@@ -220,9 +220,12 @@ export interface BoibResult {
   pct: number | null;
 }
 
+/** Промежуток обследован: через него проведён ёршик (назначен размер) или кровоточивость отмечена явно. */
+export const isExamined = (d: ElementData) => d.bleeding !== null || d.size !== null;
+
 /** BOIB: кровоточащие / обследованные × 100 %. Свободные поверхности не входят. */
 export function computeBoib(content: BrushMapContent): BoibResult {
-  const relevant = listElements(content).filter((e) => e.kind !== 'edge' && e.data.bleeding !== null);
+  const relevant = listElements(content).filter((e) => e.kind !== 'edge' && e.active && isExamined(e.data));
   const bleeding = relevant.filter((e) => e.data.bleeding === true).length;
   const examined = relevant.length;
   return { bleeding, examined, pct: examined ? Math.round((bleeding / examined) * 100) : null };

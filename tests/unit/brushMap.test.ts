@@ -74,6 +74,13 @@ describe('BOIB', () => {
     expect(computeBoib(c)).toEqual({ bleeding: 2, examined: 4, pct: 50 });
   });
 
+  it('промежуток с назначенным размером считается обследованным без кровоточивости', () => {
+    let c = updateElement(emptyBrushMap(), '16-15', { size: { catalogId: 'a' } });
+    c = updateElement(c, '15-14', { size: { catalogId: 'a' }, bleeding: true });
+    c = updateElement(c, '14-13', { alternative: 'FLOSS' });
+    expect(computeBoib(c)).toEqual({ bleeding: 1, examined: 2, pct: 50 });
+  });
+
   it('нет обследованных — индекс не считается', () => {
     expect(computeBoib(emptyBrushMap())).toEqual({ bleeding: 0, examined: 0, pct: null });
   });

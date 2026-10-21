@@ -4,7 +4,8 @@ import { summarizePsr } from '@/domain/psr';
 import { hasTodo } from '@/content/styleRules';
 import { brushMapSchema } from '@/schemas/brushMap';
 import { psrSchema } from '@/schemas/psr';
-import { filledDocumentSchema, type FilledItem } from '@/schemas/template';
+import { filledDocumentSchema } from '@/schemas/template';
+import { itemProblems } from '@/domain/templateItems';
 import { db } from '../db';
 
 export interface Blocker {
@@ -18,34 +19,6 @@ const docTitle: Record<Document['type'], string> = {
   HYGIENE_PLAN: 'Схема гигиены',
   AFTERCARE: 'Памятка',
 };
-
-/** Текстовые поля пункта, которые видит пациент. */
-export function itemTexts(item: FilledItem): string[] {
-  switch (item.type) {
-    case 'text':
-      return [item.text];
-    case 'product':
-      return [item.name, item.usage, item.frequency, item.duration];
-    case 'choice':
-      return [item.prompt, ...item.options.filter((o) => item.selected.includes(o.id)).map((o) => o.label)];
-    case 'input':
-      return [item.label, item.value];
-    case 'warning':
-      return [item.title, item.text];
-    case 'brushes':
-      return [];
-  }
-}
-
-export function itemProblems(item: FilledItem): string | null {
-  if (!item.enabled) return null;
-  if (itemTexts(item).some(hasTodo)) return 'пункт с TODO';
-  if (item.type === 'text' && !item.text.trim()) return 'пустой текст';
-  if (item.type === 'product' && !item.name.trim() && item.category !== 'INTERDENTAL') return 'не указано средство';
-  if (item.type === 'input' && item.required && !item.value.trim()) return `не заполнено поле «${item.label}»`;
-  if (item.type === 'choice' && item.required && item.selected.length === 0) return 'не выбран вариант';
-  return null;
-}
 
 export async function visitBlockers(visitId: string): Promise<Blocker[]> {
   const visit = await db().visit.findUnique({ where: { id: visitId }, include: { documents: true } });

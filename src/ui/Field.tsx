@@ -62,3 +62,57 @@ export function Switch({ label, checked, onCheckedChange }: SwitchProps) {
     </div>
   );
 }
+
+interface TextAreaProps extends Omit<import('react').TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
+  label: string;
+  hint?: ReactNode;
+  error?: string;
+}
+
+export function TextArea({ label, hint, error, className, ...rest }: TextAreaProps) {
+  const id = useId();
+  return (
+    <div className={s.field}>
+      <label htmlFor={id} className={s.label}>
+        {label}
+      </label>
+      <textarea
+        id={id}
+        className={`${s.input} ${s.textarea} ${className ?? ''}`}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error || hint ? `${id}-d` : undefined}
+        {...rest}
+      />
+      {(error || hint) && (
+        <span id={`${id}-d`} className={error ? s.error : s.hint}>
+          {error ?? hint}
+        </span>
+      )}
+    </div>
+  );
+}
+
+interface SelectProps extends Omit<import('react').SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
+  label: string;
+  options: ReadonlyArray<{ value: string; label: string }>;
+  hint?: ReactNode;
+}
+
+export function Select({ label, options, hint, ...rest }: SelectProps) {
+  const id = useId();
+  return (
+    <div className={s.field}>
+      <label htmlFor={id} className={s.label}>
+        {label}
+      </label>
+      <select id={id} className={`${s.input} ${s.select}`} {...rest}>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {hint && <span className={s.hint}>{hint}</span>}
+    </div>
+  );
+}

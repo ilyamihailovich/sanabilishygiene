@@ -23,7 +23,7 @@ export const elementDataSchema = z.object({
   size: sizeRefSchema.nullable().default(null),
   approach: approachSchema.default('VESTIBULAR'),
   method: methodSchema.default('THROUGH'),
-  /** null — не обследовано, не входит в знаменатель BOIB. */
+  /** null — не отмечено: с назначенным размером считается «нет», без размера промежуток не обследован. */
   bleeding: z.boolean().nullable().default(null),
   pain: z.boolean().default(false),
   openContact: z.boolean().default(false),

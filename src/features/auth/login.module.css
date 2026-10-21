@@ -1,0 +1,58 @@
+.page {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--space-6) var(--gutter);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.rings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: min(420px, 100%);
+  padding: var(--space-10) var(--space-8);
+  border-radius: var(--radius-card);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.error {
+  color: var(--color-notice-text);
+  font-size: var(--fs-caption);
+}
+
+.info {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-field);
+  background: var(--color-notice-bg);
+  color: var(--color-notice-text);
+  font-size: var(--fs-caption);
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: var(--space-8) var(--space-5);
+  }
+}

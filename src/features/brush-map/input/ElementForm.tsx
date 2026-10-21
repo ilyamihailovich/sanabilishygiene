@@ -1,0 +1,180 @@
+'use client';
+
+import { useState } from 'react';
+import { ui } from '@/content/ui.ru';
+import type { MapElement } from '@/domain/brushMap';
+import type { ElementData } from '@/schemas/brushMap';
+import type { CatalogItem } from '@/server/services/catalog';
+import { BrushSizeButton } from '@/ui/brush/BrushSizeButton';
+import { Button } from '@/ui/Button';
+import { ToggleChip } from '@/ui/Chip';
+import { Switch } from '@/ui/Field';
+import { Segmented } from '@/ui/Segmented';
+import { IconTrash } from '@/ui/icons';
+import s from './InterspaceForm.module.css';
+
+interface ElementFormProps {
+  element: MapElement;
+  catalog: CatalogItem[];
+  hotkeys: Map<string, string>;
+  density: 'compact' | 'touch';
+  onPatch: (patch: Partial<ElementData>) => void;
+  onRemoveExtra?: () => void;
+}
+
+const t = ui.interspace;
+
+export function sizeMeta(c: CatalogItem) {
+  return `${c.brand} · проход ${c.passageMm.replace('.', ',')} мм${c.verified ? '' : ' · не проверен'}`;
+}
+
+/** Ввод данных промежутка: одинаковый для схемы и 3D, поповер на десктопе и лист на смартфоне. */
+export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRemoveExtra }: ElementFormProps) {
+  const d = element.data;
+  const freeText = d.size && 'freeText' in d.size ? d.size.freeText : '';
+  const [showFree, setShowFree] = useState(Boolean(freeText));
+  const catalogId = d.size && 'catalogId' in d.size ? d.size.catalogId : null;
+  const isEdge = element.kind === 'edge';
+  const enabled = !isEdge || d.enabled === true;
+
+  const pickSize = (id: string) =>
+    onPatch(catalogId === id ? { size: null } : { size: { catalogId: id }, alternative: null });
+
+  return (
+    <div className={s.form}>
+      {isEdge && (
+        <Switch label={ui.map.edgeEnable} checked={enabled} onCheckedChange={(v) => onPatch({ enabled: v })} />
+      )}
+      {enabled && (
+        <>
+          <div className={s.group} role="group" aria-label={t.size}>
+            <span className={s.groupLabel}>{t.size}</span>
+            {density === 'touch' ? (
+              <div className={s.sizes}>
+                {catalog.map((c) => (
+                  <BrushSizeButton
+                    key={c.id}
+                    label={c.label}
+                    meta={sizeMeta(c)}
+                    color={c.colorHex}
+                    pressed={catalogId === c.id}
+                    onClick={() => pickSize(c.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className={s.compactSizes}>
+                {catalog.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={catalogId === c.id}
+                    className={s.dotButton}
+                    onClick={() => pickSize(c.id)}
+                    title={`${sizeMeta(c)}${hotkeys.get(c.id) ? `, клавиша ${hotkeys.get(c.id)}` : ''}`}
+                  >
+                    <span className={s.dot} style={{ background: c.colorHex }} aria-hidden="true" />
+                    {c.label}
+                    {hotkeys.get(c.id) && <kbd className={s.kbd}>{hotkeys.get(c.id)}</kbd>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {showFree ? (
+              <input
+                className={s.freeInput}
+                aria-label={ui.map.freeText}
+                placeholder={ui.map.freeTextPlaceholder}
+                defaultValue={freeText}
+                maxLength={40}
+                autoFocus={!freeText}
+                onBlur={(e) => {
+                  const v = e.target.value.trim();
+                  if (v && v !== freeText) onPatch({ size: { freeText: v }, alternative: null });
+                  if (!v && freeText) onPatch({ size: null });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                  e.stopPropagation();
+                }}
+              />
+            ) : (
+              <button type="button" className={s.linkButton} onClick={() => setShowFree(true)}>
+                {ui.map.freeText}
+              </button>
+            )}
+          </div>
+
+          <div className={s.group}>
+            <span className={s.groupLabel}>{t.side}</span>
+            <Segmented
+              label={t.side}
+              block
+              value={d.approach}
+              onChange={(v) => onPatch({ approach: v })}
+              options={[
+                { value: 'VESTIBULAR', label: t.sideVestibular },
+                { value: 'ORAL', label: t.sideOral },
+              ]}
+            />
+          </div>
+
+          <div className={s.group}>
+            <span className={s.groupLabel}>{t.method}</span>
+            <Segmented
+              label={t.method}
+              block
+              value={d.method}
+              onChange={(v) => onPatch({ method: v })}
+              options={[
+                { value: 'THROUGH', label: t.methodThrough },
+                { value: 'ANGLED', label: t.methodAngled },
+                { value: 'BOTH', label: t.methodBoth },
+              ]}
+            />
+          </div>
+
+          <div className={s.group} role="group" aria-label={t.marks}>
+            <span className={s.groupLabel}>{t.marks}</span>
+            <div className={s.chips}>
+              <ToggleChip pressed={d.bleeding === true} onPressedChange={(p) => onPatch({ bleeding: p })}>
+                {t.bleeding}
+              </ToggleChip>
+              <ToggleChip pressed={d.pain} onPressedChange={(p) => onPatch({ pain: p })}>
+                {t.pain}
+              </ToggleChip>
+              <ToggleChip pressed={d.openContact} onPressedChange={(p) => onPatch({ openContact: p })}>
+                {t.openContact}
+              </ToggleChip>
+            </div>
+          </div>
+
+          <div className={s.group} role="group" aria-label={t.alternative}>
+            <span className={s.groupLabel}>{t.alternative}</span>
+            <div className={s.chips}>
+              <ToggleChip
+                pressed={d.alternative === 'FLOSS'}
+                onPressedChange={(p) => onPatch(p ? { alternative: 'FLOSS', size: null } : { alternative: null })}
+              >
+                {t.floss}
+              </ToggleChip>
+              <ToggleChip
+                pressed={d.alternative === 'NONE'}
+                onPressedChange={(p) => onPatch(p ? { alternative: 'NONE', size: null } : { alternative: null })}
+              >
+                {t.notNeeded}
+              </ToggleChip>
+            </div>
+          </div>
+        </>
+      )}
+      {onRemoveExtra && (
+        <div>
+          <Button variant="ghost" size="sm" leading={<IconTrash size={18} />} onClick={onRemoveExtra}>
+            {ui.map.removeExtra}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

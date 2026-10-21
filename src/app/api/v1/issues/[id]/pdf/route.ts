@@ -3,10 +3,10 @@ import { db } from '@/server/db';
 import { notFound, staff } from '@/server/http';
 import { pdfResponse, getIssuePdf } from '@/server/services/renderer';
 
-export const GET = staff<{ id: string }>(null, async ({ params, session }) => {
+export const GET = staff<{ id: string }>(null, async ({ req, params, session }) => {
   const issue = await db().visitIssue.findUnique({ where: { id: params.id } });
   if (!issue) throw notFound();
   const pdf = await getIssuePdf(issue.id);
   await audit({ userId: session.user.id, action: 'pdf.download', entityType: 'visit', entityId: issue.visitId, meta: { issue: issue.number } });
-  return pdfResponse(pdf, issue, false);
+  return pdfResponse(pdf, issue, req.nextUrl.searchParams.get('inline') === '1');
 });

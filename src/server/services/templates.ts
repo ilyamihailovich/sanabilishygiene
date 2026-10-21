@@ -7,7 +7,7 @@ import type { CurrentSession } from '../auth/session';
 import { db } from '../db';
 import { badRequest, forbidden, notFound } from '../http';
 import { can } from '../rbac';
-import { itemTexts } from './readiness';
+import { itemTexts } from '@/domain/templateItems';
 
 export function canEditTemplate(session: CurrentSession, t: Pick<Template, 'ownerId'>): boolean {
   if (t.ownerId === null) return can(session.user.role, 'template.library');

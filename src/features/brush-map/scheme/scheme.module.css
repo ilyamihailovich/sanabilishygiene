@@ -1,0 +1,111 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  isolation: isolate;
+}
+
+.rings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tooth {
+  cursor: pointer;
+  outline: none;
+}
+
+.toothShape {
+  fill: #fff;
+  stroke: #8a8a8f;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  transition:
+    fill var(--dur-fast) var(--ease-out),
+    stroke var(--dur-fast) var(--ease-out);
+}
+
+.tooth:hover .toothShape {
+  fill: #f7f5fa;
+  stroke: var(--color-text);
+}
+
+.tooth:focus-visible .toothShape,
+.toothSelected .toothShape {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+
+.missing .toothShape {
+  fill: transparent;
+  stroke: #c8c8cd;
+  stroke-dasharray: 3 5;
+}
+
+.pontic .toothShape {
+  fill: url(#pontic-hatch);
+}
+
+.fissure {
+  fill: none;
+  stroke: #c4c4c8;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.number {
+  font-size: 19px;
+  font-weight: var(--fw-medium);
+  fill: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.numberMissing {
+  fill: #b0b0b5;
+}
+
+.caption {
+  font-size: 18px;
+  fill: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.marker {
+  cursor: pointer;
+  outline: none;
+}
+
+.marker:focus-visible .hit {
+  stroke: var(--color-text);
+  stroke-width: 2;
+}
+
+.hit {
+  fill: transparent;
+  stroke: transparent;
+}
+
+.printLabel {
+  font-size: 15px;
+  font-weight: var(--fw-medium);
+  fill: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}

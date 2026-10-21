@@ -19,6 +19,8 @@ interface PopoverProps {
   anchor: RefObject<HTMLElement | null> | Point;
   label: string;
   children: ReactNode;
+  /** Значение, при смене которого поповер плавно переезжает к новому якорю (например, ключ выбранного маркера). */
+  track?: unknown;
 }
 
 const GAP = 12;
@@ -32,9 +34,9 @@ function anchorRect(anchor: PopoverProps['anchor']): DOMRect {
 }
 
 /** Поповер на десктопе: стекло, лёгкое масштабирование, закрытие по Esc и клику вне. */
-export function Popover({ open, onClose, anchor, label, children }: PopoverProps) {
+export function Popover({ open, onClose, anchor, label, children, track }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number; origin: string } | null>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; origin: string; animate: boolean } | null>(null);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -57,7 +59,7 @@ export function Popover({ open, onClose, anchor, label, children }: PopoverProps
       } else {
         placed = { left: Math.max(MARGIN, a.left - GAP - width), top: clampY(a.top + a.height / 2 - height / 2), origin: 'center right' };
       }
-      setPos(placed);
+      setPos((prev) => ({ ...placed, animate: prev !== null }));
     };
     place();
     window.addEventListener('resize', place);
@@ -66,7 +68,11 @@ export function Popover({ open, onClose, anchor, label, children }: PopoverProps
       window.removeEventListener('resize', place);
       window.removeEventListener('scroll', place, true);
     };
-  }, [open, anchor]);
+  }, [open, anchor, track]);
+
+  useEffect(() => {
+    if (!open) setPos(null);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +94,12 @@ export function Popover({ open, onClose, anchor, label, children }: PopoverProps
   }, [open, onClose, anchor]);
 
   const style: CSSProperties = pos
-    ? ({ left: pos.left, top: pos.top, '--origin': pos.origin } as CSSProperties)
+    ? ({
+        left: pos.left,
+        top: pos.top,
+        '--origin': pos.origin,
+        transition: pos.animate ? 'left 280ms cubic-bezier(0.22, 1, 0.36, 1), top 280ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+      } as CSSProperties)
     : { left: -9999, top: -9999 };
 
   return (

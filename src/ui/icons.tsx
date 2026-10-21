@@ -209,3 +209,61 @@ export const IconViewLeft = (p: IconProps) => (
     <path d="M19 19c0-5-1-8.5-2.6-10.8" strokeWidth={3} />
   </Svg>
 );
+
+export const IconHome = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-8.5Z" />
+  </Svg>
+);
+
+export const IconDoc = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7 3.5h6.5L18 8v12a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20V3.5Z" transform="translate(-0.5 0)" />
+    <path d="M13 3.5V8h4.5M9.5 12.5h5M9.5 16h5" transform="translate(-0.5 0)" />
+  </Svg>
+);
+
+export const IconSettings = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="8" cy="17" r="2" />
+  </Svg>
+);
+
+export const IconLogout = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M14 4.5H7a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 7 19.5h7" />
+    <path d="M11 12h9M17 8.5l3.5 3.5-3.5 3.5" />
+  </Svg>
+);
+
+export const IconTrash = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13" />
+  </Svg>
+);
+
+export const IconGrip = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" strokeWidth={2.75} />
+  </Svg>
+);
+
+export const IconChevronDown = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Svg>
+);
+
+export const IconChevronUp = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m6 15 6-6 6 6" />
+  </Svg>
+);
+
+export const IconExpand = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+  </Svg>
+);
