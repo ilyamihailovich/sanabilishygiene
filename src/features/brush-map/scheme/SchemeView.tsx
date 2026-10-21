@@ -4,9 +4,8 @@ import { motion } from 'motion/react';
 import { memo, type KeyboardEvent, type PointerEvent } from 'react';
 import { ui } from '@/content/ui.ru';
 import type { MapElement } from '@/domain/brushMap';
-import { ARCH_ORDER, archOf, toothIndex, type ToothState } from '@/domain/teeth';
+import { ARCH_ORDER, archOf, toothIndex, type Arch, type ToothState } from '@/domain/teeth';
 import type { BrushMapContent } from '@/schemas/brushMap';
-import { ConcentricBackdrop } from '@/ui/ConcentricBackdrop';
 import { cx } from '@/ui/cx';
 import { spring } from '@/ui/motion';
 import { TEETH, VIEW_H, VIEW_W, elementAnchor, type Box } from '../geometry';
@@ -22,8 +21,12 @@ export interface SchemeViewProps {
   selectedTooth?: number | null;
   /** Подсветка: остальные маркеры приглушаются. */
   highlight?: ReadonlySet<string> | null;
-  /** Область просмотра (квадрант на смартфоне); по умолчанию обе челюсти. */
+  /** Область просмотра (камера схемы на смартфоне); по умолчанию обе челюсти. */
   box?: Box | null;
+  /** Область меняется жестами: без анимации, схема заполняет контейнер по высоте. */
+  live?: boolean;
+  /** Только одна челюсть (схема на телефоне). */
+  arch?: Arch;
   readOnly?: boolean;
   /** Печать: подписи размеров текстом рядом с маркерами, без интерактивности. */
   print?: boolean;
@@ -47,6 +50,8 @@ function SchemeViewImpl({
   selectedTooth,
   highlight,
   box,
+  live,
+  arch,
   readOnly,
   print,
   markerRadius = 16,
@@ -55,7 +60,8 @@ function SchemeViewImpl({
   onHover,
 }: SchemeViewProps) {
   const vb = box ?? FULL;
-  const shown = readOnly ? elements.filter((e) => e.active) : elements;
+  const shown = (readOnly ? elements.filter((e) => e.active) : elements).filter((e) => !arch || e.arch === arch);
+  const teeth = arch ? TEETH.filter((g) => archOf(g.tooth) === arch) : TEETH;
   const activate = (e: KeyboardEvent<SVGGElement>, fn: () => void) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -64,13 +70,12 @@ function SchemeViewImpl({
   };
 
   return (
-    <div className={s.wrap}>
-      {!print && <ConcentricBackdrop className={s.rings} rings={8} />}
+    <div className={cx(s.wrap, live && s.live)}>
       <motion.svg
         className={s.svg}
         style={box ? { overflow: 'hidden' } : undefined}
         initial={false}
-        animate={{ viewBox: `${vb.x} ${vb.y} ${vb.w} ${vb.h}` }}
+        animate={live ? undefined : { viewBox: `${vb.x} ${vb.y} ${vb.w} ${vb.h}` }}
         transition={spring}
         viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
         role="group"
@@ -94,7 +99,7 @@ function SchemeViewImpl({
           </>
         )}
 
-        {TEETH.map((g) => {
+        {teeth.map((g) => {
           const t = content.teeth[String(g.tooth)] ?? { state: 'PRESENT' as const, furcation: false };
           const rad = (g.angle * Math.PI) / 180;
           const flip = -Math.sin(rad) * g.nx + Math.cos(rad) * g.ny < 0;

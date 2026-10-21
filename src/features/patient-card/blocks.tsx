@@ -111,14 +111,15 @@ export function HowTo({ steps, compact }: { steps: string[]; compact?: boolean }
   );
 }
 
-function Item({ item, brushes }: { item: FilledItem; brushes: BrushRow[] }) {
+function Item({ item, brushes, sectionTitle }: { item: FilledItem; brushes: BrushRow[]; sectionTitle: string }) {
   switch (item.type) {
     case 'text':
       return <p className={s.paragraph}>{item.text}</p>;
     case 'warning':
       return (
         <div className={s.warning}>
-          <p className={s.warningTitle}>{item.title}</p>
+          {/* заголовок, совпадающий с названием раздела, не повторяется */}
+          {item.title.trim() !== sectionTitle.trim() && <p className={s.warningTitle}>{item.title}</p>}
           <p>{item.text}</p>
         </div>
       );
@@ -173,7 +174,7 @@ export function DocumentBody({ doc, brushes }: { doc: FilledDocument; brushes: B
         <section key={section.id} className={s.docSection}>
           <h3 className={s.docSectionTitle}>{section.title}</h3>
           {section.items.map((item) => (
-            <Item key={item.id} item={item} brushes={brushes} />
+            <Item key={item.id} item={item} brushes={brushes} sectionTitle={section.title} />
           ))}
         </section>
       ))}

@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 
 /** Подмена API: прототип работает без сервера, изменения живут до перезагрузки страницы. */
-export function installMockApi(patientUrl: string) {
+export function installMockApi(patientUrl: string, patients: Array<{ id: string; cardNumber: string; displayName: string | null }>) {
   const revs = new Map<string, number>();
   const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
   const realFetch = window.fetch.bind(window);
@@ -22,6 +22,16 @@ export function installMockApi(patientUrl: string) {
     }
     if (path.endsWith('/issue')) return json({ issueId: 'demo', number: 2, url: patientUrl });
     if (path.startsWith('/api/v1/library-items')) return json([]);
+    if (path.startsWith('/api/v1/patients?')) {
+      const q = (new URLSearchParams(path.split('?')[1]).get('card') ?? '').toLowerCase();
+      return json(patients.filter((p) => p.cardNumber.includes(q) || (p.displayName ?? '').toLowerCase().includes(q)));
+    }
+    const newVisit = /^\/api\/v1\/patients\/([^/]+)\/visits$/.exec(path);
+    if (newVisit && method === 'POST') return json({ id: `v-new-${newVisit[1]}` });
+    const copy = /^\/api\/v1\/templates\/([^/]+)\/copy$/.exec(path);
+    if (copy) return json({ id: copy[1] });
+    if (path.endsWith('/draft')) return json({ lint: [] });
+    if (path.endsWith('/publish')) return json({ version: 2 });
     if (path.startsWith('/api/v1/me')) return json({ ok: true });
     return json({ ok: true });
   };

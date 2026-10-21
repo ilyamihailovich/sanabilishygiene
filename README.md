@@ -27,7 +27,7 @@ docker compose --env-file .env.demo up -d --build
 | assistant@sanabilis.local (ассистент) | demo-password |
 | admin@sanabilis.local (администратор) | admin-password |
 
-В демо-режиме есть условный каталог «Демо 1–4», демо-тексты и пациент DEMO-001 с заполненной картой. Остановить: `docker compose --env-file .env.demo down`.
+В демо-режиме есть образец каталога (размеры ISO 0–4, цвета условные), образец текстов и пациент с картой № 10482. Образец лежит в `prisma/sample-content.json` и не утверждён клиникой. Остановить: `docker compose --env-file .env.demo down`.
 
 ## Запуск
 

@@ -78,7 +78,8 @@ export function ThreeView(props: ThreeViewProps) {
             flipflops={4}
             onDecline={() => setTier((t) => (t === 'high' ? 'mid' : 'low'))}
             onIncline={() => setTier((t) => (t === 'low' ? 'mid' : t))}
-            onFallback={() => onFallback?.('slow')}
+            // Схема включается только вручную: колебания частоты кадров (фоновая вкладка, прокрутка) не должны переключать режим
+            onFallback={() => setTier('low')}
           />
         )}
         <Lights tier={tier} />

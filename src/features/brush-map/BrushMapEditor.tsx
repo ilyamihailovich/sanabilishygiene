@@ -50,13 +50,14 @@ import { ToggleGroup } from '@/ui/ToggleGroup';
 import { useToast } from '@/ui/Toast';
 import { SaveIndicator } from '../visit/SaveIndicator';
 import { useAutosave } from '../visit/useAutosave';
-import { quadrantBox } from './geometry';
+import { archBox, elementAnchor, toothGeom } from './geometry';
 import { HoverCard } from './HoverCard';
 import { ElementForm, sizeMeta } from './input/ElementForm';
 import { ToothForm } from './input/ToothForm';
 import { BoibCard, NeedCard, legendFromUsage } from './MapSummary';
 import { MirrorDialog } from './MirrorDialog';
 import { SchemeView, neighboursOf } from './scheme/SchemeView';
+import { SchemeZoom } from './scheme/SchemeZoom';
 import type { MarkerVisual } from './scheme/SvgMarker';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { webgl2Available } from './three/types';
@@ -78,7 +79,13 @@ export const viewIcons: Record<ViewKey, React.ReactNode> = {
   left: <IconViewLeft size={22} />,
 };
 
-const QUADRANTS = [1, 2, 3, 4] as const;
+type Jaw = 'upper' | 'lower';
+/** Начало осмотра: 18→28 на верхней, 38→48 на нижней челюсти. */
+const JAW_START: Record<Jaw, [number, number]> = { upper: [17, 16], lower: [37, 36] };
+const jawStart = (jaw: Jaw) => {
+  const [a, b] = JAW_START[jaw].map(toothGeom) as [ReturnType<typeof toothGeom>, ReturnType<typeof toothGeom>];
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+};
 type Mode = 'three' | 'scheme';
 
 interface Props {
@@ -100,7 +107,9 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
 
   const [mode, setModeState] = useState<Mode>(initialMode);
   const [view, setView] = useState<ViewKey>('overview');
-  const [quadrant, setQuadrant] = useState<(typeof QUADRANTS)[number]>(1);
+  const [jaw, setJaw] = useState<Jaw>('upper');
+  const [zoomTarget, setZoomTarget] = useState(() => jawStart('upper'));
+  const jawBounds = useMemo(() => archBox(jaw), [jaw]);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [panel, setPanel] = useState<'element' | 'tooth' | null>(null);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
@@ -215,8 +224,9 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     const node = document.querySelector(`[data-key="${CSS.escape(key)}"]`);
     if (node) anchor.current = node;
     if (touch && el) {
-      const q = Math.floor((el.teeth[0] ?? 11) / 10) as (typeof QUADRANTS)[number];
-      setQuadrant(q);
+      setJaw(el.arch);
+      const a = elementAnchor(el);
+      setZoomTarget({ x: a.x, y: a.y });
     }
     if (mode === 'three' && el) {
       setView(el.arch === 'upper' ? 'upper' : 'lower');
@@ -316,6 +326,60 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
 
   const hoverEl = hover ? (byKey.get(hover.key) ?? null) : null;
 
+  // На телефоне пульт поверх сцены, на компьютере под ней
+  const dock = (
+    <div className={touch ? s.bottomDock : s.dockBelow}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={mode}
+          className={s.bottom}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.2 }}
+        >
+          {mode === 'three' ? (
+            <>
+              <GlassPanel aria-label={ui.views.label}>
+                <ToggleGroup
+                  label={ui.views.label}
+                  value={view}
+                  size={touch ? 48 : 44}
+                  onChange={(v) => v && setView(v)}
+                  options={VIEW_ORDER.map((v) => ({ value: v, label: ui.views[v], content: viewIcons[v] }))}
+                />
+                {!touch && <IconButton label={ui.views.reset} icon={<IconRotate size={20} />} variant="ghost" onClick={() => setView('overview')} />}
+              </GlassPanel>
+              <span className={s.caption} aria-live="polite">
+                {ui.views[view]}
+              </span>
+            </>
+          ) : (
+            <>
+              <GlassPanel aria-label={ui.map.brush} className={s.brushRow}>
+                <ToggleGroup
+                  label={ui.map.brush}
+                  thumb="ring"
+                  deselectable
+                  value={brush}
+                  onChange={setBrush}
+                  options={catalog.map((c) => ({
+                    value: c.id,
+                    label: `${ui.map.brush}: ${c.label}`,
+                    content: <span className={s.swatch} style={{ background: c.colorHex }} />,
+                  }))}
+                />
+              </GlassPanel>
+              <span className={s.caption} aria-live="polite">
+                {brush ? `${ui.map.brush}: ${catalogById.get(brush)?.label}. ${ui.map.brushHint}` : ui.map.brushPick}
+              </span>
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+
   return (
     <div className={s.root}>
       <div className={s.head}>
@@ -336,15 +400,21 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
         />
       </div>
 
-      <div className={`${s.stage} ${mode === 'three' ? s.stageThree : ''}`}>
+      <div className={`${s.stage} ${mode === 'three' || touch ? s.stageThree : ''}`}>
         {mode === 'scheme' && touch && (
           <div className={s.quadrants}>
             <div className={glassClass} style={{ borderRadius: 999, padding: 3, display: 'inline-block' }}>
               <Segmented
-                label="Квадрант"
-                value={String(quadrant)}
-                onChange={(v) => setQuadrant(Number(v) as (typeof QUADRANTS)[number])}
-                options={QUADRANTS.map((q) => ({ value: String(q), label: `${q}` }))}
+                label="Челюсть"
+                value={jaw}
+                onChange={(v) => {
+                  setJaw(v);
+                  setZoomTarget(jawStart(v));
+                }}
+                options={[
+                  { value: 'upper', label: 'Верхняя' },
+                  { value: 'lower', label: 'Нижняя' },
+                ]}
               />
             </div>
           </div>
@@ -354,30 +424,43 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           {mode === 'scheme' ? (
             <motion.div
               key="scheme"
-              className={s.scheme}
+              className={`${s.scheme} ${touch ? s.schemeTouch : ''}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onPanEnd={(_, info) => {
-                if (!touch || Math.abs(info.offset.x) < 60 || Math.abs(info.offset.y) > Math.abs(info.offset.x)) return;
-                const i = QUADRANTS.indexOf(quadrant) + (info.offset.x < 0 ? 1 : -1);
-                const q = QUADRANTS[(i + 4) % 4]!;
-                setQuadrant(q);
-              }}
             >
-              <SchemeView
-                content={content}
-                elements={elements}
-                visual={visual}
-                selectedKey={selectedKey}
-                selectedTooth={selectedTooth}
-                box={touch ? quadrantBox(quadrant) : null}
-                markerRadius={touch ? 15 : 16}
-                onElement={onElement}
-                onTooth={onTooth}
-                onHover={(key, target) => setHover(key && target ? { key, target } : null)}
-              />
+              {touch ? (
+                <SchemeZoom bounds={jawBounds} target={zoomTarget}>
+                  {(box) => (
+                    <SchemeView
+                      content={content}
+                      elements={elements}
+                      visual={visual}
+                      selectedKey={selectedKey}
+                      selectedTooth={selectedTooth}
+                      box={box}
+                      live
+                      arch={jaw}
+                      markerRadius={15}
+                      onElement={onElement}
+                      onTooth={onTooth}
+                    />
+                  )}
+                </SchemeZoom>
+              ) : (
+                <SchemeView
+                  content={content}
+                  elements={elements}
+                  visual={visual}
+                  selectedKey={selectedKey}
+                  selectedTooth={selectedTooth}
+                  markerRadius={16}
+                  onElement={onElement}
+                  onTooth={onTooth}
+                  onHover={(key, target) => setHover(key && target ? { key, target } : null)}
+                />
+              )}
             </motion.div>
           ) : (
             <motion.div key="three" style={{ position: 'absolute', inset: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
@@ -407,57 +490,10 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           {!touch && <IconButton label={`${ui.map.shortcuts} (?)`} icon={<IconKeyboard size={20} />} variant="ghost" size={40} onClick={() => setHelp(true)} />}
         </GlassPanel>
 
-        <div className={s.bottomDock}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={mode}
-            className={s.bottom}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.2 }}
-          >
-            {mode === 'three' ? (
-              <>
-                <GlassPanel aria-label={ui.views.label}>
-                  <ToggleGroup
-                    label={ui.views.label}
-                    value={view}
-                    size={touch ? 48 : 44}
-                    onChange={(v) => v && setView(v)}
-                    options={VIEW_ORDER.map((v) => ({ value: v, label: ui.views[v], content: viewIcons[v] }))}
-                  />
-                  {!touch && <IconButton label={ui.views.reset} icon={<IconRotate size={20} />} variant="ghost" onClick={() => setView('overview')} />}
-                </GlassPanel>
-                <span className={s.caption} aria-live="polite">
-                  {ui.views[view]}
-                </span>
-              </>
-            ) : (
-              <>
-                <GlassPanel aria-label={ui.map.brush} className={s.brushRow}>
-                  <ToggleGroup
-                    label={ui.map.brush}
-                    thumb="ring"
-                    deselectable
-                    value={brush}
-                    onChange={setBrush}
-                    options={catalog.map((c) => ({
-                      value: c.id,
-                      label: `${ui.map.brush}: ${c.label}`,
-                      content: <span className={s.swatch} style={{ background: c.colorHex }} />,
-                    }))}
-                  />
-                </GlassPanel>
-                <span className={s.caption} aria-live="polite">
-                  {brush ? `${ui.map.brush}: ${catalogById.get(brush)?.label}. ${ui.map.brushHint}` : ui.map.brushPick}
-                </span>
-              </>
-            )}
-          </motion.div>
-        </AnimatePresence>
-        </div>
+        {touch && dock}
       </div>
+
+      {!touch && dock}
 
       <aside className={s.aside}>
         <NeedCard legend={legend} />

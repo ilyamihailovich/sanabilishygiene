@@ -160,17 +160,6 @@ export interface Box {
   h: number;
 }
 
-/** Область квадранта для мобильного вида. */
-export function quadrantBox(q: 1 | 2 | 3 | 4): Box {
-  const teeth = TEETH.filter((t) => Math.floor(t.tooth / 10) === q);
-  const pad = 70;
-  const xs = teeth.flatMap((t) => [t.x - t.d, t.x + t.d]);
-  const ys = teeth.flatMap((t) => [t.y - t.d, t.y + t.d]);
-  const x = Math.min(...xs) - pad;
-  const y = Math.min(...ys) - pad;
-  return { x, y, w: Math.max(...xs) - x + pad, h: Math.max(...ys) - y + pad };
-}
-
 export const archBox = (arch: Arch): Box => {
   const teeth = TEETH.filter((t) => archOf(t.tooth) === arch);
   const pad = 60;

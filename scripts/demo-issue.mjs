@@ -1,8 +1,11 @@
-// Демо-сценарий выдачи для локальной проверки (не для рабочего сервера):
-// демо-позиции каталога, демо-тексты, визит с картой, скринингом, схемой; выдача; онлайн-карта и PDF.
-// node scripts/demo-issue.mjs <outDir> [base]
+// Сценарий выдачи для локальной проверки (не для рабочего сервера):
+// образец каталога и текстов из prisma/sample-content.json, визит с картой, скринингом, схемой и памяткой; выдача; онлайн-карта и PDF.
+// node scripts/demo-issue.mjs <outDir> [base]   CARD=номер карты, SKIP_SHOTS=1 без снимков экрана
+import { readFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
+
+const sample = JSON.parse(readFileSync(new URL('../prisma/sample-content.json', import.meta.url), 'utf8'));
 
 const [outDir = 'screenshots/tmp', base = 'http://localhost:3000'] = process.argv.slice(2);
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -22,31 +25,26 @@ const call = async (ctx, method, url, data) => {
 const admin = await session('admin@sanabilis.local', 'admin-password');
 const doctor = await session('doctor@sanabilis.local', 'demo-password');
 
-// демо-каталог (только для локальной проверки вёрстки)
+// образец каталога (только для локальной проверки)
 let catalog = await call(admin, 'GET', '/api/v1/admin/brushes');
-const demo = [
-  ['Демо 1', 0.6, '#f2c94c'],
-  ['Демо 2', 0.8, '#e86a3a'],
-  ['Демо 3', 1.0, '#3f8f5a'],
-  ['Демо 4', 1.3, '#2f6fb5'],
-];
-for (const [label, passage, color] of demo) {
-  if (catalog.some((c) => c.label === label)) continue;
-  await call(admin, 'POST', '/api/v1/admin/brushes', { brand: 'Демо', line: 'для проверки вёрстки', label, passageMm: passage, colorHex: color, verified: true, sortOrder: 10 + demo.findIndex((d) => d[0] === label) });
+const { brand, line, sizes } = sample.brushes;
+for (const [i, [label, passage, color]] of sizes.entries()) {
+  if (catalog.some((c) => c.brand === brand && c.label === label)) continue;
+  await call(admin, 'POST', '/api/v1/admin/brushes', { brand, line, label, passageMm: passage, colorHex: color, verified: true, sortOrder: i + 1 });
 }
-catalog = (await call(admin, 'GET', '/api/v1/admin/brushes')).filter((c) => c.brand === 'Демо');
-for (const code of ['2', '*']) {
-  await call(admin, 'PUT', '/api/v1/admin/psr-texts', { code, staffText: 'Демо', patientText: `Демо-текст для проверки вёрстки, код ${code}. Текст клиники заменит его.` });
+catalog = (await call(admin, 'GET', '/api/v1/admin/brushes')).filter((c) => c.brand === brand).sort((x, y) => x.passageMm - y.passageMm);
+for (const [code, text] of Object.entries(sample.psr)) {
+  await call(admin, 'PUT', '/api/v1/admin/psr-texts', { code, staffText: text.staff, patientText: text.patient });
   await call(doctor, 'POST', `/api/v1/admin/psr-texts/${encodeURIComponent(code)}/approve`, { approved: true });
 }
 await call(admin, 'PUT', '/api/v1/admin/settings', {
   idleTimeoutMin: 30,
   clinic: { name: 'SANABILIS', address: 'Москва, ул. Маршала Тимошенко, д. 17, корп. 2', phone: '+7 (495) 417-00-00', site: 'sanabilis.ru' },
-  brushSteps: ['Демо-шаг 1: текст клиники.', 'Демо-шаг 2: текст клиники.', 'Демо-шаг 3: текст клиники.', 'Демо-шаг 4: текст клиники.'],
+  brushSteps: sample.brushSteps,
 });
 
-const card = `D-${Date.now().toString().slice(-5)}`;
-const patient = await call(doctor, 'POST', '/api/v1/patients', { cardNumber: card, displayName: 'Анна' });
+const card = process.env.CARD ?? `D-${Date.now().toString().slice(-5)}`;
+const patient = await call(doctor, 'POST', '/api/v1/patients', { cardNumber: card, displayName: sample.patient.displayName });
 const visit = await call(doctor, 'POST', `/api/v1/patients/${patient.id}/visits`, { copyBrushMap: false });
 const map = await call(doctor, 'POST', `/api/v1/visits/${visit.id}/documents`, { type: 'BRUSH_MAP' });
 const ids = catalog.map((c) => c.id);
@@ -67,18 +65,26 @@ await call(doctor, 'PATCH', `/api/v1/documents/${psr.id}`, { content: { schema: 
 
 const templates = await call(doctor, 'GET', '/api/v1/templates?kind=HYGIENE_PLAN');
 const plan = await call(doctor, 'POST', `/api/v1/visits/${visit.id}/documents`, { type: 'HYGIENE_PLAN', templateId: templates[0].id });
-const filled = plan.content;
-for (const section of filled.sections) {
-  for (const item of section.items) {
-    if (item.type === 'text') item.text = `Демо-пункт раздела «${section.title}». Текст клиники заменит его.`;
-    if (item.type === 'warning') {
-      item.title = 'Когда обратиться в клинику';
-      item.text = 'Демо-текст предупреждения. Текст клиники заменит его.';
+// Текстовые пункты и предупреждения шаблона заполняются образцом по названию раздела
+const fill = (doc, texts) => {
+  for (const section of doc.sections) {
+    const own = texts[section.title];
+    for (const item of section.items) {
+      if (item.type === 'text' && own) item.text = own[0];
+      if (item.type === 'warning') [item.title, item.text] = texts.warning;
     }
   }
-}
-filled.sections[2].items.push({ id: 'demoprod1', type: 'product', required: false, category: 'RINSE', name: 'Демо-ополаскиватель', usage: '', frequency: '', duration: '', timeOfDay: ['EVENING'], prescription: true, enabled: true, selected: [], value: '' });
+  return doc;
+};
+const filled = fill(plan.content, sample.plan);
+const extra = filled.sections.find((x) => x.title === 'Дополнительные средства');
+extra.items.push({ id: 'sampleprod1', type: 'product', required: false, usage: '', frequency: '', duration: '', enabled: true, selected: [], value: '', ...sample.plan.product });
 await call(doctor, 'PATCH', `/api/v1/documents/${plan.id}`, { content: filled, rev: plan.rev });
+
+const afterTemplates = await call(doctor, 'GET', '/api/v1/templates?kind=AFTERCARE');
+const afterTpl = afterTemplates.find((x) => x.title === sample.aftercare.title);
+const after = await call(doctor, 'POST', `/api/v1/visits/${visit.id}/documents`, { type: 'AFTERCARE', templateId: afterTpl.id });
+await call(doctor, 'PATCH', `/api/v1/documents/${after.id}`, { content: fill(after.content, sample.aftercare), rev: after.rev });
 await call(doctor, 'PATCH', `/api/v1/visits/${visit.id}`, { nextVisitMonths: 6 });
 
 const ready = await call(doctor, 'GET', `/api/v1/visits/${visit.id}/readiness`);
@@ -87,6 +93,11 @@ const issued = await call(doctor, 'POST', `/api/v1/visits/${visit.id}/issue`);
 console.log(JSON.stringify({ visit: visit.id, url: issued.url, issue: issued.issueId }));
 const pdf = await call(doctor, 'GET', `/api/v1/issues/${issued.issueId}/pdf`);
 await writeFile(`${outDir}/document.pdf`, pdf);
+
+if (process.env.SKIP_SHOTS) {
+  await browser.close();
+  process.exit(0);
+}
 
 const pub = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: 'ru-RU' });
 const pp = await pub.newPage();

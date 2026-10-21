@@ -10,7 +10,7 @@ import { TextField } from '@/ui/Field';
 import { glassClass } from '@/ui/Glass';
 import { Heading } from '@/ui/Heading';
 import { IconArrowRight } from '@/ui/icons';
-import { Logo, Mark } from '@/ui/Logo';
+import { Logo } from '@/ui/Logo';
 import { cx } from '@/ui/cx';
 import s from './login.module.css';
 
@@ -40,8 +40,7 @@ export function LoginForm({ idle, next }: { idle: boolean; next: string }) {
       <ConcentricBackdrop className={s.rings} rings={9} />
       <div className={cx(glassClass, s.card)}>
         <div className={s.brand}>
-          <Mark size={44} />
-          <Logo height={13} />
+          <Logo height={15} />
           <Heading as="h1" level="title2" rest={ui.auth.subtitle}>
             {ui.auth.title}
           </Heading>

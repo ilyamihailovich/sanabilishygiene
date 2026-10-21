@@ -76,7 +76,7 @@ select.metaInput {
 .step {
   position: relative;
   display: grid;
-  grid-template-columns: 32px 1fr auto;
+  grid-template-columns: 32px 1fr;
   align-items: center;
   gap: var(--space-2);
   width: 100%;
@@ -109,8 +109,7 @@ select.metaInput {
 }
 
 .stepNum,
-.stepLabel,
-.stepState {
+.stepLabel {
   position: relative;
 }
 
@@ -119,19 +118,15 @@ select.metaInput {
   font-variant-numeric: tabular-nums;
 }
 
-.stepState {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
-}
-
-.stepDone {
-  background: var(--accent);
-  box-shadow: none;
-}
 
 .content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.stepBody {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -172,7 +167,7 @@ select.metaInput {
   gap: var(--space-2);
 }
 
-.mobileSteps {
+.mobileStepsBar {
   display: none;
 }
 
@@ -184,16 +179,38 @@ select.metaInput {
   .steps {
     display: none;
   }
-  .mobileSteps {
+  /* Подложка под вкладками шагов: размытие и светлый градиент, контент уходит под неё */
+  .mobileStepsBar {
     position: sticky;
     top: 56px;
     z-index: 20;
+    display: block;
+    /* без min-width: 0 ширина вкладок растягивает колонку сетки */
+    min-width: 0;
+    margin: 0 calc(-1 * var(--gutter));
+    padding-bottom: var(--space-3);
+  }
+  .mobileStepsBar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 92%, transparent) 55%, color-mix(in srgb, var(--color-bg) 0%, transparent));
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    pointer-events: none;
+  }
+  .mobileSteps {
     display: flex;
     gap: 2px;
-    margin: 0 calc(-1 * var(--gutter));
     padding: var(--space-2) var(--gutter);
     overflow-x: auto;
     scrollbar-width: none;
+  }
+  .mobileSteps::-webkit-scrollbar {
+    display: none;
   }
   .mobileStep {
     position: relative;

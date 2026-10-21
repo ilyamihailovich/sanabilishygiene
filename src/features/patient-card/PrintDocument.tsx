@@ -1,6 +1,6 @@
 import { ui } from '@/content/ui.ru';
 import type { IssueSnapshot } from '@/schemas/snapshot';
-import { Logo, Mark } from '@/ui/Logo';
+import { Logo } from '@/ui/Logo';
 import { PrintScheme } from './PrintScheme';
 import { AlternativesNote, Bleeding, BrushList, DocumentBody, HowTo, NextVisit, Screening, brushRows } from './blocks';
 import { dateLong } from './format';
@@ -24,8 +24,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
       <header className={s.head}>
         <div>
           <div className={s.brand}>
-            <Mark size={34} />
-            <Logo height={11} />
+            <Logo height={13} />
           </div>
           <h1 className={s.title}>
             Рекомендации <span className={s.titleRest}>по гигиене полости рта</span>

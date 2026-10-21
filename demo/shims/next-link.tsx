@@ -1,9 +1,19 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
+import { navigate } from '../router';
 
-// В прототипе ссылки внутри приложения никуда не ведут
-export default function Link({ href: _href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children?: ReactNode }) {
+// Ссылки внутри приложения переключают экран прототипа
+export default function Link({ href, children, onClick, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children?: ReactNode }) {
   return (
-    <a href="#" onClick={(e) => e.preventDefault()} {...rest}>
+    <a
+      href={href}
+      onClick={(e) => {
+        onClick?.(e);
+        if (e.defaultPrevented || href.includes('/pdf')) return;
+        e.preventDefault();
+        navigate(href);
+      }}
+      {...rest}
+    >
       {children}
     </a>
   );

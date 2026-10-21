@@ -1,8 +1,8 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import type { BoibResult } from '@/domain/brushMap';
 import { brushMapSchema } from '@/schemas/brushMap';
@@ -72,6 +72,15 @@ export function VisitWorkspace(props: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const canWrite = staff.permissions.includes('document.write');
   const compactMeta = useMediaQuery('(max-width: 720px)');
+  const stepsRef = useRef<HTMLElement>(null);
+
+  // Активная вкладка шага на телефоне прокручивается в центр полосы
+  useEffect(() => {
+    const nav = stepsRef.current;
+    const el = nav?.querySelector<HTMLElement>(`[data-step="${step}"]`);
+    if (!nav || !el) return;
+    nav.scrollTo({ left: el.offsetLeft - (nav.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' });
+  }, [step]);
 
   const setStep = (next: StepKey) => {
     setStepState(next);
@@ -80,13 +89,7 @@ export function VisitWorkspace(props: Props) {
   };
 
   const docOf = (type: VisitDoc['type']) => documents.find((d) => d.type === type) ?? null;
-  const done: Record<StepKey, boolean> = {
-    map: Boolean(docOf('BRUSH_MAP')),
-    psr: Boolean(docOf('PSR')),
-    plan: Boolean(docOf('HYGIENE_PLAN')),
-    aftercare: documents.some((d) => d.type === 'AFTERCARE'),
-    issue: Boolean(props.lastIssue),
-  };
+
 
   const patchVisit = async (patch: Record<string, unknown>) => {
     try {
@@ -179,16 +182,18 @@ export function VisitWorkspace(props: Props) {
         </details>
       </div>
 
-      <nav className={s.mobileSteps} aria-label="Шаги визита">
-        {STEPS.map((k, i) => (
-          <button key={k} type="button" className={s.mobileStep} aria-current={step === k ? 'step' : undefined} onClick={() => setStep(k)}>
-            {step === k && <motion.span layoutId="mobile-step" className={s.mobileThumb} transition={spring} />}
-            <span>
-              {String(i + 1).padStart(2, '0')} {ui.visit.steps[i]}
-            </span>
-          </button>
-        ))}
-      </nav>
+      <div className={s.mobileStepsBar}>
+        <nav ref={stepsRef} className={s.mobileSteps} aria-label="Шаги визита">
+          {STEPS.map((k, i) => (
+            <button key={k} type="button" data-step={k} className={s.mobileStep} aria-current={step === k ? 'step' : undefined} onClick={() => setStep(k)}>
+              {step === k && <motion.span layoutId="mobile-step" className={s.mobileThumb} transition={spring} />}
+              <span>
+                {String(i + 1).padStart(2, '0')} {ui.visit.steps[i]}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
 
       <ol className={s.steps} aria-label="Шаги визита">
         {STEPS.map((k, i) => (
@@ -197,7 +202,6 @@ export function VisitWorkspace(props: Props) {
               {step === k && <motion.span layoutId="visit-step" className={s.stepThumb} transition={spring} />}
               <span className={s.stepNum}>{String(i + 1).padStart(2, '0')}</span>
               <span className={s.stepLabel}>{ui.visit.steps[i]}</span>
-              <span className={`${s.stepState} ${done[k] ? s.stepDone : ''}`} aria-label={done[k] ? 'заполнено' : 'не заполнено'} />
             </button>
           </li>
         ))}
@@ -211,119 +215,130 @@ export function VisitWorkspace(props: Props) {
       </ol>
 
       <section className={s.content} aria-label={ui.visit.steps[index]}>
-        <div className={s.stepHead}>
-          <Heading as="h2" level="title2">
-            {ui.visit.steps[index]}
-          </Heading>
-          <StepCounter current={index + 1} total={STEPS.length} />
-        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={step}
+            className={s.stepBody}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <div className={s.stepHead}>
+              <Heading as="h2" level="title2">
+                {ui.visit.steps[index]}
+              </Heading>
+              <StepCounter current={index + 1} total={STEPS.length} />
+            </div>
 
-        {step === 'map' &&
-          (map && brushMapContent ? (
-            <BrushMapEditor
-              key={map.id}
-              documentId={map.id}
-              rev={map.rev}
-              initial={brushMapContent}
-              catalog={props.catalog}
-              hotkeyOrder={staff.prefs.sizeHotkeys}
-              initialMode={staff.prefs.mapMode}
-              previousBoib={props.previousBoib}
-            />
-          ) : (
-            <Card className={s.cta}>
-              <p className={s.ctaText}>Карта межзубных ёршиков: формула зубов, размеры для каждого промежутка, кровоточивость и индекс BOIB.</p>
-              <Button disabled={!canWrite || busy} onClick={() => createDoc('BRUSH_MAP')}>
-                Начать карту ёршиков
-              </Button>
-            </Card>
-          ))}
+            {step === 'map' &&
+              (map && brushMapContent ? (
+                <BrushMapEditor
+                  key={map.id}
+                  documentId={map.id}
+                  rev={map.rev}
+                  initial={brushMapContent}
+                  catalog={props.catalog}
+                  hotkeyOrder={staff.prefs.sizeHotkeys}
+                  initialMode={staff.prefs.mapMode}
+                  previousBoib={props.previousBoib}
+                />
+              ) : (
+                <Card className={s.cta}>
+                  <p className={s.ctaText}>Карта межзубных ёршиков: формула зубов, размеры для каждого промежутка, кровоточивость и индекс BOIB.</p>
+                  <Button disabled={!canWrite || busy} onClick={() => createDoc('BRUSH_MAP')}>
+                    Начать карту ёршиков
+                  </Button>
+                </Card>
+              ))}
 
-        {step === 'psr' &&
-          (psr ? (
-            <PsrEditor
-              key={psr.id}
-              documentId={psr.id}
-              rev={psr.rev}
-              initial={psrSchema.parse(psr.content)}
-              texts={props.psrTexts}
-              furcationTeeth={props.furcationTeeth}
-              onRemove={() => removeDoc(psr.id)}
-            />
-          ) : (
-            <Card className={s.cta}>
-              <p className={s.ctaText}>Скрининг пародонта PSR: шесть секстантов, коды 0–4, отметка «*». Итог по наибольшему коду.</p>
-              <Button disabled={!canWrite || busy} onClick={() => createDoc('PSR')}>
-                Начать скрининг
-              </Button>
-            </Card>
-          ))}
+            {step === 'psr' &&
+              (psr ? (
+                <PsrEditor
+                  key={psr.id}
+                  documentId={psr.id}
+                  rev={psr.rev}
+                  initial={psrSchema.parse(psr.content)}
+                  texts={props.psrTexts}
+                  furcationTeeth={props.furcationTeeth}
+                  onRemove={() => removeDoc(psr.id)}
+                />
+              ) : (
+                <Card className={s.cta}>
+                  <p className={s.ctaText}>Скрининг пародонта PSR: шесть секстантов, коды 0–4, отметка «*». Итог по наибольшему коду.</p>
+                  <Button disabled={!canWrite || busy} onClick={() => createDoc('PSR')}>
+                    Начать скрининг
+                  </Button>
+                </Card>
+              ))}
 
-        {step === 'plan' &&
-          (plan ? (
-            <TemplateDocEditor
-              key={plan.id}
-              documentId={plan.id}
-              rev={plan.rev}
-              initial={filledDocumentSchema.parse(plan.content)}
-              catalog={props.catalog}
-              brushMap={brushMapContent}
-              canSaveTemplate={staff.permissions.includes('template.personal')}
-              onRemove={() => removeDoc(plan.id)}
-            />
-          ) : (
-            <TemplatePicker
-              templates={props.templates.filter((t) => t.kind === 'HYGIENE_PLAN')}
-              disabled={!canWrite || busy}
-              onPick={(id) => createDoc('HYGIENE_PLAN', id)}
-            />
-          ))}
+            {step === 'plan' &&
+              (plan ? (
+                <TemplateDocEditor
+                  key={plan.id}
+                  documentId={plan.id}
+                  rev={plan.rev}
+                  initial={filledDocumentSchema.parse(plan.content)}
+                  catalog={props.catalog}
+                  brushMap={brushMapContent}
+                  canSaveTemplate={staff.permissions.includes('template.personal')}
+                  onRemove={() => removeDoc(plan.id)}
+                />
+              ) : (
+                <TemplatePicker
+                  templates={props.templates.filter((t) => t.kind === 'HYGIENE_PLAN')}
+                  disabled={!canWrite || busy}
+                  onPick={(id) => createDoc('HYGIENE_PLAN', id)}
+                />
+              ))}
 
-        {step === 'aftercare' && (
-          <>
-            {aftercare.map((d) => (
-              <TemplateDocEditor
-                key={d.id}
-                documentId={d.id}
-                rev={d.rev}
-                initial={filledDocumentSchema.parse(d.content)}
-                catalog={props.catalog}
-                brushMap={brushMapContent}
-                canSaveTemplate={staff.permissions.includes('template.personal')}
-                onRemove={() => removeDoc(d.id)}
+            {step === 'aftercare' && (
+              <>
+                {aftercare.map((d) => (
+                  <TemplateDocEditor
+                    key={d.id}
+                    documentId={d.id}
+                    rev={d.rev}
+                    initial={filledDocumentSchema.parse(d.content)}
+                    catalog={props.catalog}
+                    brushMap={brushMapContent}
+                    canSaveTemplate={staff.permissions.includes('template.personal')}
+                    onRemove={() => removeDoc(d.id)}
+                  />
+                ))}
+                <TemplatePicker
+                  templates={props.templates.filter((t) => t.kind === 'AFTERCARE')}
+                  disabled={!canWrite || busy}
+                  compact={aftercare.length > 0}
+                  onPick={(id) => createDoc('AFTERCARE', id)}
+                />
+              </>
+            )}
+
+            {step === 'issue' && (
+              <IssuePanel
+                visitId={visit.id}
+                blockers={props.blockers}
+                share={props.share}
+                lastIssue={props.lastIssue}
+                canIssue={staff.permissions.includes('issue.create')}
+                canManageLink={staff.permissions.includes('link.manage')}
+                hasDocuments={documents.length > 0}
               />
-            ))}
-            <TemplatePicker
-              templates={props.templates.filter((t) => t.kind === 'AFTERCARE')}
-              disabled={!canWrite || busy}
-              compact={aftercare.length > 0}
-              onPick={(id) => createDoc('AFTERCARE', id)}
-            />
-          </>
-        )}
+            )}
 
-        {step === 'issue' && (
-          <IssuePanel
-            visitId={visit.id}
-            blockers={props.blockers}
-            share={props.share}
-            lastIssue={props.lastIssue}
-            canIssue={staff.permissions.includes('issue.create')}
-            canManageLink={staff.permissions.includes('link.manage')}
-            hasDocuments={documents.length > 0}
-          />
-        )}
-
-        {next && (
-          <div className={s.footer}>
-            <Button variant="ghost" onClick={() => setStep(next)}>
-              {ui.visit.skip}
-            </Button>
-            <Button variant="secondary" trailing={<IconArrowRight size={18} />} onClick={() => setStep(next)}>
-              {ui.visit.steps[index + 1]}
-            </Button>
-          </div>
-        )}
+            {next && (
+              <div className={s.footer}>
+                <Button variant="ghost" onClick={() => setStep(next)}>
+                  {ui.visit.skip}
+                </Button>
+                <Button variant="secondary" trailing={<IconArrowRight size={18} />} onClick={() => setStep(next)}>
+                  {ui.visit.steps[index + 1]}
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       <ConfirmDialog

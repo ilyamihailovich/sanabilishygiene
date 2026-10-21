@@ -148,7 +148,7 @@ export function TemplateDocEditor({ documentId, rev, initial, catalog, brushMap,
         <section key={section.id} className={`${s.section} ${section.enabled ? '' : s.sectionOff}`}>
           <div className={s.sectionHead}>
             <span className={s.sectionTitle}>{section.title}</span>
-            <div className={s.docActions}>
+            <div className={s.sectionActions}>
               <CounterChip>{`${section.items.filter((i) => i.enabled).length} из ${section.items.length}`}</CounterChip>
               <Switch label={<span className="visually-hidden">Раздел «{section.title}»</span>} checked={section.enabled} onCheckedChange={(v) => updateSection(section.id, (x) => ({ ...x, enabled: v }))} />
             </div>
@@ -189,7 +189,7 @@ export function TemplateDocEditor({ documentId, rev, initial, catalog, brushMap,
                         {problem && item.enabled && <span className={s.lint}>{problem}</span>}
                       </div>
                       {item.type !== 'brushes' && (
-                        <Button variant="ghost" size="sm" onClick={() => setEditing(isEditing ? null : item.id)}>
+                        <Button variant="ghost" size="sm" className={s.itemEdit} onClick={() => setEditing(isEditing ? null : item.id)}>
                           {isEditing ? 'Готово' : ui.common.edit}
                         </Button>
                       )}

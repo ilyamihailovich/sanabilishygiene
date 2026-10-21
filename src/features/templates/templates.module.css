@@ -40,9 +40,18 @@
 }
 
 .sectionTitle {
+  flex: 1;
+  min-width: 0;
   font-size: var(--fs-callout);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-title);
+}
+
+.sectionActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .sectionOff .sectionTitle {
@@ -266,5 +275,18 @@
 @media (max-width: 720px) {
   .fields {
     grid-template-columns: 1fr;
+  }
+  /* Пункт на телефоне: текст на всю ширину, «Изменить» под ним */
+  .item {
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding-inline: var(--space-1);
+  }
+  .itemEdit {
+    grid-column: 2;
+    justify-self: start;
+    margin-left: calc(-1 * var(--space-3));
+  }
+  .docTitle {
+    flex: 1 1 100%;
   }
 }

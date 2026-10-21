@@ -10,7 +10,7 @@ import { CounterChip } from '@/ui/Chip';
 import { GlassPanel, glassClass } from '@/ui/Glass';
 import { Heading } from '@/ui/Heading';
 import { IconDownload, IconShare } from '@/ui/icons';
-import { Logo, Mark } from '@/ui/Logo';
+import { Logo } from '@/ui/Logo';
 import { Segmented } from '@/ui/Segmented';
 import { ToggleGroup } from '@/ui/ToggleGroup';
 import { cx } from '@/ui/cx';
@@ -87,8 +87,7 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
       <header className={cx(s.header, scrolled && glassClass, scrolled && s.headerScrolled)}>
         <div className={s.headerInner}>
           <span className={s.brand}>
-            <Mark size={30} />
-            <Logo height={12} />
+            <Logo height={14} />
           </span>
         </div>
       </header>

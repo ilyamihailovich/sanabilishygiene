@@ -4,6 +4,7 @@
 */
 import 'dotenv/config';
 import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, type Prisma } from '../src/generated/prisma/client';
 import { hashPassword } from '../src/server/auth/password';
@@ -95,12 +96,19 @@ async function main() {
 
 /**
  * Демо-режим для локального просмотра (SEED_DEMO=true). Не запускать на рабочем сервере:
- * демо-сотрудники, условный каталог «Демо», демо-тексты PSR и шагов, демо-пациент с заполненной картой.
- * Все демо-данные подписаны «Демо» и не являются данными клиники.
+ * демо-сотрудники, образец каталога, текстов PSR и шагов из prisma/sample-content.json, пациент с заполненной картой.
+ * Образец не утверждён клиникой и не является её данными.
  */
 async function seedDemo() {
+  const sample = JSON.parse(readFileSync(new URL('./sample-content.json', import.meta.url), 'utf8')) as {
+    doctor: { displayName: string; title: string };
+    patient: { cardNumber: string; displayName: string };
+    brushes: { brand: string; line: string; sizes: Array<[string, number, string]> };
+    psr: Record<string, { staff: string; patient: string }>;
+    brushSteps: string[];
+  };
   const demo = [
-    { email: 'doctor@sanabilis.local', displayName: 'Анна Сергеевна Иванова', title: 'врач-пародонтолог', role: 'DOCTOR' as const },
+    { email: 'doctor@sanabilis.local', ...sample.doctor, role: 'DOCTOR' as const },
     { email: 'hygienist@sanabilis.local', displayName: 'Мария Петрова', title: 'гигиенист стоматологический', role: 'HYGIENIST' as const },
     { email: 'assistant@sanabilis.local', displayName: 'Ольга Смирнова', title: 'ассистент', role: 'ASSISTANT' as const },
   ];
@@ -110,37 +118,32 @@ async function seedDemo() {
   }
   const doctor = await db.user.findUniqueOrThrow({ where: { email: 'doctor@sanabilis.local' } });
 
-  const brand = await db.brushBrand.upsert({ where: { name: 'Демо' }, create: { name: 'Демо' }, update: {} });
-  const sizes: Array<[string, number, string]> = [
-    ['Демо 1', 0.6, '#f2c94c'],
-    ['Демо 2', 0.8, '#e86a3a'],
-    ['Демо 3', 1.0, '#3f8f5a'],
-    ['Демо 4', 1.3, '#2f6fb5'],
-  ];
-  for (const [i, [label, passageMm, colorHex]] of sizes.entries()) {
+  const { line } = sample.brushes;
+  const brand = await db.brushBrand.upsert({ where: { name: sample.brushes.brand }, create: { name: sample.brushes.brand }, update: {} });
+  for (const [i, [label, passageMm, colorHex]] of sample.brushes.sizes.entries()) {
     await db.brushSize.upsert({
-      where: { brandId_line_label: { brandId: brand.id, line: 'для просмотра', label } },
-      create: { brandId: brand.id, line: 'для просмотра', label, passageMm, colorHex, verified: true, sortOrder: i + 1 },
+      where: { brandId_line_label: { brandId: brand.id, line, label } },
+      create: { brandId: brand.id, line, label, passageMm, colorHex, verified: true, sortOrder: i + 1 },
       update: {},
     });
   }
 
-  for (const code of ['0', '1', '2', '3', '4', '*']) {
+  for (const [code, text] of Object.entries(sample.psr)) {
     const row = await db.psrText.findUnique({ where: { code } });
     if (row && !row.patientText.startsWith('TODO')) continue;
     await db.psrText.update({
       where: { code },
-      data: { patientText: `Демо-текст для кода ${code}. Его заменит текст клиники.`, approved: true, approvedById: doctor.id },
+      data: { staffText: text.staff, patientText: text.patient, approved: true, approvedById: doctor.id },
     });
   }
 
   if (!(await db.setting.findUnique({ where: { key: 'brushSteps' } }))) {
     await db.setting.create({
-      data: { key: 'brushSteps', value: ['Демо-шаг 1. Текст клиники.', 'Демо-шаг 2. Текст клиники.', 'Демо-шаг 3. Текст клиники.', 'Демо-шаг 4. Текст клиники.'] },
+      data: { key: 'brushSteps', value: sample.brushSteps },
     });
   }
 
-  if (!(await db.patient.findUnique({ where: { cardNumber: 'DEMO-001' } }))) {
+  if (!(await db.patient.findUnique({ where: { cardNumber: sample.patient.cardNumber } }))) {
     const ids = (await db.brushSize.findMany({ where: { brandId: brand.id }, orderBy: { sortOrder: 'asc' } })).map((x) => x.id);
     const pick = (a: number, b: number) => {
       const i = Math.min(a % 10, b % 10);
@@ -165,7 +168,7 @@ async function seedDemo() {
         { state: t % 10 === 8 ? 'MISSING' : t === 36 ? 'IMPLANT' : 'PRESENT', furcation: t === 46 },
       ]),
     );
-    const patient = await db.patient.create({ data: { cardNumber: 'DEMO-001', displayName: 'Анна', createdById: doctor.id } });
+    const patient = await db.patient.create({ data: { ...sample.patient, createdById: doctor.id } });
     const visit = await db.visit.create({
       data: { patientId: patient.id, date: new Date(new Date().toISOString().slice(0, 10)), clinicianId: doctor.id, createdById: doctor.id, nextVisitMonths: 6 },
     });
@@ -184,7 +187,7 @@ async function seedDemo() {
       },
     });
   }
-  console.log('Демо-режим: сотрудники с паролем demo-password, каталог «Демо», пациент DEMO-001');
+  console.log(`Демо-режим: сотрудники с паролем demo-password, образец каталога, пациент ${sample.patient.cardNumber}`);
 }
 
 main()

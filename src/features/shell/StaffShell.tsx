@@ -9,7 +9,7 @@ import { api } from '@/ui/api';
 import { cx } from '@/ui/cx';
 import { glassClass } from '@/ui/Glass';
 import { IconDoc, IconHome, IconLogout, IconSettings, IconUser } from '@/ui/icons';
-import { Logo, Mark } from '@/ui/Logo';
+import { Logo } from '@/ui/Logo';
 import { spring } from '@/ui/motion';
 import { Popover } from '@/ui/Popover';
 import { ToastProvider } from '@/ui/Toast';
@@ -64,8 +64,7 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
         <header className={cx(s.header, scrolled && glassClass, scrolled && s.scrolled)}>
           <div className={s.headerInner}>
             <Link href="/" className={s.brand} aria-label={ui.nav.home}>
-              <Mark size={30} />
-              <Logo height={12} />
+              <Logo height={14} />
             </Link>
             <nav className={s.nav} aria-label="Разделы">
               {items.map((item) => {

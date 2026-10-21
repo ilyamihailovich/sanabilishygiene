@@ -80,24 +80,21 @@ export function BoibCard({ boib, previous }: { boib: BoibResult; previous: (Boib
       {boib.pct === null ? (
         <p className={s.muted}>{ui.map.boibNone}</p>
       ) : (
-        <div className={s.index}>
-          <span className={s.indexValue}>{boib.pct} %</span>
-          <span className={s.indexMeta}>
-            {boib.bleeding} из {boib.examined}
-            {previous && (
-              <>
-                <br />
-                {ui.map.previous} {formatDate(previous.date)}: {previous.pct} %{trend ? `, ${trend}` : ''}
-              </>
-            )}
-            {incomparable && (
-              <>
-                <br />
-                {ui.map.incomparable}
-              </>
-            )}
-          </span>
-        </div>
+        <>
+          <div className={s.index}>
+            <span className={s.indexValue}>{boib.pct} %</span>
+            <span className={s.indexMeta}>
+              {boib.bleeding} из {boib.examined}
+            </span>
+          </div>
+          {(previous || incomparable) && (
+            <p className={s.indexNote}>
+              {previous && `${ui.map.previous} ${formatDate(previous.date)}: ${previous.pct} %${trend ? `, ${trend}` : ''}`}
+              {previous && incomparable && <br />}
+              {incomparable && ui.map.incomparable}
+            </p>
+          )}
+        </>
       )}
     </Card>
   );
