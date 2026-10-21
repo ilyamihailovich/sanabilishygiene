@@ -25,7 +25,7 @@ export function Showcase() {
     <div className={s.page}>
       <header className={cx(s.header, scrolled && glassClass, scrolled && s.headerScrolled)}>
         <div className={s.headerInner}>
-          <Logo />
+          <Logo height={13} />
           <span className={s.headerMeta}>Витрина компонентов · этап 1</span>
         </div>
       </header>

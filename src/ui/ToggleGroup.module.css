@@ -1,0 +1,70 @@
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.item:hover::before {
+  opacity: 1;
+}
+
+.item:active {
+  transform: scale(0.94);
+}
+
+.content {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.thumb {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.thumbAccent {
+  background: var(--accent);
+}
+
+.thumbRing {
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.selectedAccent {
+  color: var(--color-text-on-accent);
+}
+
+.selectedAccent::before,
+.selectedRing::before {
+  opacity: 0 !important;
+}

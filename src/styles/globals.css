@@ -22,6 +22,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* У Relative Pro пока одно начертание (Book): без синтетического полужирного */
+  font-synthesis: none;
 }
 
 h1,

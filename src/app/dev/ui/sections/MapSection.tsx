@@ -1,10 +1,12 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useRef, useState } from 'react';
+import { ToggleGroup } from '@/ui/ToggleGroup';
+import { spring } from '@/ui/motion';
 import { InterspaceForm, type InterspaceValue } from '@/features/brush-map/input/InterspaceForm';
 import { ui } from '@/content/ui.ru';
 import { BrushMarker } from '@/ui/brush/BrushMarker';
-import { BrushSwatch } from '@/ui/brush/BrushSwatch';
 import { countLabel } from '@/content/plural';
 import { Button } from '@/ui/Button';
 import { Card, CardHeader } from '@/ui/Card';
@@ -140,7 +142,7 @@ export function MapSection() {
                 ]}
               />
             </div>
-            <Notice glass>{ui.catalog.notVerified}</Notice>
+            <Notice glass short={ui.catalog.notVerifiedShort}>{ui.catalog.notVerified}</Notice>
           </div>
 
           <div className={s.arc}>
@@ -168,9 +170,11 @@ export function MapSection() {
                   style={{ left: `${pos?.left ?? 0}%`, top: `${pos?.top ?? 0}%` }}
                   aria-pressed={selected === e.key}
                   aria-label={describe(e)}
-                  title={describe(e)}
                   onClick={() => onMarker(e.key)}
                 >
+                  {selected === e.key && (
+                    <motion.span layoutId="marker-selection" className={s.selection} transition={spring} />
+                  )}
                   <BrushMarker
                     title={describe(e)}
                     color={size?.color ?? null}
@@ -178,7 +182,7 @@ export function MapSection() {
                     bleeding={e.bleeding === true}
                     pain={e.pain}
                     openContact={e.openContact}
-                    selected={selected === e.key}
+                    selected={false}
                     size={touch ? 44 : 40}
                   />
                   <span className={s.markerLabel}>{e.label}</span>
@@ -194,22 +198,24 @@ export function MapSection() {
             {!touch && <IconButton label="Клавиши (?)" icon={<IconKeyboard size={20} />} variant="ghost" size={40} />}
           </GlassPanel>
 
-          <div className={s.bottom}>
+          <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={mode}
+            className={s.bottom}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.2 }}
+          >
             {mode === 'three' ? (
               <>
                 <GlassPanel aria-label={ui.views.label}>
-                  {views.map((v) => (
-                    <IconButton
-                      key={v.key}
-                      label={ui.views[v.key]}
-                      icon={v.icon}
-                      variant="ghost"
-                      size={44}
-                      active={view === v.key}
-                      aria-pressed={view === v.key}
-                      onClick={() => setView(v.key)}
-                    />
-                  ))}
+                  <ToggleGroup
+                    label={ui.views.label}
+                    value={view}
+                    onChange={(v) => v && setView(v)}
+                    options={views.map((v) => ({ value: v.key, label: ui.views[v.key], content: v.icon }))}
+                  />
                   {!touch && (
                     <IconButton
                       label={ui.views.reset}
@@ -226,22 +232,26 @@ export function MapSection() {
             ) : (
               <>
                 <GlassPanel aria-label="Кисть: размер для быстрого ввода">
-                  {demoSizes.map((size) => (
-                    <BrushSwatch
-                      key={size.id}
-                      color={size.color}
-                      label={`Кисть: ${size.label}`}
-                      pressed={brush === size.id}
-                      onClick={() => setBrush((b) => (b === size.id ? null : size.id))}
-                    />
-                  ))}
+                  <ToggleGroup
+                    label="Кисть"
+                    thumb="ring"
+                    deselectable
+                    value={brush}
+                    onChange={setBrush}
+                    options={demoSizes.map((size) => ({
+                      value: size.id,
+                      label: `Кисть: ${size.label}`,
+                      content: <span className={s.swatch} style={{ background: size.color }} />,
+                    }))}
+                  />
                 </GlassPanel>
                 <span className={s.viewCaption} aria-live="polite">
                   {brush ? `Кисть: ${sizeById.get(brush)?.label}. Касания проставляют размер` : 'Выберите размер как кисть'}
                 </span>
               </>
             )}
-          </div>
+          </motion.div>
+          </AnimatePresence>
         </div>
 
         <aside className={s.aside}>

@@ -46,6 +46,7 @@ export const ui = {
   },
   catalog: {
     notVerified: 'Каталог не проверен',
+    notVerifiedShort: 'Не проверен',
   },
   fallback: {
     schemeOpened: 'Открыта схема: 3D на этом устройстве работает медленно',

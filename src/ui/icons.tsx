@@ -165,46 +165,47 @@ export const IconUser = (p: IconProps) => (
   </Svg>
 );
 
-/* Иконки ракурсов карты: схематичные дуги челюстей */
+/* Иконки ракурсов: дуга зубного ряда (вид сверху), выделенный участок показывает, куда смотрит камера.
+   Правая сторона пациента на экране слева. */
+
+const ARCH = 'M5 19C5 10.5 8 5 12 5s7 5.5 7 14';
 
 export const IconViewOverview = (p: IconProps) => (
   <Svg {...p}>
-    <path d="M5 10.5c0-3.6 3.1-6 7-6s7 2.4 7 6" />
-    <path d="M5 13.5c0 3.6 3.1 6 7 6s7-2.4 7-6" />
+    <path d="M5 11c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5" />
+    <path d="M5 13c0 3.9 3.1 6.5 7 6.5s7-2.6 7-6.5" />
   </Svg>
 );
 
 export const IconViewUpper = (p: IconProps) => (
   <Svg {...p}>
-    <path d="M5.5 17c0-6.5 2.9-11 6.5-11s6.5 4.5 6.5 11" strokeWidth={2.25} />
+    <path d={ARCH} strokeWidth={2.25} />
   </Svg>
 );
 
 export const IconViewLower = (p: IconProps) => (
   <Svg {...p}>
-    <path d="M5.5 7c0 6.5 2.9 11 6.5 11s6.5-4.5 6.5-11" strokeWidth={2.25} />
-  </Svg>
-);
-
-export const IconViewFront = (p: IconProps) => (
-  <Svg {...p}>
-    <path d="M4 11.2h16M4 12.8h16" strokeOpacity={0.5} />
-    <path d="M7 11V8.5M10 11V7.5M14 11V7.5M17 11V8.5M7 13v2.5M10 13v3M14 13v3M17 13v2.5" />
+    <path d="M5 5c0 8.5 3 14 7 14s7-5.5 7-14" strokeWidth={2.25} />
   </Svg>
 );
 
 export const IconViewRight = (p: IconProps) => (
   <Svg {...p}>
-    <path d="M4 11.2h16M4 12.8h16" strokeOpacity={0.5} />
-    <path d="M5 11V8M9 11V7.5M13 11V8M5 13v3M9 13v3.5M13 13v3" />
-    <path d="M17 9.5 19.5 12 17 14.5" />
+    <path d={ARCH} strokeOpacity={0.35} />
+    <path d="M5 19C5 14 6 10.5 7.6 8.2" strokeWidth={3} />
+  </Svg>
+);
+
+export const IconViewFront = (p: IconProps) => (
+  <Svg {...p}>
+    <path d={ARCH} strokeOpacity={0.35} />
+    <path d="M8.6 6.6C9.6 5.6 10.7 5 12 5s2.4.6 3.4 1.6" strokeWidth={3} />
   </Svg>
 );
 
 export const IconViewLeft = (p: IconProps) => (
   <Svg {...p}>
-    <path d="M4 11.2h16M4 12.8h16" strokeOpacity={0.5} />
-    <path d="M19 11V8M15 11V7.5M11 11V8M19 13v3M15 13v3.5M11 13v3" />
-    <path d="M7 9.5 4.5 12 7 14.5" />
+    <path d={ARCH} strokeOpacity={0.35} />
+    <path d="M19 19c0-5-1-8.5-2.6-10.8" strokeWidth={3} />
   </Svg>
 );

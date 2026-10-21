@@ -5,11 +5,16 @@ import { IconAlert } from './icons';
 import s from './Notice.module.css';
 
 /** Плашка-предупреждение в рабочем интерфейсе: «Каталог не проверен». */
-export function Notice({ children, glass = false }: { children: ReactNode; glass?: boolean }) {
+export function Notice({ children, short, glass = false }: { children: ReactNode; short?: ReactNode; glass?: boolean }) {
   return (
-    <span role="status" className={cx(s.notice, glass && s.glass)}>
+    <span role="status" className={cx(s.notice, glass && s.glass, short !== undefined && s.adaptive)}>
       <IconAlert size={18} />
-      {children}
+      <span className={s.full}>{children}</span>
+      {short !== undefined && (
+        <span className={s.short} aria-hidden="true">
+          {short}
+        </span>
+      )}
     </span>
   );
 }

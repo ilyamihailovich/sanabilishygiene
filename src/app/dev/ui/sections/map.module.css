@@ -21,6 +21,28 @@
   z-index: -1;
 }
 
+.selection {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--marker-ring-selected);
+  pointer-events: none;
+}
+
+.swatch {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 2.5px rgba(255, 255, 255, 0.6);
+}
+
 .topBar {
   position: absolute;
   top: var(--space-4);
@@ -235,7 +257,7 @@
     inset: 120px 10% 170px;
   }
   .topBar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
   .side {
     top: 72px;
