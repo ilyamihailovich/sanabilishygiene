@@ -1,0 +1,150 @@
+/*
+  Все дизайн-токены приложения. Компоненты используют только семантические токены
+  (вторая секция). Тёмная тема и фирменные цвета SANABILIS задаются переопределением
+  семантических токенов без правок компонентов.
+*/
+
+:root {
+  /* Палитра: нейтральная временная схема до получения фирменных HEX */
+  --palette-gray-0: #ffffff;
+  --palette-gray-50: #f5f5f7;
+  --palette-gray-100: #ececef;
+  --palette-gray-200: #e3e3e7;
+  --palette-gray-300: #d2d2d7;
+  --palette-gray-500: #86868b;
+  --palette-gray-600: #6e6e73;
+  --palette-gray-800: #3a3a3c;
+  --palette-gray-900: #1d1d1f;
+  --palette-amber-50: #fbf4e6;
+  --palette-amber-800: #7a4b00;
+
+  /* Поверхности */
+  --color-bg: var(--palette-gray-50);
+  --color-surface: var(--palette-gray-0);
+  --color-surface-muted: var(--palette-gray-50);
+  --color-surface-sunken: var(--palette-gray-100);
+  --color-surface-pressed: var(--palette-gray-200);
+
+  /* Текст. text-secondary проходит AA (4.5:1) на белом и на #F5F5F7.
+     text-tertiary (#86868B) допустим только для крупного текста от 24 px: AA для крупного 3:1. */
+  --color-text: var(--palette-gray-900);
+  --color-text-secondary: var(--palette-gray-600);
+  --color-text-tertiary: var(--palette-gray-500);
+  --color-text-on-accent: var(--palette-gray-0);
+
+  --color-separator: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
+
+  /* Акцент: временный графит */
+  --accent: var(--palette-gray-800);
+  --accent-hover: #2c2c2e;
+  --accent-pressed: var(--palette-gray-900);
+
+  /* Фокус с клавиатуры: двойное кольцо читается на любом фоне */
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-text);
+
+  /* Сигнальные состояния (сдержанные, без ярких цветов) */
+  --color-notice-bg: var(--palette-amber-50);
+  --color-notice-text: var(--palette-amber-800);
+  --color-signal: var(--palette-gray-900);
+
+  /* Маркеры промежутков */
+  --marker-empty-stroke: #8e8e93;
+  --marker-outline: rgba(0, 0, 0, 0.55);
+  --marker-ring-selected: var(--palette-gray-900);
+
+  /* 3D-сцена */
+  --scene-bg-center: #f2f2f4;
+  --scene-bg-edge: #e4e4e8;
+
+  /* Стекло: только для плавающих элементов */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-fallback: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-hairline: rgba(0, 0, 0, 0.06);
+  --glass-blur: 24px;
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.08);
+
+  /* Тени непрозрачных элементов */
+  --shadow-card: none;
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.05);
+
+  /* Скругления */
+  --radius-card: 28px;
+  --radius-card-sm: 24px;
+  --radius-inner: 18px;
+  --radius-popover: 22px;
+  --radius-sheet: 28px;
+  --radius-field: 14px;
+  --radius-capsule: 999px;
+
+  /* Отступы, шаг 4 px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Размеры элементов управления */
+  --hit-min: 44px;
+  --control-sm: 36px;
+  --control-md: 44px;
+  --control-lg: 52px;
+
+  /* Типографика */
+  --font-sans: 'Relative Pro', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+    system-ui, sans-serif;
+  --fs-caption: 15px;
+  --fs-body: 17px;
+  --fs-callout: 20px;
+  --fs-title3: 24px;
+  --fs-title2: 32px;
+  --fs-title1: 44px;
+  --fs-display: 56px;
+  --lh-tight: 1.08;
+  --lh-snug: 1.25;
+  --lh-body: 1.45;
+  --tracking-display: -0.025em;
+  --tracking-title: -0.02em;
+  --tracking-body: -0.005em;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* Движение */
+  --dur-fast: 200ms;
+  --dur: 260ms;
+  --dur-slow: 350ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --press-scale: 0.98;
+
+  /* Сетка */
+  --content-max: 1280px;
+  --gutter: 32px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --radius-card: 24px;
+    --gutter: 16px;
+    --fs-title1: 34px;
+    --fs-display: 40px;
+    --fs-title2: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+    --press-scale: 1;
+  }
+}

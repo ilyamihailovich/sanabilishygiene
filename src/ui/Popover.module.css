@@ -1,0 +1,18 @@
+.popover {
+  position: fixed;
+  z-index: 50;
+  width: min(384px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border-radius: var(--radius-popover);
+  padding: var(--space-5);
+  transform-origin: var(--origin, top center);
+}
+
+.arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: inherit;
+  transform: rotate(45deg);
+}

@@ -1,0 +1,34 @@
+.glass {
+  background: var(--glass-bg-fallback);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 0 0 1px var(--glass-hairline),
+    var(--glass-shadow);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  }
+}
+
+/* Деградация на слабых устройствах: класс ставит монитор производительности */
+:global(.reduce-glass) .glass {
+  background: var(--glass-bg-fallback);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.panel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px;
+  border-radius: var(--radius-capsule);
+}
+
+.vertical {
+  flex-direction: column;
+}

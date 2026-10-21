@@ -1,0 +1,48 @@
+.heading {
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-title);
+  line-height: var(--lh-tight);
+  text-wrap: balance;
+}
+
+.display {
+  font-size: var(--fs-display);
+  letter-spacing: var(--tracking-display);
+}
+
+.title1 {
+  font-size: var(--fs-title1);
+  letter-spacing: var(--tracking-display);
+}
+
+.title2 {
+  font-size: var(--fs-title2);
+}
+
+.title3 {
+  font-size: var(--fs-title3);
+  line-height: var(--lh-snug);
+}
+
+/* Продолжение заголовка: серый для крупного текста (AA для крупного кегля 3:1) */
+.rest {
+  color: var(--color-text-tertiary);
+}
+
+.title3 .rest {
+  color: var(--color-text-secondary);
+}
+
+.step {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.stepCurrent {
+  color: var(--color-text);
+}
