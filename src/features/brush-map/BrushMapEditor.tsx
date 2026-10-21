@@ -393,7 +393,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
                 onHover={(key, target) => setHover(key && target ? { key, target } : null)}
                 onFallback={(reason) => {
                   setModeState('scheme');
-                  toast(reason === 'webgl' ? ui.fallback.noWebgl : ui.fallback.schemeOpened);
+                  toast(reason === 'webgl' ? ui.fallback.noWebgl : reason === 'error' ? ui.fallback.modelError : ui.fallback.schemeOpened);
                 }}
               />
             </motion.div>

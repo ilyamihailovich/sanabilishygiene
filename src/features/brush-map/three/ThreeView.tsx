@@ -2,14 +2,14 @@
 
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, PerformanceMonitor, useGLTF } from '@react-three/drei';
 import { Canvas, createPortal, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Fragment, Suspense, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
+import { Component, Fragment, Suspense, use, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { MapElement } from '@/domain/brushMap';
 import { SvgMarker } from '../scheme/SvgMarker';
 import type { ViewKey } from '../useMapKeyboard';
 import { createMaterials, setFade, type JawMaterials, type QualityTier } from './materials';
-import { MODEL_URL, OPEN_ANGLE, anchorFor, indexNodes, type JawNodes } from './model';
+import { INLINE_MODEL, MODEL_URL, OPEN_ANGLE, inlineModel, anchorFor, indexNodes, type JawNodes } from './model';
 import { webgl2Available, type ThreeViewProps } from './types';
 import s from './three.module.css';
 
@@ -82,12 +82,29 @@ export function ThreeView(props: ThreeViewProps) {
           />
         )}
         <Lights tier={tier} />
-        <Suspense fallback={null}>
-          <Scene {...props} tier={tier} skip={skip} />
-        </Suspense>
+        <SceneBoundary onError={() => onFallback?.('error')}>
+          <Suspense fallback={null}>
+            <Scene {...props} tier={tier} skip={skip} />
+          </Suspense>
+        </SceneBoundary>
       </Canvas>
     </div>
   );
+}
+
+/** Ошибка загрузки или разбора модели переключает на схему вместо пустого экрана. */
+class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override componentDidCatch(error: unknown) {
+    console.error('3D model failed', error);
+    this.props.onError();
+  }
+  override render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }
 
 function Lights({ tier }: { tier: QualityTier }) {
@@ -131,7 +148,8 @@ function Scene({
   onTooth,
   onHover,
 }: SceneProps) {
-  const gltf = useGLTF(MODEL_URL, false, true);
+  // Источник модели постоянен на всё время работы страницы, порядок хуков не меняется
+  const gltf = INLINE_MODEL ? use(inlineModel(INLINE_MODEL)) : useGLTF(MODEL_URL, false, true);
   const nodes = useMemo(() => indexNodes(gltf.scene), [gltf.scene]);
   const upperMats = useMemo(() => createMaterials(tier), [tier]);
   const lowerMats = useMemo(() => createMaterials(tier), [tier]);
@@ -499,4 +517,4 @@ function CaptureSignal({ view }: { view: ViewKey }) {
   return null;
 }
 
-useGLTF.preload(MODEL_URL, false, true);
+if (!INLINE_MODEL) useGLTF.preload(MODEL_URL, false, true);

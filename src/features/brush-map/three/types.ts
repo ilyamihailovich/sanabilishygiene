@@ -20,7 +20,7 @@ export interface ThreeViewProps {
   onTooth?: (tooth: number, target: Element) => void;
   onHover?: (key: string | null, target: Element | null) => void;
   /** 3D недоступно или слишком медленно: переключиться на схему. */
-  onFallback?: (reason: 'webgl' | 'slow') => void;
+  onFallback?: (reason: 'webgl' | 'slow' | 'error') => void;
 }
 
 export function webgl2Available(): boolean {

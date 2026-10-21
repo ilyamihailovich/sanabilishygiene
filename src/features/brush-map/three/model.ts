@@ -1,14 +1,23 @@
 import * as THREE from 'three';
+import { GLTFLoader, type GLTF } from 'three-stdlib';
 import type { MapElement } from '@/domain/brushMap';
 
 declare global {
   interface Window {
-    /** Переопределение адреса модели (интерактивный прототип без сервера). */
-    __SANABILIS_MODEL_URL?: string;
+    /** Модель, встроенная в страницу как base64 GLB без meshopt (интерактивный прототип без сервера). */
+    __SANABILIS_MODEL_DATA?: string;
   }
 }
 
-export const MODEL_URL = (typeof window !== 'undefined' && window.__SANABILIS_MODEL_URL) || '/models/jaws.glb';
+export const MODEL_URL = '/models/jaws.glb';
+export const INLINE_MODEL = typeof window !== 'undefined' ? window.__SANABILIS_MODEL_DATA : undefined;
+
+let inlinePromise: Promise<GLTF> | null = null;
+/** Разбор встроенной модели без сетевых запросов: в песочнице прототипа fetch запрещён. */
+export function inlineModel(data: string): Promise<GLTF> {
+  inlinePromise ??= new GLTFLoader().parseAsync(Uint8Array.from(atob(data), (c) => c.charCodeAt(0)).buffer, '');
+  return inlinePromise;
+}
 /** Угол раскрытия, рад. Рекомендуемый угол из записки моделлера заменит это значение. */
 export const OPEN_ANGLE = 0.36;
 
