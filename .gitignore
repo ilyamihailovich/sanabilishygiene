@@ -11,3 +11,4 @@ data
 backups
 test-results
 playwright-report
+screenshots/
