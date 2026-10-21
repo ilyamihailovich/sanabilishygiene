@@ -4,7 +4,7 @@ import { prepareIssueFiles } from '@/server/services/renderer';
 
 export const POST = staff<{ id: string }>('issue.create', async ({ params, session }) => {
   const { issue, url } = await issueVisit(params.id, session.user.id);
-  // Рендер ракурсов и PDF готовятся сразу; если сервис рендера недоступен, PDF соберётся при первом запросе
-  await prepareIssueFiles(issue.id).catch((e) => console.error('renderer', e));
+  // Рендер ракурсов и PDF готовятся в фоне; если сервис рендера недоступен, PDF соберётся при первом запросе
+  void prepareIssueFiles(issue.id).catch((e) => console.error('renderer', e));
   return ok({ issueId: issue.id, number: issue.number, url });
 });

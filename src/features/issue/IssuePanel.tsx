@@ -144,7 +144,7 @@ export function IssuePanel({ visitId, blockers, share, lastIssue, canIssue, canM
           <CardHeader title="Показать пациенту" />
           <p className={s.muted}>Полноэкранная 3D-карта для объяснения в кресле, с режимом «Анатомия».</p>
           <div className={s.actions} style={{ justifyContent: 'flex-start', marginTop: 'var(--space-4)' }}>
-            <Link href={`/visits/${visitId}/present`}>
+            <Link href={`/present/${visitId}`}>
               <Button variant="secondary" leading={<IconExpand size={18} />} tabIndex={-1}>
                 Открыть
               </Button>

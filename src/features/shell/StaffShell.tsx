@@ -94,6 +94,11 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
             <Link href="/account" className={s.menuItem} onClick={() => setMenu(false)}>
               <IconUser size={20} /> {ui.nav.account}
             </Link>
+            {staff.permissions.includes('texts.approve') && (
+              <Link href="/admin/texts" className={s.menuItem} onClick={() => setMenu(false)}>
+                <IconDoc size={20} /> Тексты на утверждение
+              </Link>
+            )}
             <button type="button" className={s.menuItem} onClick={logout}>
               <IconLogout size={20} /> {ui.nav.logout}
             </button>

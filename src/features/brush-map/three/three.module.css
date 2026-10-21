@@ -64,3 +64,15 @@
     height: 44px;
   }
 }
+
+/* Рендер для PDF: маркеры и подписи крупнее, чтобы читались на печати */
+.captureWrap {
+  transform: scale(1.8);
+}
+
+.captureWrap .captureLabel {
+  margin-top: -2px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+}

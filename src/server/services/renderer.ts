@@ -10,7 +10,7 @@ export const RENDER_VIEWS = ['upper', 'lower', 'front'] as const;
 export type RenderView = (typeof RENDER_VIEWS)[number];
 
 const internalUrl = (path: string, subject: string) =>
-  `${env().INTERNAL_APP_URL ?? env().APP_URL}${path}?sig=${encodeURIComponent(signInternal(subject, 180))}`;
+  `${env().INTERNAL_APP_URL ?? env().APP_URL}${path}?sig=${encodeURIComponent(signInternal(subject, 600))}`;
 
 async function callRenderer(path: string, body: unknown, timeoutMs: number): Promise<Response> {
   const res = await fetch(`${env().RENDERER_URL}${path}`, {
@@ -31,7 +31,7 @@ async function renderViews(issue: VisitIssue): Promise<void> {
     const res = await callRenderer(
       '/renders',
       { url: internalUrl(`/render/${issue.id}`, `render:${issue.id}`), views: RENDER_VIEWS },
-      60_000,
+      300_000,
     );
     const { images } = (await res.json()) as { images: Partial<Record<RenderView, string>> };
     const saved: Partial<Record<RenderView, string>> = {};
@@ -51,7 +51,10 @@ async function renderViews(issue: VisitIssue): Promise<void> {
 async function renderPdf(issueId: string): Promise<Buffer> {
   let res: Response;
   try {
-    res = await callRenderer('/pdf', { url: internalUrl(`/print/${issueId}`, `print:${issueId}`) }, 90_000);
+    const issue = await db().visitIssue.findUniqueOrThrow({ where: { id: issueId } });
+    const c = (issue.snapshot as unknown as IssueSnapshot).clinic;
+    const footer = `${c.name} · ${c.address} · ${c.phone} · ${c.site}`;
+    res = await callRenderer('/pdf', { url: internalUrl(`/print/${issueId}`, `print:${issueId}`), footer }, 300_000);
   } catch (e) {
     console.error(e);
     throw new HttpError(503, 'renderer_unavailable', 'Сервис PDF недоступен. Повторите через минуту.');
@@ -63,10 +66,23 @@ async function renderPdf(issueId: string): Promise<Buffer> {
   return pdf;
 }
 
+// Одна генерация на выдачу: фоновая подготовка и запрос PDF ждут общий результат
+const inflight = new Map<string, Promise<Buffer>>();
+
+function generate(issueId: string): Promise<Buffer> {
+  const existing = inflight.get(issueId);
+  if (existing) return existing;
+  const job = (async () => {
+    const issue = await db().visitIssue.findUniqueOrThrow({ where: { id: issueId } });
+    if (!issue.renders) await renderViews(issue);
+    return renderPdf(issueId);
+  })().finally(() => inflight.delete(issueId));
+  inflight.set(issueId, job);
+  return job;
+}
+
 export async function prepareIssueFiles(issueId: string): Promise<void> {
-  const issue = await db().visitIssue.findUniqueOrThrow({ where: { id: issueId } });
-  await renderViews(issue);
-  await renderPdf(issueId);
+  await generate(issueId);
 }
 
 export async function getIssuePdf(issueId: string): Promise<Buffer> {
@@ -75,8 +91,7 @@ export async function getIssuePdf(issueId: string): Promise<Buffer> {
     const cached = await readData(issue.pdfPath);
     if (cached) return cached;
   }
-  if (!issue.renders) await renderViews(issue);
-  return renderPdf(issueId);
+  return generate(issueId);
 }
 
 export function pdfFileName(snapshot: IssueSnapshot): string {

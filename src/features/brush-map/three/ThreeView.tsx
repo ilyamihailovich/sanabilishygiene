@@ -48,7 +48,7 @@ function pointAnchor(x: number, y: number): HTMLElement {
 }
 
 export function ThreeView(props: ThreeViewProps) {
-  const [tier, setTier] = useState<QualityTier>(() => (props.capture ? 'high' : initialTier()));
+  const [tier, setTier] = useState<QualityTier>(() => (props.capture ? 'mid' : initialTier()));
   const skip = useRef(false);
   const { onFallback } = props;
 
@@ -60,7 +60,7 @@ export function ThreeView(props: ThreeViewProps) {
     <div className={s.root} onPointerDown={() => (skip.current = true)}>
       <Canvas
         className={s.canvas}
-        dpr={tier === 'low' ? 1 : tier === 'mid' ? [1, 1.5] : [1, 2]}
+        dpr={props.capture ? 1.5 : tier === 'low' ? 1 : tier === 'mid' ? [1, 1.5] : [1, 2]}
         camera={{ fov: 28, near: 0.005, far: 3, position: [0, 0.01, 0.2] }}
         gl={{
           antialias: true,
@@ -190,7 +190,8 @@ function Scene({
       opening.current = skip.current ? 1 : Math.min(1, opening.current + (delta * 1000) / INTRO_MS);
     }
     nodes.pivot.rotation.x = OPEN_ANGLE * easeInOut(opening.current);
-    const target = { upper: view === 'lower' ? 0.08 : 1, lower: view === 'upper' ? 0.08 : 1 };
+    const hidden = capture ? 0 : 0.08;
+    const target = { upper: view === 'lower' ? hidden : 1, lower: view === 'upper' ? hidden : 1 };
     const k = capture ? 1 : Math.min(1, delta * 8);
     fades.current.upper += (target.upper - fades.current.upper) * k;
     fades.current.lower += (target.lower - fades.current.lower) * k;
@@ -227,8 +228,8 @@ function Scene({
           onHover={onHover}
         />
       )}
-      <Furcations nodes={nodes} content={content} />
-      {capture && <CaptureSignal />}
+      <Furcations nodes={nodes} content={content} view={view} />
+      {capture && <CaptureSignal view={view} />}
     </>
   );
 }
@@ -396,7 +397,7 @@ function Markers({ nodes, elements, visual, selectedKey, highlight, readOnly, ca
       const facing = tmp.n.dot(tmp.c);
       const jawFade = el.arch === 'upper' ? fades.current.upper : fades.current.lower;
       const visible = facing > -0.45 && jawFade > 0.5;
-      const opacity = !visible ? 0.12 : facing > -0.15 ? 1 : 0.55;
+      const opacity = !visible ? (capture ? 0 : 0.12) : facing > -0.15 ? 1 : 0.55;
       node.style.opacity = String(opacity);
       node.style.pointerEvents = visible ? 'auto' : 'none';
     }
@@ -423,7 +424,7 @@ function Markers({ nodes, elements, visual, selectedKey, highlight, readOnly, ca
                 if (n) refs.current.set(el.key, n);
                 else refs.current.delete(el.key);
               }}
-              className={s.markerWrap}
+              className={capture ? `${s.markerWrap} ${s.captureWrap}` : s.markerWrap}
             >
               {readOnly || !onElement ? (
                 <span className={s.marker}>{marker}</span>
@@ -455,8 +456,10 @@ function Markers({ nodes, elements, visual, selectedKey, highlight, readOnly, ca
   );
 }
 
-function Furcations({ nodes, content }: { nodes: JawNodes; content: ThreeViewProps['content'] }) {
-  const marked = Object.entries(content.teeth).filter(([, t]) => t.furcation && t.state !== 'MISSING');
+function Furcations({ nodes, content, view }: { nodes: JawNodes; content: ThreeViewProps['content']; view: ViewKey }) {
+  const marked = Object.entries(content.teeth).filter(
+    ([tooth, t]) => t.furcation && t.state !== 'MISSING' && !(view === 'upper' && Number(tooth) > 30) && !(view === 'lower' && Number(tooth) < 30),
+  );
   return (
     <>
       {marked.map(([tooth]) => {
@@ -482,11 +485,15 @@ function Furcations({ nodes, content }: { nodes: JawNodes; content: ThreeViewPro
 }
 
 /** Сигнал для сервиса рендера: модель загружена и отрисована. */
-function CaptureSignal() {
+function CaptureSignal({ view }: { view: ViewKey }) {
   const frames = useRef(0);
+  useEffect(() => {
+    frames.current = 0;
+    window.__sanabilisReady = false;
+  }, [view]);
   useFrame(() => {
     frames.current++;
-    if (frames.current === 20) window.__sanabilisReady = true;
+    if (frames.current === 3) window.__sanabilisReady = true;
   });
   useEffect(() => () => void (window.__sanabilisReady = false), []);
   return null;

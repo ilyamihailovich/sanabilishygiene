@@ -68,6 +68,7 @@ function SchemeViewImpl({
       {!print && <ConcentricBackdrop className={s.rings} rings={8} />}
       <motion.svg
         className={s.svg}
+        style={box ? { overflow: 'hidden' } : undefined}
         initial={false}
         animate={{ viewBox: `${vb.x} ${vb.y} ${vb.w} ${vb.h}` }}
         transition={spring}

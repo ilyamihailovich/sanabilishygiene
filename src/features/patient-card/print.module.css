@@ -1,0 +1,141 @@
+@page {
+  size: A4;
+  margin: 14mm 14mm 18mm;
+}
+
+:global(html),
+:global(body) {
+  background: #fff !important;
+}
+
+.doc {
+  --print-text: #1d1d1f;
+  --print-muted: #5f5f64;
+  --print-line: #d9d9de;
+  display: flex;
+  flex-direction: column;
+  gap: 5mm;
+  width: 182mm;
+  margin: 0 auto;
+  color: var(--print-text);
+  font-size: 10.5pt;
+  line-height: 1.35;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6mm;
+  padding-bottom: 5mm;
+  border-bottom: 0.3mm solid var(--print-line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+}
+
+.title {
+  margin-top: 5mm;
+  font-size: 22pt;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.titleRest {
+  color: var(--print-muted);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+  margin-top: 3mm;
+  color: var(--print-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5mm;
+  width: 30mm;
+  flex: none;
+  color: var(--print-muted);
+  font-size: 7.5pt;
+  text-align: center;
+}
+
+.qr svg {
+  width: 26mm;
+  height: 26mm;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.blockTitle {
+  font-size: 14pt;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.maps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+}
+
+.mapFig {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5mm;
+}
+
+.mapFig img {
+  width: 100%;
+  border-radius: 3mm;
+  border: 0.25mm solid var(--print-line);
+}
+
+.mapFig figcaption {
+  font-size: 8.5pt;
+  color: var(--print-muted);
+}
+
+.scheme {
+  width: 150mm;
+  margin: 0 auto;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+}
+
+.legendNote {
+  font-size: 8.5pt;
+  color: var(--print-muted);
+}
+
+/* Блоки документа в печати: плотнее и мельче */
+.doc :global(h3) {
+  font-size: 11pt;
+}
+
+.mapFig :global(svg) {
+  max-height: 72mm;
+}
