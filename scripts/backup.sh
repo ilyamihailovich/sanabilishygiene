@@ -7,6 +7,10 @@ BACKUP_KEEP="${BACKUP_KEEP:-14}"
 DATA_DIR="${DATA_DIR:-./data}"
 STAMP="$(date +%Y%m%d-%H%M)"
 mkdir -p "$BACKUP_DIR"
+if [ -n "${BACKUP_PASSPHRASE:-}" ] && ! command -v openssl >/dev/null 2>&1; then
+  echo "Нет openssl: копия не создана, чтобы не оставлять незашифрованный файл" >&2
+  exit 1
+fi
 
 encrypt() {
   if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
