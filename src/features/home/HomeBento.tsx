@@ -9,6 +9,7 @@ import { IconButton } from '@/ui/IconButton';
 import { IconArrowUpRight, IconChevronRight } from '@/ui/icons';
 import { Notice } from '@/ui/Notice';
 import { formatDate, formatTime, formatWeekday } from '@/ui/format';
+import { Num } from '@/ui/Num';
 import { useCan } from '../shell/StaffContext';
 import { StartVisitForm } from './StartVisitForm';
 import s from './home.module.css';
@@ -53,7 +54,9 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
                     <span className={s.card}>{p.card}</span>
                     <span className={s.sub}>{p.name ?? 'Без имени'}</span>
                   </span>
-                  <span className={s.sub}>{formatDate(p.date)}</span>
+                  <span className={s.sub}>
+                    <Num>{formatDate(p.date)}</Num>
+                  </span>
                   {p.boib !== null ? <CounterChip>BOIB {p.boib} %</CounterChip> : <span />}
                 </Link>
               </li>
@@ -75,7 +78,9 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
                     <span className={s.card}>{d.card}</span>
                     <span className={s.sub}>{countLabel(d.docs, ['документ', 'документа', 'документов'])}</span>
                   </span>
-                  <span className={s.sub}>{formatTime(d.updatedAt)}</span>
+                  <span className={s.sub}>
+                    <Num>{formatTime(d.updatedAt)}</Num>
+                  </span>
                   <IconChevronRight size={18} />
                 </Link>
               </li>
@@ -86,7 +91,8 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
         )}
       </Card>
 
-      <Link href="/templates" className={`${s.templates} ${s.link}`}>
+      <div className={s.sideStack}>
+      <Link href="/templates" className={s.link}>
         <Card interactive style={{ height: '100%' }}>
           <CardHeader title={ui.home.templates} action={<IconChevronRight size={20} />} />
           <CardFooter>
@@ -96,7 +102,7 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
         </Card>
       </Link>
 
-      <Card className={s.catalog}>
+      <Card>
         <CardHeader
           title={ui.home.catalog}
           action={
@@ -111,6 +117,7 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
           {catalogUnverified > 0 ? <Notice>{ui.catalog.notVerified}</Notice> : <span className={s.sub}>Все позиции проверены</span>}
         </CardFooter>
       </Card>
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { TextField } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
 import { IconChevronRight, IconPlus } from '@/ui/icons';
 import { formatDate } from '@/ui/format';
+import { Num } from '@/ui/Num';
 import { useToast } from '@/ui/Toast';
 import { useCan } from '../shell/StaffContext';
 import { TrendChart } from './TrendChart';
@@ -103,7 +104,9 @@ export function PatientCard({ patient, visits }: Props) {
               {visits.map((v) => (
                 <li key={v.id}>
                   <Link href={`/visits/${v.id}`} className={s.visitRow}>
-                    <span className={s.card}>{formatDate(v.date)}</span>
+                    <span className={s.card}>
+                      <Num>{formatDate(v.date)}</Num>
+                    </span>
                     <span className={s.docs}>
                       <CounterChip>{v.status === 'ISSUED' ? ui.patients.issued : ui.patients.draft}</CounterChip>
                       {v.documents.map((d, i) => (

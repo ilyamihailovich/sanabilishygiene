@@ -108,6 +108,21 @@
   pointer-events: auto;
 }
 
+.stageViews {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  top: var(--space-3);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.stageViews > * {
+  pointer-events: auto;
+}
+
 .hint {
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
@@ -183,7 +198,6 @@ button.brushRow[aria-pressed='true'] {
 .brushCount {
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
 }
 
 .brushCount {
@@ -382,7 +396,6 @@ button.brushRow[aria-pressed='true'] {
   border-radius: var(--radius-capsule);
   background: var(--color-surface-muted);
   font-size: var(--fs-caption);
-  font-variant-numeric: tabular-nums;
 }
 
 .brushChipDot {

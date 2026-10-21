@@ -10,6 +10,7 @@ import { Card, CardHeader } from '@/ui/Card';
 import { ConfirmDialog } from '@/ui/Dialog';
 import { IconDownload, IconExpand, IconLink, IconPrint, IconQr } from '@/ui/icons';
 import { formatDateTime } from '@/ui/format';
+import { Num } from '@/ui/Num';
 import { useToast } from '@/ui/Toast';
 import s from './issue.module.css';
 
@@ -129,7 +130,7 @@ export function IssuePanel({ visitId, blockers, share, lastIssue, canIssue, canM
           )}
           {lastIssue && (
             <p className={s.muted}>
-              {ui.issue.lastIssue}: № {lastIssue.number}, {formatDateTime(lastIssue.issuedAt)}
+              {ui.issue.lastIssue}: № {lastIssue.number}, <Num>{formatDateTime(lastIssue.issuedAt)}</Num>
             </p>
           )}
           <div className={s.actions} style={{ justifyContent: 'flex-start', marginTop: 'var(--space-5)' }}>

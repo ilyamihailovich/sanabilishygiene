@@ -8,6 +8,7 @@ import { TextField } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
 import { IconChevronRight } from '@/ui/icons';
 import { formatDate } from '@/ui/format';
+import { Num } from '@/ui/Num';
 import s from './patients.module.css';
 
 interface Row {
@@ -55,7 +56,7 @@ export function PatientSearch({ initial }: { initial: Row[] }) {
                   <span className={s.card}>{r.cardNumber}</span>
                   <span className={s.sub}>{r.displayName ?? 'Без имени'}</span>
                 </span>
-                <span className={s.sub}>{r.lastVisit ? formatDate(r.lastVisit) : ''}</span>
+                <span className={s.sub}>{r.lastVisit ? <Num>{formatDate(r.lastVisit)}</Num> : ''}</span>
                 <span className={s.sub}>{r.visits >= 0 ? `визитов: ${r.visits}` : ''}</span>
                 <IconChevronRight size={18} />
               </Link>

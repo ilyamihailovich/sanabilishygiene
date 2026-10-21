@@ -7,6 +7,7 @@ import { Button } from '@/ui/Button';
 import { Select } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
 import { formatDateTime } from '@/ui/format';
+import { Num } from '@/ui/Num';
 import s from './admin.module.css';
 
 interface Row {
@@ -80,7 +81,9 @@ export function AuditLogView({ initial, users, actions }: { initial: Page; users
           <tbody>
             {page.rows.map((r) => (
               <tr key={r.id}>
-                <td>{formatDateTime(r.at)}</td>
+                <td>
+                  <Num>{formatDateTime(r.at)}</Num>
+                </td>
                 <td>{r.user}</td>
                 <td className={s.cellMain} style={{ fontSize: 'var(--fs-caption)' }}>
                   {r.actionLabel}

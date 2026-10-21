@@ -18,6 +18,7 @@ import { IconArrowRight, IconTrash } from '@/ui/icons';
 import { spring } from '@/ui/motion';
 import { useToast } from '@/ui/Toast';
 import { formatDate } from '@/ui/format';
+import { Num } from '@/ui/Num';
 import { useMediaQuery } from '@/ui/hooks/useMediaQuery';
 import { BrushMapEditor } from '../brush-map/BrushMapEditor';
 import { IssuePanel } from '../issue/IssuePanel';
@@ -129,7 +130,9 @@ export function VisitWorkspace(props: Props) {
         </Heading>
         <details className={s.metaDetails} open={!compactMeta}>
           <summary className={s.metaSummary}>
-            {formatDate(visit.date)} · {props.doctors.find((d) => d.id === visit.clinicianId)?.displayName ?? 'врач не указан'}
+            <span>
+              <Num>{formatDate(visit.date)}</Num> · {props.doctors.find((d) => d.id === visit.clinicianId)?.displayName ?? 'врач не указан'}
+            </span>
           </summary>
         <div className={s.headMeta}>
           <label className={s.metaField}>

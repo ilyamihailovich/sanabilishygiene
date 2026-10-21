@@ -16,7 +16,18 @@
 }
 
 .drafts {
-  grid-column: span 4;
+  grid-column: span 7;
+}
+
+.drafts {
+  align-self: start;
+}
+
+.sideStack {
+  grid-column: span 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .templates {
@@ -139,9 +150,8 @@
     grid-row: auto;
   }
   .drafts,
-  .templates,
-  .catalog {
-    grid-column: span 4;
+  .sideStack {
+    grid-column: span 12;
   }
 }
 
@@ -153,12 +163,9 @@
   }
   .start,
   .recent,
-  .catalog {
-    grid-column: span 2;
-  }
   .drafts,
-  .templates {
-    grid-column: span 1;
+  .sideStack {
+    grid-column: span 2;
   }
   .startTitle {
     font-size: var(--fs-title2);

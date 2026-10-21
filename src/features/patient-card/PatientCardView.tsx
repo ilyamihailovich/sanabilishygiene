@@ -139,7 +139,7 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
                     readOnly
                     onFallback={() => setMode('scheme')}
                   />
-                  <div className={s.stageBottom}>
+                  <div className={s.stageViews}>
                     <GlassPanel aria-label={ui.views.label}>
                       <ToggleGroup
                         label={ui.views.label}

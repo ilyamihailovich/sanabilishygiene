@@ -42,6 +42,7 @@ export function TemplateDocEditor({ documentId, rev, initial, catalog, brushMap,
   const [editing, setEditing] = useState<string | null>(null);
   const [library, setLibrary] = useState<{ sectionId: string; items: Array<{ id: string; title: string; payload: TemplateItem }> } | null>(null);
   const [saveTpl, setSaveTpl] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
   const [tplTitle, setTplTitle] = useState(`${initial.title} (мой)`);
   const save = useAutosave(documentId, rev, doc);
 
@@ -197,14 +198,38 @@ export function TemplateDocEditor({ documentId, rev, initial, catalog, brushMap,
                 })}
               </ul>
               <div className={s.addRow}>
-                {ITEM_TYPES.filter((t) => t !== 'brushes').map((t) => (
-                  <Button key={t} variant="secondary" size="sm" leading={<IconPlus size={16} />} onClick={() => addItem(section.id, newItem(t))}>
-                    {ui.templates.itemTypes[t]}
+                {adding === section.id ? (
+                  <>
+                    {ITEM_TYPES.filter((t) => t !== 'brushes').map((t) => (
+                      <Button
+                        key={t}
+                        variant="secondary"
+                        size="sm"
+                        leading={<IconPlus size={16} />}
+                        onClick={() => {
+                          addItem(section.id, newItem(t));
+                          setAdding(null);
+                        }}
+                      >
+                        {ui.templates.itemTypes[t]}
+                      </Button>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAdding(null);
+                        openLibrary(section.id);
+                      }}
+                    >
+                      {ui.templates.fromLibrary}
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="ghost" size="sm" leading={<IconPlus size={16} />} onClick={() => setAdding(section.id)}>
+                    {ui.templates.addItem}
                   </Button>
-                ))}
-                <Button variant="ghost" size="sm" onClick={() => openLibrary(section.id)}>
-                  {ui.templates.fromLibrary}
-                </Button>
+                )}
               </div>
             </>
           )}
