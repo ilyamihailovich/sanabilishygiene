@@ -32,6 +32,8 @@ services:
       DATA_DIR: /app/data
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      # только для просмотра на своём компьютере (.env.demo); на рабочем сервере не включать
+      SEED_DEMO: ${SEED_DEMO:-false}
     volumes:
       - app-data:/app/data
       # шрифты, логотип и 3D-модель клиники можно подменять без пересборки

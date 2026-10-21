@@ -10,6 +10,25 @@
 
 Стек: Next.js (App Router, TypeScript strict), PostgreSQL, Prisma, three.js и React Three Fiber, Playwright для генерации PDF, Docker Compose.
 
+## Посмотреть на своём компьютере
+
+Нужен Docker Desktop (https://www.docker.com/products/docker-desktop/), он должен быть запущен. В папке проекта выполните:
+
+```sh
+docker compose --env-file .env.demo up -d --build
+```
+
+Первая сборка занимает 5–10 минут. Затем откройте http://localhost:3000.
+
+| Вход | Пароль |
+|---|---|
+| doctor@sanabilis.local (врач) | demo-password |
+| hygienist@sanabilis.local (гигиенист) | demo-password |
+| assistant@sanabilis.local (ассистент) | demo-password |
+| admin@sanabilis.local (администратор) | admin-password |
+
+В демо-режиме есть условный каталог «Демо 1–4», демо-тексты и пациент DEMO-001 с заполненной картой. Остановить: `docker compose --env-file .env.demo down`.
+
 ## Запуск
 
 Требуется Docker с Compose. Команда:
