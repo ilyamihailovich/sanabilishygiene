@@ -336,7 +336,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
         />
       </div>
 
-      <div className={s.stage}>
+      <div className={`${s.stage} ${mode === 'three' ? s.stageThree : ''}`}>
         {mode === 'scheme' && touch && (
           <div className={s.quadrants}>
             <div className={glassClass} style={{ borderRadius: 999, padding: 3, display: 'inline-block' }}>

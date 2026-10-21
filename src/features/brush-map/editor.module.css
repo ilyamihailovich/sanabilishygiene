@@ -287,6 +287,11 @@ button.need[aria-pressed='true'] {
   .stage {
     min-height: 0;
   }
+  /* 3D-сцена позиционирована абсолютно и не задаёт высоту сама */
+  .stageThree {
+    height: min(118vw, 72svh);
+    min-height: 420px;
+  }
   .scheme {
     padding: 64px var(--space-2) 112px;
   }
