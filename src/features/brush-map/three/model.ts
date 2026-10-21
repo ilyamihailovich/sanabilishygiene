@@ -1,7 +1,14 @@
 import * as THREE from 'three';
 import type { MapElement } from '@/domain/brushMap';
 
-export const MODEL_URL = '/models/jaws.glb';
+declare global {
+  interface Window {
+    /** Переопределение адреса модели (интерактивный прототип без сервера). */
+    __SANABILIS_MODEL_URL?: string;
+  }
+}
+
+export const MODEL_URL = (typeof window !== 'undefined' && window.__SANABILIS_MODEL_URL) || '/models/jaws.glb';
 /** Угол раскрытия, рад. Рекомендуемый угол из записки моделлера заменит это значение. */
 export const OPEN_ANGLE = 0.36;
 
