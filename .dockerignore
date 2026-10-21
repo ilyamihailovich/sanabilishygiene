@@ -1,0 +1,8 @@
+node_modules
+.next
+data
+screenshots
+test-results
+.env
+.git
+renderer/node_modules

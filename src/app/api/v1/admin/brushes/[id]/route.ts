@@ -1,13 +1,10 @@
-import { z } from 'zod';
 import { audit } from '@/server/audit';
 import { db } from '@/server/db';
 import { ok, readJson, staff } from '@/server/http';
-import { brushSizeSchema, upsertBrand } from '@/server/services/catalog';
-
-const patchSchema = brushSizeSchema.partial().extend({ archived: z.boolean().optional() });
+import { brushSizePatchSchema, upsertBrand } from '@/server/services/catalog';
 
 export const PATCH = staff<{ id: string }>('catalog.manage', async ({ req, params, session }) => {
-  const { brand, verified, ...rest } = await readJson(req, patchSchema);
+  const { brand, verified, ...rest } = await readJson(req, brushSizePatchSchema);
   const data: Record<string, unknown> = { ...rest };
   if (brand) data.brandId = (await upsertBrand(brand)).id;
   if (verified !== undefined) {

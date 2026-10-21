@@ -13,6 +13,20 @@ export const brushSizeSchema = z.object({
   sortOrder: z.number().int().min(0).max(999).default(0),
 });
 
+/** Частичное обновление: без значений по умолчанию, иначе непереданные поля сбрасываются. */
+export const brushSizePatchSchema = z.object({
+  brand: z.string().trim().min(1).max(80).optional(),
+  line: z.string().trim().min(1).max(80).optional(),
+  label: z.string().trim().min(1).max(40).optional(),
+  isoSize: z.string().trim().max(10).nullable().optional(),
+  passageMm: z.coerce.number().min(0.1).max(10).optional(),
+  bristleDiameterMm: z.coerce.number().min(0.1).max(20).nullable().optional(),
+  colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Цвет в формате #RRGGBB').optional(),
+  verified: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).max(999).optional(),
+  archived: z.boolean().optional(),
+});
+
 export interface CatalogItem {
   id: string;
   brand: string;

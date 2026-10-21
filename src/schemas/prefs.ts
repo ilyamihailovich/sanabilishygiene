@@ -7,3 +7,9 @@ export const prefsSchema = z.object({
 });
 
 export type Prefs = z.infer<typeof prefsSchema>;
+
+/** Частичное обновление настроек без значений по умолчанию. */
+export const prefsPatchSchema = z.object({
+  mapMode: z.enum(['three', 'scheme']).optional(),
+  sizeHotkeys: z.array(z.string()).max(10).optional(),
+});

@@ -9,7 +9,15 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:api": "vitest run --config vitest.api.config.ts",
+    "test:e2e": "playwright test",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "model:placeholder": "node scripts/build-placeholder-model.mjs /tmp/jaws-raw.glb && node scripts/model-optimize.mjs /tmp/jaws-raw.glb public/models/jaws.glb",
+    "model:optimize": "node scripts/model-optimize.mjs",
+    "model:check": "node scripts/model-check.mjs",
+    "postinstall": "prisma generate"
   },
   "engines": {
     "node": ">=22"
@@ -27,7 +35,9 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.186.1",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "prisma": "^7.10.1",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.1",
@@ -42,8 +52,6 @@
     "@types/three": "^0.186.0",
     "meshoptimizer": "^1.3.0",
     "playwright": "^1.56.1",
-    "prisma": "^7.10.1",
-    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   }

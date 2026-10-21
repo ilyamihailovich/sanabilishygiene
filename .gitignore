@@ -8,3 +8,6 @@ next-env.d.ts
 /screenshots/tmp
 src/generated
 data
+backups
+test-results
+playwright-report

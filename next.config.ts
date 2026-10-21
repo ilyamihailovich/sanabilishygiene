@@ -8,7 +8,6 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
-  output: 'standalone',
   poweredByHeader: false,
   agentRules: false,
   reactStrictMode: true,
