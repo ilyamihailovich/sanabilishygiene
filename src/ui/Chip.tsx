@@ -4,8 +4,8 @@ import { IconCheck } from './icons';
 import s from './Chip.module.css';
 
 /** Чип-счётчик рядом с заголовком: «14 промежутков». */
-export function CounterChip({ children, onSurface = false }: { children: ReactNode; onSurface?: boolean }) {
-  return <span className={cx(s.chip, onSurface && s.onSurface)}>{children}</span>;
+export function CounterChip({ children, tone = 'muted' }: { children: ReactNode; tone?: 'muted' | 'surface' | 'glass' }) {
+  return <span className={cx(s.chip, tone === 'surface' && s.onSurface, tone === 'glass' && s.glass)}>{children}</span>;
 }
 
 interface ToggleChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange'> {

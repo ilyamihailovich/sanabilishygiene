@@ -15,8 +15,13 @@
   --palette-gray-600: #6e6e73;
   --palette-gray-800: #3a3a3c;
   --palette-gray-900: #1d1d1f;
-  --palette-amber-50: #fbf4e6;
-  --palette-amber-800: #7a4b00;
+  /* Индиго и лаванда: временные акценты по референсу клиники, до фирменных HEX */
+  --palette-indigo-600: #5a3a82;
+  --palette-indigo-700: #4a2d6b;
+  --palette-indigo-800: #3d2459;
+  --palette-indigo-900: #2f1b45;
+  --palette-lavender-50: #f3eff9;
+  --palette-lavender-100: #e9e1f4;
 
   /* Поверхности */
   --color-bg: var(--palette-gray-50);
@@ -35,17 +40,18 @@
   --color-separator: rgba(0, 0, 0, 0.08);
   --color-border-strong: rgba(0, 0, 0, 0.16);
 
-  /* Акцент: временный графит */
-  --accent: var(--palette-gray-800);
-  --accent-hover: #2c2c2e;
-  --accent-pressed: var(--palette-gray-900);
+  /* Акцент: индиго. Используется точечно: главные кнопки, выбранные состояния, акцентные карточки */
+  --accent: var(--palette-indigo-700);
+  --accent-hover: var(--palette-indigo-800);
+  --accent-pressed: var(--palette-indigo-900);
+  --accent-soft: var(--palette-lavender-50);
 
   /* Фокус с клавиатуры: двойное кольцо читается на любом фоне */
   --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-text);
 
   /* Сигнальные состояния (сдержанные, без ярких цветов) */
-  --color-notice-bg: var(--palette-amber-50);
-  --color-notice-text: var(--palette-amber-800);
+  --color-notice-bg: var(--palette-lavender-100);
+  --color-notice-text: var(--palette-indigo-700);
   --color-signal: var(--palette-gray-900);
 
   /* Маркеры промежутков */
@@ -64,6 +70,17 @@
   --glass-hairline: rgba(0, 0, 0, 0.06);
   --glass-blur: 24px;
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.08);
+  /* Стекло на светлом фоне в элементах управления: легче плавающих панелей */
+  --glass-control-bg: rgba(255, 255, 255, 0.55);
+  --glass-control-hover: rgba(255, 255, 255, 0.75);
+  --glass-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 10px rgba(0, 0, 0, 0.05);
+  /* Стекло на индиго и других тёмных поверхностях */
+  --glass-dark-bg: rgba(255, 255, 255, 0.14);
+  --glass-dark-hover: rgba(255, 255, 255, 0.2);
+  --glass-dark-border: rgba(255, 255, 255, 0.22);
+  /* Лавандовое стекло для плашек */
+  --glass-notice-bg: rgba(233, 225, 244, 0.72);
+  --glass-control-blur: 16px;
 
   /* Тени непрозрачных элементов */
   --shadow-card: none;

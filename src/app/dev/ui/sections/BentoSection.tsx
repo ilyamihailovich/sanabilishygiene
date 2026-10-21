@@ -11,7 +11,7 @@ export function BentoSection() {
   return (
     <Section id="bento" title="Главный экран." rest="Бенто-сетка карточек.">
       <div className={s.bento}>
-        <Card tone="dark" className={s.start} padding={32}>
+        <Card tone="accent" className={s.start} padding={32}>
           <span className={s.startMeta}>Вторник, 21 октября</span>
           <h3 className={s.startTitle}>
             Начать визит <span className={s.startRest}>по номеру медицинской карты</span>

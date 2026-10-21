@@ -22,6 +22,15 @@
   color: var(--color-surface);
 }
 
+/* Акцентная карточка: индиго с мягким светлым пятном, чтобы стеклянные элементы на ней читались */
+.accent {
+  background:
+    radial-gradient(90% 110% at 100% 100%, rgba(150, 120, 200, 0.45) 0%, rgba(150, 120, 200, 0) 60%),
+    radial-gradient(60% 70% at 0% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 70%),
+    var(--accent);
+  color: #fff;
+}
+
 .interactive {
   cursor: pointer;
   transition:

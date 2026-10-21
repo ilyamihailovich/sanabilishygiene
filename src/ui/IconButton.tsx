@@ -5,7 +5,7 @@ import s from './IconButton.module.css';
 interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label'> {
   label: string;
   icon: ReactNode;
-  variant?: 'surface' | 'muted' | 'accent' | 'ghost';
+  variant?: 'surface' | 'muted' | 'accent' | 'ghost' | 'glass' | 'glassDark';
   size?: 36 | 40 | 44 | 52;
   active?: boolean;
 }

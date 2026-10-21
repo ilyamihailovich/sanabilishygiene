@@ -140,7 +140,7 @@ export function MapSection() {
                 ]}
               />
             </div>
-            <Notice>{ui.catalog.notVerified}</Notice>
+            <Notice glass>{ui.catalog.notVerified}</Notice>
           </div>
 
           <div className={s.arc}>
@@ -298,7 +298,7 @@ export function MapSection() {
             <>
               <div className={s.popHead}>
                 <span className={s.popTitle}>{current.label}</span>
-                <CounterChip onSurface>Промежуток</CounterChip>
+                <CounterChip tone="glass">Промежуток</CounterChip>
               </div>
               {form}
             </>

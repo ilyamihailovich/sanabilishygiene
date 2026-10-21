@@ -8,9 +8,10 @@ const swatches = [
   { name: 'Текст', token: '--color-text', value: '#1D1D1F' },
   { name: 'Текст вторичный', token: '--color-text-secondary', value: '#6E6E73 · AA' },
   { name: 'Текст крупный серый', token: '--color-text-tertiary', value: '#86868B · от 24 px' },
-  { name: 'Акцент (временный)', token: '--accent', value: '#3A3A3C' },
+  { name: 'Акцент индиго', token: '--accent', value: '#4A2D6B' },
   { name: 'Разделитель', token: '--color-separator', value: 'rgba(0,0,0,0.08)' },
-  { name: 'Плашка', token: '--color-notice-bg', value: '#FBF4E6' },
+  { name: 'Лаванда, плашки', token: '--color-notice-bg', value: '#E9E1F4' },
+  { name: 'Лаванда светлая', token: '--accent-soft', value: '#F3EFF9' },
 ];
 
 const typeScale = [
@@ -23,7 +24,7 @@ const typeScale = [
 export function FoundationsSection() {
   return (
     <>
-      <Section id="colors" title="Цвет." rest="Нейтральная схема до фирменных HEX." counter="8 токенов">
+      <Section id="colors" title="Цвет." rest="Нейтральная основа, индиго и лаванда точечно." counter="9 токенов">
         <div className={s.swatches}>
           {swatches.map((sw) => (
             <div key={sw.token} className={s.swatch}>

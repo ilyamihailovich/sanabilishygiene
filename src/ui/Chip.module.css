@@ -40,8 +40,16 @@
 }
 
 .toggle[aria-pressed='true'] {
-  background: var(--color-text);
-  color: var(--color-surface);
+  background: var(--accent);
+  color: var(--color-text-on-accent);
+}
+
+.glass {
+  background: var(--glass-control-bg);
+  color: var(--color-text);
+  box-shadow: var(--glass-control-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--glass-control-blur)) saturate(1.5);
 }
 
 .check {

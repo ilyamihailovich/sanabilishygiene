@@ -22,18 +22,81 @@
   color: var(--color-text-secondary);
 }
 
-.glassStage {
+.wide {
+  grid-column: 1 / -1;
+}
+
+.glassGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.glassStage,
+.glassStageAccent {
   position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 140px;
+  min-height: 240px;
+  padding: var(--space-6);
   border-radius: var(--radius-inner);
-  background: radial-gradient(ellipse at center, var(--scene-bg-center), var(--scene-bg-edge));
   overflow: hidden;
+  isolation: isolate;
+}
+
+.glassStage {
+  background: radial-gradient(ellipse at center, var(--scene-bg-center), var(--scene-bg-edge));
+}
+
+.glassStageAccent {
+  color: #fff;
+  background:
+    radial-gradient(70% 90% at 100% 100%, rgba(150, 120, 200, 0.5) 0%, rgba(150, 120, 200, 0) 60%),
+    var(--accent);
+}
+
+.stageRings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+}
+
+.stageDots {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 14%;
+  display: flex;
+  justify-content: space-between;
+  z-index: -1;
+}
+
+.stageDots span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.stageContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.accentTitle {
+  font-size: var(--fs-title3);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-title);
 }
 
 @media (max-width: 720px) {
+  .glassGrid {
+    grid-template-columns: 1fr;
+  }
   .grid {
     grid-template-columns: 1fr;
   }

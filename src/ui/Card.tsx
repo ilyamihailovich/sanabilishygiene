@@ -3,7 +3,7 @@ import { cx } from './cx';
 import s from './Card.module.css';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  tone?: 'surface' | 'muted' | 'dark';
+  tone?: 'surface' | 'muted' | 'dark' | 'accent';
   interactive?: boolean;
   padding?: number;
 }

@@ -9,7 +9,8 @@ import { Switch, TextField } from '@/ui/Field';
 import { GlassPanel } from '@/ui/Glass';
 import { StepCounter } from '@/ui/Heading';
 import { IconButton } from '@/ui/IconButton';
-import { IconArrowRight, IconArrowUpRight, IconDownload, IconPlus, IconPrint, IconQr, IconRedo, IconShare, IconUndo } from '@/ui/icons';
+import { ConcentricBackdrop } from '@/ui/ConcentricBackdrop';
+import { IconArrowRight, IconArrowUpRight, IconDownload, IconLink, IconPlus, IconPrint, IconQr, IconRedo, IconShare, IconUndo } from '@/ui/icons';
 import { Notice } from '@/ui/Notice';
 import { Segmented } from '@/ui/Segmented';
 import { Section } from './Section';
@@ -57,12 +58,62 @@ export function ControlsSection() {
               <IconButton label="Отменить" icon={<IconUndo size={20} />} variant="ghost" />
               <IconButton label="Повторить" icon={<IconRedo size={20} />} variant="ghost" disabled />
             </div>
-            <div className={s.glassStage}>
-              <GlassPanel aria-label="Пример стеклянной панели">
-                <IconButton label="Отменить" icon={<IconUndo size={20} />} variant="ghost" />
-                <IconButton label="Повторить" icon={<IconRedo size={20} />} variant="ghost" />
-                <IconButton label="Выдать" icon={<IconQr size={20} />} variant="ghost" active />
-              </GlassPanel>
+          </div>
+        </Card>
+
+        <Card className={s.wide}>
+          <div className={s.stack}>
+            <CardHeader title="Стекло" meta={<CounterChip>над сценой и на индиго</CounterChip>} />
+            <div className={s.glassGrid}>
+              <div className={s.glassStage}>
+                <ConcentricBackdrop className={s.stageRings} />
+                <div className={s.stageDots} aria-hidden="true">
+                  {['#f2c94c', '#e86a3a', '#3f8f5a', '#2f6fb5', '#8a4fb0', '#e86a3a', '#3f8f5a'].map((c, i) => (
+                    <span key={i} style={{ background: c }} />
+                  ))}
+                </div>
+                <div className={s.stageContent}>
+                  <div className={s.row}>
+                    <Button variant="glass" leading={<IconDownload size={18} />}>
+                      PDF
+                    </Button>
+                    <Button variant="glass" leading={<IconShare size={18} />}>
+                      Поделиться
+                    </Button>
+                    <IconButton label="Отменить" icon={<IconUndo size={20} />} variant="glass" />
+                    <IconButton label="Повторить" icon={<IconRedo size={20} />} variant="glass" />
+                  </div>
+                  <div className={s.row}>
+                    <CounterChip tone="glass">14 промежутков</CounterChip>
+                    <Notice glass>{ui.catalog.notVerified}</Notice>
+                  </div>
+                  <GlassPanel aria-label="Пример стеклянной панели">
+                    <IconButton label="Отменить" icon={<IconUndo size={20} />} variant="ghost" />
+                    <IconButton label="Повторить" icon={<IconRedo size={20} />} variant="ghost" />
+                    <IconButton label="Выдать" icon={<IconQr size={20} />} variant="ghost" active />
+                  </GlassPanel>
+                </div>
+              </div>
+              <div className={s.glassStageAccent}>
+                <div className={s.stageContent}>
+                  <span className={s.accentTitle}>Выдача пациенту</span>
+                  <div className={s.row}>
+                    <Button variant="glassDark" leading={<IconLink size={18} />}>
+                      Скопировать ссылку
+                    </Button>
+                    <Button variant="glassDark" leading={<IconPrint size={18} />}>
+                      Печать
+                    </Button>
+                  </div>
+                  <div className={s.row}>
+                    <Button variant="surface" leading={<IconDownload size={18} />}>
+                      PDF
+                    </Button>
+                    <IconButton label="QR-код" icon={<IconQr size={20} />} variant="glassDark" />
+                    <IconButton label="Далее" icon={<IconArrowRight size={20} />} variant="glassDark" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
