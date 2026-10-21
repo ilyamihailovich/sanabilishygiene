@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  HYGIENIST
+  ASSISTANT
+}
+
+enum VisitStatus {
+  DRAFT
+  ISSUED
+}
+
+enum DocumentType {
+  BRUSH_MAP
+  PSR
+  HYGIENE_PLAN
+  AFTERCARE
+}
+
+enum TemplateKind {
+  HYGIENE_PLAN
+  AFTERCARE
+}
+
+enum TemplateStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum AuditActor {
+  STAFF
+  PATIENT_LINK
+  SYSTEM
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  displayName        String
+  title              String?
+  role               Role
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(true)
+  prefs              Json      @default("{}")
+  passwordChangedAt  DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  sessions           Session[]
+}
+
+model Session {
+  id           String   @id
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+  expiresAt    DateTime
+  userAgent    String?
+
+  @@index([userId])
+}
+
+model LoginAttempt {
+  id        BigInt   @id @default(autoincrement())
+  emailHash String
+  ipHash    String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([emailHash, createdAt])
+  @@index([ipHash, createdAt])
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  cardNumber  String   @unique
+  displayName String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  visits      Visit[]
+}
+
+model Visit {
+  id              String      @id @default(cuid())
+  patientId       String
+  patient         Patient     @relation(fields: [patientId], references: [id])
+  date            DateTime    @db.Date
+  clinicianId     String?
+  status          VisitStatus @default(DRAFT)
+  nextVisitDate   DateTime?   @db.Date
+  nextVisitMonths Int?
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  documents       Document[]
+  issues          VisitIssue[]
+  shareLinks      ShareLink[]
+
+  @@index([patientId, date])
+  @@index([createdById, updatedAt])
+}
+
+model Document {
+  id                String       @id @default(cuid())
+  visitId           String
+  visit             Visit        @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  type              DocumentType
+  templateVersionId String?
+  content           Json
+  rev               Int          @default(1)
+  boibPct           Int?
+  boibBleeding      Int?
+  boibExamined      Int?
+  psrMaxCode        Int?
+  psrAsterisk       Boolean?
+  authorId          String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([visitId])
+}
+
+model VisitIssue {
+  id         String   @id @default(cuid())
+  visitId    String
+  visit      Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  number     Int
+  snapshot   Json
+  renders    Json?
+  pdfPath    String?
+  issuedById String
+  issuedAt   DateTime @default(now())
+
+  @@unique([visitId, number])
+}
+
+model ShareLink {
+  id          String    @id @default(cuid())
+  visitId     String
+  visit       Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  tokenCipher String
+  createdById String
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  revokedById String?
+
+  @@index([visitId])
+}
+
+model BrushBrand {
+  id    String      @id @default(cuid())
+  name  String      @unique
+  sizes BrushSize[]
+}
+
+model BrushSize {
+  id                String     @id @default(cuid())
+  brandId           String
+  brand             BrushBrand @relation(fields: [brandId], references: [id])
+  line              String
+  label             String
+  isoSize           String?
+  passageMm         Decimal    @db.Decimal(4, 2)
+  bristleDiameterMm Decimal?   @db.Decimal(4, 2)
+  colorHex          String
+  photoPath         String?
+  verified          Boolean    @default(false)
+  verifiedById      String?
+  verifiedAt        DateTime?
+  sortOrder         Int        @default(0)
+  archived          Boolean    @default(false)
+  updatedAt         DateTime   @updatedAt
+
+  @@unique([brandId, line, label])
+}
+
+model PsrText {
+  code        String   @id
+  staffText   String
+  patientText String
+  approved    Boolean  @default(false)
+  approvedById String?
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+model BoibGrade {
+  id           String   @id @default(cuid())
+  minPct       Int
+  maxPct       Int
+  staffLabel   String
+  patientText  String
+  approved     Boolean  @default(false)
+  approvedById String?
+  updatedAt    DateTime @updatedAt
+}
+
+model Template {
+  id               String            @id @default(cuid())
+  kind             TemplateKind
+  title            String
+  ownerId          String?
+  status           TemplateStatus    @default(ACTIVE)
+  copiedFromId     String?
+  publishedVersion Int?
+  draft            Json?
+  sortOrder        Int               @default(0)
+  versions         TemplateVersion[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model TemplateVersion {
+  id          String   @id @default(cuid())
+  templateId  String
+  template    Template @relation(fields: [templateId], references: [id])
+  version     Int
+  structure   Json
+  createdById String
+  createdAt   DateTime @default(now())
+
+  @@unique([templateId, version])
+}
+
+model LibraryItem {
+  id        String   @id @default(cuid())
+  kind      String
+  category  String?
+  title     String
+  payload   Json
+  ownerId   String?
+  archived  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         BigInt     @id @default(autoincrement())
+  at         DateTime   @default(now())
+  actor      AuditActor
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  meta       Json?
+
+  @@index([entityType, entityId])
+  @@index([userId, at])
+  @@index([at])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
