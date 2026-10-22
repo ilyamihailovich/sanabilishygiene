@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import { ApiError, api } from '@/ui/api';
 import { Button } from '@/ui/Button';
@@ -35,6 +35,16 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
   const canLibrary = useCan('template.library');
   const canPersonal = useCan('template.personal');
   const [tab, setTab] = useState<Tab>('library');
+  const tabsRef = useRef<HTMLDivElement>(null);
+  // выбранный раздел прокручивается в видимую часть полосы
+  useEffect(() => {
+    const box = tabsRef.current;
+    const el = box?.querySelector<HTMLElement>('[aria-checked="true"]');
+    if (!box || !el) return;
+    const r = el.getBoundingClientRect();
+    const b = box.getBoundingClientRect();
+    box.scrollTo({ left: box.scrollLeft + r.left - b.left - (b.width - r.width) / 2, behavior: 'smooth' });
+  }, [tab]);
   const [create, setCreate] = useState(false);
   const [title, setTitle] = useState('');
   const [kind, setKind] = useState<'HYGIENE_PLAN' | 'AFTERCARE'>('AFTERCARE');
@@ -70,7 +80,7 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
         )}
       </div>
       {/* на узком экране разделы прокручиваются вбок */}
-      <div className={s.tabsScroll}>
+      <div ref={tabsRef} className={s.tabsScroll}>
       <Segmented
         label="Раздел"
         value={tab}

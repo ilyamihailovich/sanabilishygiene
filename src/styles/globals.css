@@ -43,7 +43,10 @@ select {
   letter-spacing: inherit;
 }
 
-button {
+/* без системной вспышки при касании: у кнопок и ссылок своя обратная связь */
+button,
+a,
+[role='button'] {
   -webkit-tap-highlight-color: transparent;
 }
 
