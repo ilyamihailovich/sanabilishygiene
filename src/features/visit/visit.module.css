@@ -327,3 +327,8 @@ select.metaInput {
 .headSlot:empty {
   display: none;
 }
+
+/* текст «Пропустить» по левому краю карточек выше: прозрачная кнопка сдвигается на свой отступ */
+.skip {
+  margin-left: calc(-1 * var(--space-5));
+}

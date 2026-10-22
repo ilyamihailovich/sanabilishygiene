@@ -341,7 +341,7 @@ export function VisitWorkspace(props: Props) {
 
             {next && (
               <div className={s.footer}>
-                <Button variant="ghost" onClick={() => setStep(next)}>
+                <Button variant="ghost" className={s.skip} onClick={() => setStep(next)}>
                   {ui.visit.skip}
                 </Button>
                 <Button variant="secondary" trailing={<IconArrowRight size={18} />} onClick={() => setStep(next)}>

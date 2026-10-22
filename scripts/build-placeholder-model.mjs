@@ -437,7 +437,7 @@ function buildArch(arch) {
       const towardNext = (surf === 'm') === (ORDER[arch].indexOf(item.tooth) < 8);
       const p = new THREE.Vector3(item.x, papilla, item.z)
         .addScaledVector(t, (towardNext ? 1 : -1) * (crown.w / 2))
-        .addScaledVector(n, crown.d * 0.62);
+        .addScaledVector(n, crown.d * 0.62 + 1.6);
       group.add(empty(`px_${item.tooth}_${surf}`, p, n));
     }
     const axis = empty(`ax_${item.tooth}`, new THREE.Vector3(item.x, sign * (OCCLUSAL + crown.h), item.z));
@@ -487,7 +487,8 @@ function buildArch(arch) {
     // ёршик вводится между вершиной сосочка и точкой контакта
     const margin = sign * (OCCLUSAL + Math.min(a.crown.h, b.crown.h) * 0.5 - 0.5);
     const n = new THREE.Vector3(p.nx, 0, p.nz);
-    const depth = Math.min(a.crown.d, b.crown.d) * 0.62;
+    // маркер выносится на 1,6 мм перед поверхностью десны, чтобы не «тонул» в модели
+    const depth = Math.min(a.crown.d, b.crown.d) * 0.62 + 1.6;
     group.add(empty(`ip_${a.item.tooth}_${b.item.tooth}`, new THREE.Vector3(p.x, margin, p.z).addScaledVector(n, depth), n));
     group.add(empty(`ipo_${a.item.tooth}_${b.item.tooth}`, new THREE.Vector3(p.x, margin, p.z).addScaledVector(n, -depth), n.clone().negate()));
   }

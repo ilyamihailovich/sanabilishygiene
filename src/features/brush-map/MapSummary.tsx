@@ -75,7 +75,10 @@ export function BoibCard({ boib, previous }: { boib: BoibResult; previous: (Boib
       ) : (
         <>
           <div className={s.index}>
-            <span className={s.indexValue}>{boib.pct} %</span>
+            <span className={s.indexValue}>
+              {boib.pct}
+              {'\u202F'}%
+            </span>
             <span className={s.indexMeta}>
               {boib.bleeding} из {boib.examined}
             </span>
