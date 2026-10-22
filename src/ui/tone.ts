@@ -28,11 +28,20 @@ function mix(t: number): Rgb {
 export const boibTone = (pct: number) => Math.min(1, Math.max(0, (pct - 10) / 20));
 export const psrTone = (code: number) => [0, 0.3, 0.55, 0.85, 1][code] ?? 1;
 
-/** Градиент из правого верхнего угла, к середине карточки сходит на нет. */
+/**
+ * Тон обтекает карточку: крупное пятно из правого верхнего угла, меньшее из левого нижнего
+ * и лёгкое свечение по краю.
+ */
 export function toneStyle(t: number, base = 'var(--color-surface)'): CSSProperties {
   const [r, g, b] = mix(t);
+  const c = (a: number) => `rgba(${r}, ${g}, ${b}, ${a})`;
   return {
-    background: `radial-gradient(85% 120% at 100% 0%, rgba(${r}, ${g}, ${b}, 0.85) 0%, rgba(${r}, ${g}, ${b}, 0.35) 38%, rgba(${r}, ${g}, ${b}, 0) 72%), ${base}`,
+    background: [
+      `radial-gradient(75% 95% at 100% 0%, ${c(0.85)} 0%, ${c(0.38)} 38%, ${c(0)} 70%)`,
+      `radial-gradient(48% 65% at 0% 100%, ${c(0.6)} 0%, ${c(0.22)} 42%, ${c(0)} 72%)`,
+      base,
+    ].join(', '),
+    boxShadow: `inset 0 0 0 1px ${c(0.3)}, inset 0 0 32px ${c(0.2)}`,
     printColorAdjust: 'exact',
     WebkitPrintColorAdjust: 'exact',
   };
