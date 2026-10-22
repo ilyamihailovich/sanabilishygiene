@@ -521,6 +521,7 @@ function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; conten
   const marked = Object.entries(content.teeth).filter(
     ([tooth, t]) => t.furcation && t.state !== 'MISSING' && !(view === 'upper' && Number(tooth) > 30) && !(view === 'lower' && Number(tooth) < 30),
   );
+  const [open, setOpen] = useState<string | null>(null);
   return (
     <>
       {marked.map(([tooth]) => {
@@ -529,16 +530,37 @@ function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; conten
         return (
           <Fragment key={tooth}>
           {createPortal(
-          <Html center zIndexRange={[15, 0]}>
-            {/* подпись словом: значок без текста не читается; нажатие открывает карточку зуба с отметкой фуркации */}
-            <button
-              type="button"
-              className={s.furcation}
-              aria-label={`Открытая фуркация, зуб ${tooth}`}
-              onClick={(e) => onTooth?.(Number(tooth), e.currentTarget)}
-            >
-              фуркация
-            </button>
+          <Html center zIndexRange={[24, 21]}>
+            {/* компактная метка F; нажатие показывает пояснение и ведёт в карточку зуба */}
+            <span className={s.furcationWrap}>
+              <button
+                type="button"
+                className={s.furcation}
+                aria-label={`Открытая фуркация, зуб ${tooth}`}
+                aria-expanded={open === tooth}
+                onClick={() => setOpen((o) => (o === tooth ? null : tooth))}
+              >
+                F
+              </button>
+              {open === tooth && (
+                <span className={s.furcationTip} role="tooltip">
+                  <b>Фуркация, зуб {tooth}</b>
+                  <span>Открытая фуркация: убыль кости в области разветвления корней многокорневого зуба. Отметка ставится и снимается в карточке зуба.</span>
+                  {onTooth && (
+                    <button
+                      type="button"
+                      className={s.furcationLink}
+                      onClick={(e) => {
+                        setOpen(null);
+                        onTooth(Number(tooth), e.currentTarget);
+                      }}
+                    >
+                      Карточка зуба
+                    </button>
+                  )}
+                </span>
+              )}
+            </span>
           </Html>,
           anchor,
         )}
