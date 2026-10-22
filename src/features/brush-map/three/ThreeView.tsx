@@ -6,6 +6,7 @@ import { Component, Fragment, Suspense, use, useEffect, useMemo, useRef, useStat
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { MapElement } from '@/domain/brushMap';
+import { glassClass } from '@/ui/Glass';
 import { SvgMarker } from '../scheme/SvgMarker';
 import type { ViewKey } from '../useMapKeyboard';
 import { createMaterials, setFade, type JawMaterials, type QualityTier } from './materials';
@@ -543,7 +544,7 @@ function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; conten
                 Ф
               </button>
               {open === tooth && (
-                <span className={s.furcationTip} role="tooltip">
+                <span className={`${glassClass} ${s.furcationTip}`} role="tooltip">
                   <b>Фуркация, зуб {tooth}</b>
                   <span>Открытая фуркация: убыль кости в области разветвления корней многокорневого зуба. Отметка ставится и снимается в карточке зуба.</span>
                   {onTooth && (
