@@ -531,7 +531,7 @@ function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; conten
           <Fragment key={tooth}>
           {createPortal(
           <Html center zIndexRange={[24, 21]}>
-            {/* компактная метка F; нажатие показывает пояснение и ведёт в карточку зуба */}
+            {/* компактная метка «Ф»; нажатие показывает пояснение и ведёт в карточку зуба */}
             <span className={s.furcationWrap}>
               <button
                 type="button"
@@ -540,7 +540,7 @@ function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; conten
                 aria-expanded={open === tooth}
                 onClick={() => setOpen((o) => (o === tooth ? null : tooth))}
               >
-                F
+                Ф
               </button>
               {open === tooth && (
                 <span className={s.furcationTip} role="tooltip">
