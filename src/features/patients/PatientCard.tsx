@@ -77,7 +77,7 @@ export function PatientCard({ patient, visits }: Props) {
     <div className={s.page}>
       <div className={s.head}>
         <Heading as="h1" level="title1">
-          <span className={s.cardNumber}>{patient.cardNumber}</span> {patientTitle(patient)}
+          {patientTitle(patient) ?? 'Без имени'} <span className={s.cardNumber}>{patient.cardNumber}</span>
         </Heading>
         <div className={s.actions}>
           {canEdit && (

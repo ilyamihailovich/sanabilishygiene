@@ -60,6 +60,13 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
   const tabbarRef = useRef<HTMLElement>(null);
   const [thumb, setThumb] = useState<{ x: number; width: number } | null>(null);
   useEffect(() => setPendingTab(null), [pathname]);
+  // направление смахивания: новая вкладка правее — экран въезжает справа
+  const prevTab = useRef(routeTab);
+  const slideFrom = useRef(0);
+  if (prevTab.current !== routeTab) {
+    slideFrom.current = routeTab > prevTab.current ? 1 : -1;
+    prevTab.current = routeTab;
+  }
   useLayoutEffect(() => {
     const nav = tabbarRef.current;
     const tab = nav?.querySelectorAll<HTMLElement>(`.${s.tab}`)[activeTab];
@@ -96,7 +103,8 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
                 <span className={s.userName}>{staff.displayName}</span> <span className={s.userRole}>· {staff.roleLabel}</span>
               </span>
               <span className={s.avatar} aria-hidden="true">
-                {initials}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {staff.avatarUrl ? <img src={staff.avatarUrl} alt="" className={s.avatarImg} /> : initials}
               </span>
             </button>
           </div>
@@ -120,7 +128,15 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
 
         {/* смена раздела: короткое размытие экрана; два одинаковых класса перезапускают анимацию без пересоздания страницы */}
         <main className={cx(s.main, blurKey > 0 && (blurKey % 2 ? s.mainSwitchA : s.mainSwitchB))}>
-          {children}
+          {/* раздел въезжает со стороны нажатой вкладки, как смахивание экрана */}
+          <motion.div
+            key={routeTab}
+            initial={slideFrom.current === 0 ? false : { x: slideFrom.current * 56, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+          >
+            {children}
+          </motion.div>
         </main>
 
         <nav ref={tabbarRef} className={cx(glassClass, s.tabbar)} aria-label="Разделы">

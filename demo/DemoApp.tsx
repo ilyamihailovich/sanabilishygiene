@@ -15,6 +15,7 @@ import { TemplateLibrary } from '@/features/templates/TemplateLibrary';
 import { VisitWorkspace, type VisitDoc } from '@/features/visit/VisitWorkspace';
 import { ui } from '@/content/ui.ru';
 import { emptyBrushMap } from '@/domain/brushMap';
+import { patientTitle } from '@/domain/patient';
 import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 import { emptyPsr } from '@/domain/psr';
 import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
@@ -24,6 +25,7 @@ import type { CatalogItem } from '@/server/services/catalog';
 import { Card } from '@/ui/Card';
 import { Heading } from '@/ui/Heading';
 import { Segmented } from '@/ui/Segmented';
+import avatar from './assets/avatar-doctor.jpg';
 import sample from '../prisma/sample-content.json';
 import data from './data.json';
 import { addDoc, removeDoc, seedDocs, useDocs } from './docStore';
@@ -67,16 +69,17 @@ const staff: StaffInfo = {
   permissions: ['patient.write', 'visit.write', 'visit.delete', 'document.write', 'issue.create', 'link.manage', 'template.personal', 'texts.approve'],
   prefs: { mapMode: 'three', sizeHotkeys: [] },
   idleTimeoutMin: 240,
+  avatarUrl: avatar,
 };
 
 /* Пациенты и визиты прототипа. Заполнен один визит: пациент 10482, остальные показывают список и пустой визит. */
 export const patients = [
   { id: 'p-10482', cardNumber: sample.patient.cardNumber, displayName: sample.patient.displayName as string | null, fullName: sample.patient.fullName as string | null },
-  { id: 'p-10391', cardNumber: '10391', displayName: 'Михаил', fullName: null },
-  { id: 'p-10377', cardNumber: '10377', displayName: null, fullName: null },
-  { id: 'p-10215', cardNumber: '10215', displayName: 'Елена', fullName: null },
-  { id: 'p-10164', cardNumber: '10164', displayName: 'Дмитрий', fullName: null },
-  { id: 'p-10102', cardNumber: '10102', displayName: 'Ольга', fullName: null },
+  { id: 'p-10391', cardNumber: '10391', displayName: 'Михаил', fullName: 'Соколов Михаил Андреевич' },
+  { id: 'p-10377', cardNumber: '10377', displayName: 'Наталья', fullName: 'Белова Наталья Игоревна' },
+  { id: 'p-10215', cardNumber: '10215', displayName: 'Елена', fullName: 'Кузнецова Елена Викторовна' },
+  { id: 'p-10164', cardNumber: '10164', displayName: 'Дмитрий', fullName: 'Морозов Дмитрий Олегович' },
+  { id: 'p-10102', cardNumber: '10102', displayName: 'Ольга', fullName: 'Павлова Ольга Сергеевна' },
 ];
 
 interface DemoVisit {
@@ -240,7 +243,7 @@ function StaffRoutes({ path }: { path: string }) {
   const recent = patients
     .map((p) => ({ p, v: visitsOf(p.id).find((x) => x.status === 'ISSUED') }))
     .filter((x) => x.v)
-    .map(({ p, v }) => ({ patientId: p.id, card: p.cardNumber, name: p.displayName, date: v!.date, boib: v!.boib }));
+    .map(({ p, v }) => ({ patientId: p.id, card: p.cardNumber, name: patientTitle(p), date: v!.date, boib: v!.boib }));
   return (
     <HomeBento
       today={new Date().toISOString()}
@@ -249,7 +252,7 @@ function StaffRoutes({ path }: { path: string }) {
         .filter((v) => v.status === 'DRAFT')
         .map((v) => {
           const p = patients.find((x) => x.id === v.patientId)!;
-          return { id: v.id, card: p.cardNumber, name: p.displayName, updatedAt: `${v.date}T10:40:00.000Z`, docs: v.documents.length };
+          return { id: v.id, card: p.cardNumber, name: patientTitle(p), updatedAt: `${v.date}T10:40:00.000Z`, docs: v.documents.length };
         })}
       templates={templates.length}
       personalTemplates={0}

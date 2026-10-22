@@ -314,8 +314,14 @@ select.metaInput {
 }
 
 /* Номер карты в заголовке серым, имя и фамилия основным цветом */
+/* номер карты после имени: мельче и полупрозрачный */
 .card {
-  color: var(--color-text-secondary);
+  font-size: 0.5em;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  color: var(--color-text);
+  opacity: 0.45;
+  vertical-align: 0.25em;
 }
 
 .headSlot:empty {

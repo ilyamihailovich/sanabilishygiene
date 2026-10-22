@@ -38,7 +38,7 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
       <Card className={s.recent} padding={28}>
         <CardHeader
           title={ui.home.recent}
-          meta={recent.length ? <CounterChip>{recent.length}</CounterChip> : undefined}
+          meta={recent.length ? <span className={s.count}>{recent.length}</span> : undefined}
           action={
             <Link href="/patients" aria-label={ui.home.allPatients}>
               <IconButton label={ui.home.allPatients} icon={<IconArrowUpRight size={20} />} variant="muted" size={40} tabIndex={-1} />
@@ -51,8 +51,8 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
               <li key={p.patientId}>
                 <Link href={`/patients/${p.patientId}`} className={`${s.item} ${s.link}`}>
                   <span className={s.who}>
-                    <span className={s.card}>{p.card}</span>
-                    <span className={s.sub}>{p.name ?? 'Без имени'}</span>
+                    <span className={s.card}>{p.name ?? 'Без имени'}</span>
+                    <span className={s.number}>{p.card}</span>
                   </span>
                   <span className={s.sub}>
                     <Num>{formatDate(p.date)}</Num>
@@ -68,15 +68,17 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
       </Card>
 
       <Card className={s.drafts}>
-        <CardHeader title={ui.home.drafts} meta={drafts.length ? <CounterChip>{drafts.length}</CounterChip> : undefined} />
+        <CardHeader title={ui.home.drafts} meta={drafts.length ? <span className={s.count}>{drafts.length}</span> : undefined} />
         {drafts.length ? (
           <ul className={s.draftList}>
             {drafts.map((d) => (
               <li key={d.id}>
                 <Link href={`/visits/${d.id}`} className={`${s.item} ${s.link}`}>
                   <span className={s.who}>
-                    <span className={s.card}>{d.card}</span>
-                    <span className={s.sub}>{countLabel(d.docs, ['документ', 'документа', 'документов'])}</span>
+                    <span className={s.card}>{d.name ?? 'Без имени'}</span>
+                    <span className={s.number}>
+                      {d.card} · {countLabel(d.docs, ['документ', 'документа', 'документов'])}
+                    </span>
                   </span>
                   <span className={s.sub}>
                     <Num>{formatTime(d.updatedAt)}</Num>

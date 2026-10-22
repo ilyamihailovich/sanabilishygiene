@@ -135,7 +135,7 @@ export function VisitWorkspace(props: Props) {
     <div className={s.layout}>
       <div className={s.head}>
         <Heading as="h1" level="title1">
-          <span className={s.card}>{visit.patient.cardNumber}</span> {patientTitle(visit.patient)}
+          {patientTitle(visit.patient) ?? 'Без имени'} <span className={s.card}>{visit.patient.cardNumber}</span>
         </Heading>
         <details className={s.metaDetails} open={!compactMeta}>
           <summary className={s.metaSummary}>

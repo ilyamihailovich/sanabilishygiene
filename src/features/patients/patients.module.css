@@ -204,6 +204,19 @@
 }
 
 /* Номер карты в заголовке серым, имя и фамилия основным цветом */
+/* номер карты после имени: мельче и полупрозрачный */
 .cardNumber {
-  color: var(--color-text-secondary);
+  font-size: 0.5em;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  color: var(--color-text);
+  opacity: 0.45;
+  vertical-align: 0.25em;
+}
+
+.number {
+  font-size: var(--fs-caption);
+  color: var(--color-text);
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
 }

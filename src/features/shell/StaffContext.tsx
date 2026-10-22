@@ -12,6 +12,8 @@ export interface StaffInfo {
   permissions: Permission[];
   prefs: Prefs;
   idleTimeoutMin: number;
+  /** Фото сотрудника для аватара; без него — инициалы. */
+  avatarUrl?: string | null;
 }
 
 const Ctx = createContext<StaffInfo | null>(null);

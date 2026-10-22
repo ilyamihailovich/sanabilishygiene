@@ -15,6 +15,7 @@ export default async function PatientsPage() {
         id: p.id,
         cardNumber: p.cardNumber,
         displayName: p.displayName,
+        fullName: p.fullName,
         lastVisit: p.visits[0]?.date.toISOString() ?? null,
         visits: p.visits.length,
       }))}

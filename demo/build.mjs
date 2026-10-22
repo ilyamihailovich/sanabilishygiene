@@ -25,7 +25,7 @@ const result = await build({
   minifyWhitespace: true,
   minifySyntax: true,
   legalComments: 'none',
-  loader: { '.module.css': 'local-css', '.svg': 'text' },
+  loader: { '.module.css': 'local-css', '.svg': 'text', '.jpg': 'dataurl' },
   define: { 'process.env.NODE_ENV': '"production"' },
   tsconfig: resolve(root, 'tsconfig.json'),
   alias: {

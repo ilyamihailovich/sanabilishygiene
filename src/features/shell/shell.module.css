@@ -112,6 +112,16 @@
   font-weight: var(--fw-medium);
 }
 
+.avatar {
+  overflow: hidden;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .menu {
   display: flex;
   flex-direction: column;
@@ -170,6 +180,7 @@
   max-width: var(--content-max);
   margin: 0 auto;
   padding: var(--space-6) var(--gutter) var(--space-20);
+  overflow-x: clip;
 }
 
 .tabbar {

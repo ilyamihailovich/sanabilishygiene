@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ui } from '@/content/ui.ru';
+import { patientTitle } from '@/domain/patient';
 import { api } from '@/ui/api';
 import { TextField } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
@@ -15,6 +16,7 @@ interface Row {
   id: string;
   cardNumber: string;
   displayName: string | null;
+  fullName?: string | null;
   lastVisit: string | null;
   visits: number;
 }
@@ -29,7 +31,7 @@ export function PatientSearch({ initial }: { initial: Row[] }) {
       return;
     }
     const t = setTimeout(async () => {
-      const list = await api.get<Array<{ id: string; cardNumber: string; displayName: string | null }>>(
+      const list = await api.get<Array<{ id: string; cardNumber: string; displayName: string | null; fullName: string | null }>>(
         `/api/v1/patients?card=${encodeURIComponent(q)}`,
       );
       setRows(list.map((p) => ({ ...p, lastVisit: null, visits: -1 })));
@@ -53,8 +55,8 @@ export function PatientSearch({ initial }: { initial: Row[] }) {
             <li key={r.id}>
               <Link href={`/patients/${r.id}`} className={s.row}>
                 <span className={s.who}>
-                  <span className={s.card}>{r.cardNumber}</span>
-                  <span className={s.sub}>{r.displayName ?? 'Без имени'}</span>
+                  <span className={s.card}>{patientTitle(r) ?? 'Без имени'}</span>
+                  <span className={s.number}>{r.cardNumber}</span>
                 </span>
                 <span className={s.sub}>{r.lastVisit ? <Num>{formatDate(r.lastVisit)}</Num> : ''}</span>
                 <span className={s.sub}>{r.visits >= 0 ? `визитов: ${r.visits}` : ''}</span>

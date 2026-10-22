@@ -1,3 +1,4 @@
+import { patientTitle } from '@/domain/patient';
 import { HomeBento } from '@/features/home/HomeBento';
 import { requireStaff } from '@/server/auth/guard';
 import { db } from '@/server/db';
@@ -23,14 +24,14 @@ export default async function HomePage() {
       recent={recent.map((r) => ({
         patientId: r.patient.id,
         card: r.patient.cardNumber,
-        name: r.patient.displayName,
+        name: patientTitle(r.patient),
         date: r.visitDate.toISOString(),
         boib: r.boib,
       }))}
       drafts={drafts.map((d) => ({
         id: d.id,
         card: d.patient.cardNumber,
-        name: d.patient.displayName,
+        name: patientTitle(d.patient),
         updatedAt: d.updatedAt.toISOString(),
         docs: d.documents.length,
       }))}
