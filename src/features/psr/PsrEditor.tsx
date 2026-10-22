@@ -87,7 +87,6 @@ export function PsrEditor({ documentId, rev, initial, texts, furcationTeeth, onR
         }}
         className={cx(s.sextant, value.code === null && s.empty)}
         padding={20}
-        style={typeof value.code === 'number' ? toneStyle(psrTone(value.code)) : undefined}
       >
         <div className={s.sextantHead}>
           <span className={s.range}>{sx.label}</span>
@@ -97,6 +96,7 @@ export function PsrEditor({ documentId, rev, initial, texts, furcationTeeth, onR
           <ToggleGroup
             label={`${ui.psr.code}, ${sx.label}`}
             deselectable
+            thumb="glow"
             size={44}
             value={value.code === null ? null : String(value.code)}
             onChange={(v) => {
@@ -111,6 +111,7 @@ export function PsrEditor({ documentId, rev, initial, texts, furcationTeeth, onR
           />
         </div>
         <span className={cx(s.meaning, !meaning && s.meaningEmpty)}>{meaning ?? 'Выберите наибольший код в секстанте'}</span>
+        {furcation && !value.asterisk && <span className={s.hint}>{ui.psr.furcationHint}: отметьте доп. признак</span>}
         <button
           type="button"
           role="switch"
@@ -119,15 +120,12 @@ export function PsrEditor({ documentId, rev, initial, texts, furcationTeeth, onR
           disabled={value.code === 'X'}
           onClick={() => setSextant(sx.id, { asterisk: !value.asterisk })}
         >
-          <span className={s.starMark} aria-hidden="true">
-            *
+          <span className={s.starTitle}>
+            <span className={s.starFull}>Дополнительный признак</span>
+            <span className={s.starShort}>Доп. признак</span> *
           </span>
-          <span>
-            <span className={s.starTitle}>Доп. признак</span>
-            <span className={s.starText}>фуркация, подвижность, рецессия от 3,5 мм</span>
-          </span>
+          <span className={s.starText}>фуркация, подвижность, рецессия от 3,5 мм</span>
         </button>
-        {furcation && !value.asterisk && <span className={s.hint}>{ui.psr.furcationHint}: отметьте доп. признак</span>}
       </Card>
     );
   };

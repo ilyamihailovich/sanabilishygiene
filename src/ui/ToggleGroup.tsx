@@ -17,8 +17,8 @@ interface ToggleGroupProps<T extends string> {
   value: T | null;
   onChange: (value: T | null) => void;
   label: string;
-  /** accent: заливка акцентом (ракурсы); ring: белая подложка с кольцом (кисть с цветом размера). */
-  thumb?: 'accent' | 'ring';
+  /** accent: заливка акцентом (ракурсы); ring: белая подложка с кольцом (кисть с цветом размера); glow: акцент с радиальным градиентом. */
+  thumb?: 'accent' | 'ring' | 'glow';
   /** Повторное нажатие снимает выбор. */
   deselectable?: boolean;
   size?: number;
@@ -46,13 +46,13 @@ export function ToggleGroup<T extends string>({
             aria-pressed={selected}
             aria-label={o.label}
             title={o.label}
-            className={cx(s.item, selected && (thumb === 'accent' ? s.selectedAccent : s.selectedRing))}
+            className={cx(s.item, selected && (thumb === 'ring' ? s.selectedRing : s.selectedAccent))}
             onClick={() => onChange(selected && deselectable ? null : o.value)}
           >
             {selected && (
               <motion.span
                 layoutId={`toggle-thumb-${id}`}
-                className={cx(s.thumb, thumb === 'accent' ? s.thumbAccent : s.thumbRing)}
+                className={cx(s.thumb, thumb === 'accent' ? s.thumbAccent : thumb === 'glow' ? s.thumbGlow : s.thumbRing)}
                 transition={spring}
               />
             )}

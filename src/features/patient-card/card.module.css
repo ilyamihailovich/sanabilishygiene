@@ -393,7 +393,8 @@ button.brushRow[aria-pressed='true'] {
 }
 
 .nextVisit {
-  font-size: var(--fs-title3);
+  /* срок помещается в одну строку на телефоне */
+  font-size: var(--fs-body);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-title);
   color: var(--color-text-secondary);
@@ -404,6 +405,14 @@ button.brushRow[aria-pressed='true'] {
   flex-direction: column;
   gap: var(--space-1);
   font-style: normal;
+  font-size: var(--fs-caption);
+}
+
+/* телефон и сайт одной строкой */
+.contactLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
 }
 
 .contacts a {
@@ -534,6 +543,16 @@ button.brushRow[aria-pressed='true'] {
 }
 
 .reminder {
-  align-self: flex-start;
+  display: block;
   text-decoration: none;
+}
+
+/* больше воздуха между заголовком, числом и текстом */
+.roomy {
+  gap: var(--space-6);
+}
+
+/* число слева, «3 из 25» у правого края */
+.bigValueSplit {
+  justify-content: space-between;
 }

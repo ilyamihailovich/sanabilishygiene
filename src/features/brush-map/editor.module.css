@@ -216,6 +216,7 @@ button.need[aria-pressed='true'] {
 .index {
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: var(--space-3);
   margin-top: var(--space-3);
 }

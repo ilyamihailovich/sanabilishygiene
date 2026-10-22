@@ -10,13 +10,13 @@ import { Button } from '@/ui/Button';
 import { CounterChip } from '@/ui/Chip';
 import { GlassPanel, glassClass } from '@/ui/Glass';
 import { Heading } from '@/ui/Heading';
-import { IconCalendar, IconDownload, IconShare } from '@/ui/icons';
+import { IconDownload, IconShare } from '@/ui/icons';
 import { Logo } from '@/ui/Logo';
 import { Popover } from '@/ui/Popover';
 import { Segmented } from '@/ui/Segmented';
 import { ToggleGroup } from '@/ui/ToggleGroup';
 import { cx } from '@/ui/cx';
-import { boibTone, psrTone, toneStyle } from '@/ui/tone';
+import { boibTone, toneStyle } from '@/ui/tone';
 import { archBox, elementAnchor, toothGeom } from '../brush-map/geometry';
 import { SchemeView } from '../brush-map/scheme/SchemeView';
 import { SchemeZoom } from '../brush-map/scheme/SchemeZoom';
@@ -266,7 +266,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
         ))}
 
         {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
-          <section className={s.block} aria-labelledby="pc-psr" style={toneStyle(psrTone(snapshot.psr.summary.maxCode))}>
+          <section className={cx(s.block, s.roomy)} aria-labelledby="pc-psr">
             <h2 id="pc-psr" className={s.blockTitle}>
               {ui.patient.screening}
             </h2>
@@ -275,7 +275,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
         )}
 
         {map && map.boib.pct !== null && (
-          <section className={s.block} aria-labelledby="pc-boib" style={toneStyle(boibTone(map.boib.pct))}>
+          <section className={cx(s.block, s.roomy)} aria-labelledby="pc-boib" style={toneStyle(boibTone(map.boib.pct))}>
             <h2 id="pc-boib" className={s.blockTitle}>
               {ui.patient.bleeding}
             </h2>
@@ -291,7 +291,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
             <NextVisit snapshot={snapshot} />
             {calendarUrl && (
               <a href={calendarUrl} className={s.reminder}>
-                <Button variant="secondary" leading={<IconCalendar size={18} />} tabIndex={-1}>
+                <Button variant="glass" block tabIndex={-1}>
                   Установить напоминание
                 </Button>
               </a>

@@ -3,6 +3,7 @@ import { ui } from '@/content/ui.ru';
 import { listElements, summarizeSizes } from '@/domain/brushMap';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import type { FilledDocument, FilledItem } from '@/schemas/template';
+import { cx } from '@/ui/cx';
 import { StepIllustration } from './Illustrations';
 import { dateLong, nextVisitText, productLine } from './format';
 import s from './card.module.css';
@@ -228,7 +229,7 @@ export function Bleeding({ snapshot }: { snapshot: IssueSnapshot }) {
   const prev = map.previousBoib;
   return (
     <div className={s.screening}>
-      <div className={s.bigValue}>
+      <div className={cx(s.bigValue, s.bigValueSplit)}>
         <span>{map.boib.pct} %</span>
         <span className={s.bigMeta}>
           {map.boib.bleeding} из {map.boib.examined}
@@ -255,8 +256,10 @@ export function Contacts({ snapshot }: { snapshot: IssueSnapshot }) {
   return (
     <address className={s.contacts}>
       <span>{c.address}</span>
-      <a href={`tel:${c.phone.replace(/[^\d+]/g, '')}`}>{c.phone}</a>
-      <a href={`https://${c.site}`}>{c.site}</a>
+      <span className={s.contactLinks}>
+        <a href={`tel:${c.phone.replace(/[^\d+]/g, '')}`}>{c.phone}</a>
+        <a href={`https://${c.site}`}>{c.site}</a>
+      </span>
     </address>
   );
 }

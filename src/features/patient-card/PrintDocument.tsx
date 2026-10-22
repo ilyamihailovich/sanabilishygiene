@@ -1,7 +1,7 @@
 import { ui } from '@/content/ui.ru';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import { Logo } from '@/ui/Logo';
-import { boibTone, psrTone, toneStyle } from '@/ui/tone';
+import { boibTone, toneStyle } from '@/ui/tone';
 import { PrintScheme } from './PrintScheme';
 import { AlternativesNote, Bleeding, BrushList, DocumentBody, HowTo, NextVisit, Screening, brushRows } from './blocks';
 import { dateLong } from './format';
@@ -114,7 +114,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
 
       <div className={s.cols}>
         {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
-          <section className={`${s.block} ${s.bento}`} style={toneStyle(psrTone(snapshot.psr.summary.maxCode), BENTO_BASE)}>
+          <section className={`${s.block} ${s.bento}`} style={{ background: BENTO_BASE }}>
             <h2 className={s.blockTitle}>{ui.patient.screening}</h2>
             <Screening snapshot={snapshot} />
           </section>
