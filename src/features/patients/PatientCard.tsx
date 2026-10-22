@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ui } from '@/content/ui.ru';
+import { patientTitle } from '@/domain/patient';
 import { ApiError, api } from '@/ui/api';
 import { Button } from '@/ui/Button';
 import { Card, CardHeader } from '@/ui/Card';
@@ -75,8 +76,8 @@ export function PatientCard({ patient, visits }: Props) {
   return (
     <div className={s.page}>
       <div className={s.head}>
-        <Heading as="h1" level="title1" rest={patient.displayName ?? undefined}>
-          {patient.cardNumber}
+        <Heading as="h1" level="title1">
+          <span className={s.cardNumber}>{patient.cardNumber}</span> {patientTitle(patient)}
         </Heading>
         <div className={s.actions}>
           {canEdit && (

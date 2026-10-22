@@ -64,11 +64,11 @@
   --scene-bg-edge: #e4e4e8;
 
   /* Стекло: только для плавающих элементов */
-  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-bg: rgba(255, 255, 255, 0.4);
   --glass-bg-fallback: rgba(255, 255, 255, 0.96);
   --glass-border: rgba(255, 255, 255, 0.7);
   --glass-hairline: rgba(0, 0, 0, 0.06);
-  --glass-blur: 24px;
+  --glass-blur: 12px;
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.08);
   /* Стекло на светлом фоне в элементах управления: легче плавающих панелей */
   --glass-control-bg: rgba(255, 255, 255, 0.4);
@@ -80,7 +80,7 @@
   --glass-dark-border: rgba(255, 255, 255, 0.22);
   /* Лавандовое стекло для плашек */
   --glass-notice-bg: rgba(233, 225, 244, 0.56);
-  --glass-control-blur: 16px;
+  --glass-control-blur: 10px;
 
   /* Тени непрозрачных элементов */
   --shadow-card: none;

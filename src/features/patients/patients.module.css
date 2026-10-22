@@ -202,3 +202,8 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Номер карты в заголовке серым, имя и фамилия основным цветом */
+.cardNumber {
+  color: var(--color-text-secondary);
+}

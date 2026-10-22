@@ -244,15 +244,37 @@ select.metaInput {
 }
 
 @media (max-width: 720px) {
+  /* Телефон: поля одной колонкой, врач первым, повторный визит — две половины */
   .headMeta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
     width: 100%;
   }
-  .metaField {
-    flex: 1 1 140px;
+  .metaField:nth-child(2) {
+    order: -1;
+  }
+  .nextVisit {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .metaInput {
+    display: block;
     width: 100%;
+    min-width: 0;
     min-height: 44px;
+    text-overflow: ellipsis;
+  }
+  /* iOS рисует поле даты по-своему: по центру, с собственной шириной и нулевой высотой без значения */
+  input.metaInput[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 44px;
+    text-align: left;
+  }
+  input.metaInput[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+    margin: 0;
   }
 }
 
@@ -287,4 +309,9 @@ select.metaInput {
   .metaDetails[open] .metaSummary {
     margin-bottom: var(--space-3);
   }
+}
+
+/* Номер карты в заголовке серым, имя и фамилия основным цветом */
+.card {
+  color: var(--color-text-secondary);
 }

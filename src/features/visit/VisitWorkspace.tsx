@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import type { BoibResult } from '@/domain/brushMap';
+import { patientTitle } from '@/domain/patient';
 import { brushMapSchema } from '@/schemas/brushMap';
 import { psrSchema } from '@/schemas/psr';
 import { filledDocumentSchema } from '@/schemas/template';
@@ -50,7 +51,7 @@ interface Props {
     nextVisitDate: string | null;
     nextVisitMonths: number | null;
     status: 'DRAFT' | 'ISSUED';
-    patient: { id: string; cardNumber: string; displayName: string | null };
+    patient: { id: string; cardNumber: string; displayName: string | null; fullName?: string | null };
   };
   documents: VisitDoc[];
   catalog: CatalogItem[];
@@ -131,8 +132,8 @@ export function VisitWorkspace(props: Props) {
   return (
     <div className={s.layout}>
       <div className={s.head}>
-        <Heading as="h1" level="title1" rest={visit.patient.displayName ?? undefined}>
-          {visit.patient.cardNumber}
+        <Heading as="h1" level="title1">
+          <span className={s.card}>{visit.patient.cardNumber}</span> {patientTitle(visit.patient)}
         </Heading>
         <details className={s.metaDetails} open={!compactMeta}>
           <summary className={s.metaSummary}>

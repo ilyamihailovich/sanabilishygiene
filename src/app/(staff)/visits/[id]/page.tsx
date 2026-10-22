@@ -53,7 +53,7 @@ export default async function VisitPage({ params, searchParams }: { params: Prom
         nextVisitDate: visit.nextVisitDate?.toISOString().slice(0, 10) ?? null,
         nextVisitMonths: visit.nextVisitMonths,
         status: visit.status,
-        patient: { id: visit.patient.id, cardNumber: visit.patient.cardNumber, displayName: visit.patient.displayName },
+        patient: { id: visit.patient.id, cardNumber: visit.patient.cardNumber, displayName: visit.patient.displayName, fullName: visit.patient.fullName },
       }}
       documents={visit.documents.map((d) => ({ id: d.id, type: d.type, rev: d.rev, content: d.content, templateVersionId: d.templateVersionId }))}
       catalog={catalog}
