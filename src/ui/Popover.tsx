@@ -59,12 +59,29 @@ export function Popover({ open, onClose, anchor, label, children, track }: Popov
       } else {
         placed = { left: Math.max(MARGIN, a.left - GAP - width), top: clampY(a.top + a.height / 2 - height / 2), origin: 'center right' };
       }
-      setPos((prev) => ({ ...placed, animate: prev !== null }));
+      setPos((prev) => ({ ...placed, animate: prev !== null && !following }));
+    };
+    // якорь может двигаться сам (поворот 3D-модели): поповер следует за ним без задержки и не уходит за край экрана
+    let following = false;
+    let last = '';
+    let raf = 0;
+    const follow = () => {
+      const a = anchorRect(anchor);
+      const key = `${Math.round(a.left)}:${Math.round(a.top)}`;
+      if (last && key !== last) {
+        following = true;
+        place();
+        following = false;
+      }
+      last = key;
+      raf = requestAnimationFrame(follow);
     };
     place();
+    raf = requestAnimationFrame(follow);
     window.addEventListener('resize', place);
     window.addEventListener('scroll', place, true);
     return () => {
+      cancelAnimationFrame(raf);
       window.removeEventListener('resize', place);
       window.removeEventListener('scroll', place, true);
     };
@@ -79,17 +96,25 @@ export function Popover({ open, onClose, anchor, label, children, track }: Popov
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+    // закрывается касанием вне поповера; перетаскивание (поворот модели) его не закрывает
+    let down: { x: number; y: number } | null = null;
     const onPointer = (e: PointerEvent) => {
       const target = e.target as Node;
       if (ref.current?.contains(target)) return;
       if ('current' in anchor && anchor.current?.contains(target)) return;
-      onClose();
+      down = { x: e.clientX, y: e.clientY };
+    };
+    const onUp = (e: PointerEvent) => {
+      if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6) onClose();
+      down = null;
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('pointerup', onUp);
     return () => {
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('pointerup', onUp);
     };
   }, [open, onClose, anchor]);
 

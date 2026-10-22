@@ -59,7 +59,7 @@ export function ThreeView(props: ThreeViewProps) {
   }, [onFallback]);
 
   return (
-    <div className={s.root} onPointerDown={() => (skip.current = true)}>
+    <div className={s.root} data-three-root onPointerDown={() => (skip.current = true)}>
       <Canvas
         className={s.canvas}
         // PDF: 1200 px на 85 мм — около 360 dpi, больше не нужно, а программная отрисовка на сервере дорогая
@@ -161,6 +161,13 @@ function Scene({
   const opening = useRef(intro && !capture && !reducedMotion() ? 0 : 1);
   const fades = useRef({ upper: 1, lower: 1 });
   const [ready, setReady] = useState(false);
+  // доворот камеры к выбранному месту: плашка открывается ближе к центру сцены, а не у края
+  const [focus, setFocus] = useState<{ point: THREE.Vector3; n: number } | null>(null);
+  const focusOn = (obj: THREE.Object3D | null | undefined) => {
+    if (!obj || capture) return;
+    const point = obj.getWorldPosition(new THREE.Vector3());
+    setFocus((f) => ({ point, n: (f?.n ?? 0) + 1 }));
+  };
 
   useEffect(() => {
     assignMaterials(nodes.maxilla, upperMats);
@@ -228,13 +235,14 @@ function Scene({
     const m = /^tooth_(\d{2})_/.exec(e.object.name);
     if (!m) return;
     e.stopPropagation();
+    focusOn(nodes.anchors.get(`ax_${m[1]}`));
     onTooth(Number(m[1]), pointAnchor(e.nativeEvent.clientX, e.nativeEvent.clientY));
   };
 
   return (
     <>
       <primitive object={gltf.scene} onClick={handleClick} />
-      <CameraRig nodes={nodes} view={view} opening={opening} capture={Boolean(capture)} onReady={() => setReady(true)} />
+      <CameraRig nodes={nodes} view={view} opening={opening} capture={Boolean(capture)} focus={focus} onReady={() => setReady(true)} />
       {tier !== 'low' && !capture && <Shadows nodes={nodes} />}
       {ready && (
         <Markers
@@ -246,12 +254,19 @@ function Scene({
           readOnly={Boolean(readOnly)}
           capture={Boolean(capture)}
           fades={fades}
-          onElement={onElement}
+          onElement={
+            onElement &&
+            ((key, target) => {
+              const el = elements.find((x) => x.key === key);
+              if (el) focusOn(anchorFor(nodes, el));
+              onElement(key, target);
+            })
+          }
           onHover={onHover}
         />
       )}
       {/* фуркация — пометка для врача, пациенту не показывается */}
-      {!readOnly && <Furcations nodes={nodes} content={content} view={view} onTooth={onTooth} />}
+      {!readOnly && <Furcations nodes={nodes} content={content} view={view} onTooth={onTooth} onOpen={(t) => focusOn(nodes.anchors.get(`fx_${t}`))} />}
       {capture && <CaptureSignal view={view} />}
     </>
   );
@@ -360,12 +375,14 @@ function CameraRig({
   view,
   opening,
   capture,
+  focus,
   onReady,
 }: {
   nodes: JawNodes;
   view: ViewKey;
   opening: MutableRefObject<number>;
   capture: boolean;
+  focus: { point: THREE.Vector3; n: number } | null;
   onReady: () => void;
 }) {
   const { camera, size } = useThree();
@@ -403,6 +420,17 @@ function CameraRig({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, presets]);
+
+  // доворот к выбранному месту: сдвиг камеры и цели на 60 % пути, ракурс сохраняется
+  useEffect(() => {
+    const c = controls.current;
+    if (!focus || !c || capture) return;
+    const shift = focus.point.clone().sub(c.target).multiplyScalar(0.6);
+    const from = { position: camera.position.clone(), target: c.target.clone() };
+    const to = { position: camera.position.clone().add(shift), target: c.target.clone().add(shift) };
+    tween.current = { from, to, t: 0, ms: VIEW_MS };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.n]);
 
   useFrame((_, delta) => {
     const c = controls.current;
@@ -527,7 +555,42 @@ function Markers({ nodes, elements, visual, selectedKey, highlight, readOnly, ca
   );
 }
 
-function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; content: ThreeViewProps['content']; view: ViewKey; onTooth?: ThreeViewProps['onTooth'] }) {
+/** Плашка, привязанная к точке модели, не уходит за край сцены: сдвигается внутрь с отступом 12 px. */
+function keepInside(el: HTMLElement | null) {
+  if (!el) return;
+  const root = el.closest('[data-three-root]');
+  if (!root) return;
+  const M = 12;
+  let dx = 0;
+  let dy = 0;
+  const tick = () => {
+    if (!el.isConnected) return;
+    const r = el.getBoundingClientRect();
+    const c = root.getBoundingClientRect();
+    const left = r.left - dx;
+    const top = r.top - dy;
+    dx = left < c.left + M ? c.left + M - left : left + r.width > c.right - M ? c.right - M - (left + r.width) : 0;
+    dy = top < c.top + M ? c.top + M - top : top + r.height > c.bottom - M ? c.bottom - M - (top + r.height) : 0;
+    el.style.setProperty('--dx', `${dx}px`);
+    el.style.setProperty('--dy', `${dy}px`);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function Furcations({
+  nodes,
+  content,
+  view,
+  onTooth,
+  onOpen,
+}: {
+  nodes: JawNodes;
+  content: ThreeViewProps['content'];
+  view: ViewKey;
+  onTooth?: ThreeViewProps['onTooth'];
+  onOpen: (tooth: string) => void;
+}) {
   const marked = Object.entries(content.teeth).filter(
     ([tooth, t]) => t.furcation && t.state !== 'MISSING' && !(view === 'upper' && Number(tooth) > 30) && !(view === 'lower' && Number(tooth) < 30),
   );
@@ -548,12 +611,15 @@ function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; conten
                 className={s.furcation}
                 aria-label={`Открытая фуркация, зуб ${tooth}`}
                 aria-expanded={open === tooth}
-                onClick={() => setOpen((o) => (o === tooth ? null : tooth))}
+                onClick={() => {
+                  if (open !== tooth) onOpen(tooth);
+                  setOpen((o) => (o === tooth ? null : tooth));
+                }}
               >
                 Ф
               </button>
               {open === tooth && (
-                <span className={`${glassClass} ${s.furcationTip}`} role="tooltip">
+                <span ref={keepInside} className={`${glassClass} ${s.furcationTip}`} role="tooltip">
                   <b>Фуркация, зуб {tooth}</b>
                   <span>Открытая фуркация: убыль кости в области разветвления корней многокорневого зуба. Отметка ставится и снимается в карточке зуба.</span>
                   {onTooth && (

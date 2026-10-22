@@ -76,7 +76,7 @@
 }
 
 .furcationTip {
-  /* стекло — общий класс glassClass, как у остальных плашек */
+  /* стекло — общий класс glassClass, как у остальных плашек; --dx/--dy удерживают её в пределах сцены */
   position: absolute;
   left: 50%;
   bottom: calc(100% + 8px);
@@ -90,7 +90,7 @@
   font-size: 12px;
   line-height: 1.25;
   text-align: left;
-  transform: translateX(-50%);
+  transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px));
 }
 
 .furcationLink {
