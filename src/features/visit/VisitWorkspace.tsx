@@ -14,7 +14,7 @@ import { ApiError, api } from '@/ui/api';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { ConfirmDialog } from '@/ui/Dialog';
-import { Heading, StepCounter } from '@/ui/Heading';
+import { Heading } from '@/ui/Heading';
 import { IconArrowRight, IconTrash } from '@/ui/icons';
 import { spring } from '@/ui/motion';
 import { useToast } from '@/ui/Toast';
@@ -78,6 +78,7 @@ export function VisitWorkspace(props: Props) {
   const canWrite = staff.permissions.includes('document.write');
   const compactMeta = useMediaQuery('(max-width: 720px)');
   const stepsRef = useRef<HTMLElement>(null);
+  const [headSlot, setHeadSlot] = useState<HTMLDivElement | null>(null);
 
   // Активная вкладка шага на телефоне прокручивается в центр полосы
   useEffect(() => {
@@ -203,7 +204,7 @@ export function VisitWorkspace(props: Props) {
             <button key={k} type="button" data-step={k} className={s.mobileStep} aria-current={step === k ? 'step' : undefined} onClick={() => setStep(k)}>
               {step === k && <motion.span layoutId="mobile-step" className={s.mobileThumb} transition={spring} />}
               <span>
-                {String(i + 1).padStart(2, '0')} {ui.visit.steps[i]}
+                {ui.visit.steps[i]}
               </span>
             </button>
           ))}
@@ -215,7 +216,6 @@ export function VisitWorkspace(props: Props) {
           <li key={k}>
             <button type="button" className={s.step} aria-current={step === k ? 'step' : undefined} onClick={() => setStep(k)}>
               {step === k && <motion.span layoutId="visit-step" className={s.stepThumb} transition={spring} />}
-              <span className={s.stepNum}>{String(i + 1).padStart(2, '0')}</span>
               <span className={s.stepLabel}>{ui.visit.steps[i]}</span>
             </button>
           </li>
@@ -243,7 +243,8 @@ export function VisitWorkspace(props: Props) {
               <Heading as="h2" level="title2">
                 {ui.visit.steps[index]}
               </Heading>
-              <StepCounter current={index + 1} total={STEPS.length} />
+              {/* место для переключателя режима шага (3D / Схема на карте ёршиков) */}
+          <div ref={setHeadSlot} className={s.headSlot} />
             </div>
 
             {step === 'map' &&
@@ -257,6 +258,7 @@ export function VisitWorkspace(props: Props) {
                   hotkeyOrder={staff.prefs.sizeHotkeys}
                   initialMode={staff.prefs.mapMode}
                   previousBoib={props.previousBoib}
+                  headSlot={headSlot}
                 />
               ) : (
                 <BrushMapStart previousDate={props.previousMapDate ?? null} disabled={!canWrite || busy} onStart={(start) => createDoc('BRUSH_MAP', null, start)} />

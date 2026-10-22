@@ -1,9 +1,9 @@
 'use client';
 
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { countLabel } from '@/content/plural';
 import { ui } from '@/content/ui.ru';
 import {
   addExtra,
@@ -99,9 +99,11 @@ interface Props {
   hotkeyOrder: string[];
   initialMode: Mode;
   previousBoib: (BoibResult & { date: string }) | null;
+  /** Куда вынести переключатель 3D / Схема (заголовок шага); без него — в шапке редактора. */
+  headSlot?: HTMLElement | null;
 }
 
-export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder, initialMode, previousBoib }: Props) {
+export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder, initialMode, previousBoib, headSlot }: Props) {
   const touch = useTouchLayout();
   const toast = useToast();
   const history = useHistoryState(initial);
@@ -160,7 +162,6 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
       }),
     [content, catalogById],
   );
-  const activeCount = elements.filter((e) => e.active && e.kind !== 'edge').length;
 
   // 3D недоступно — сразу схема
   useEffect(() => {
@@ -338,6 +339,18 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
 
   const hoverEl = hover ? (byKey.get(hover.key) ?? null) : null;
 
+  const modeToggle = (
+    <Segmented
+      label={ui.mapMode.label}
+      value={mode}
+      onChange={setMode}
+      options={[
+        { value: 'three', label: ui.mapMode.three },
+        { value: 'scheme', label: ui.mapMode.scheme },
+      ]}
+    />
+  );
+
   // На телефоне пульт поверх сцены, на компьютере под ней
   const dock = (
     <div className={touch ? s.bottomDock : s.dockBelow}>
@@ -396,20 +409,10 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     <div className={s.root} data-ready={ready ? 'true' : undefined}>
       <div className={s.head}>
         <div className={s.headLeft}>
-          <CounterChip>{countLabel(activeCount, ui.map.interspaces)}</CounterChip>
-          {legend.length > 0 && <CounterChip>{countLabel(legend.length, ui.map.sizes)}</CounterChip>}
           {unverified && <Notice short={ui.catalog.notVerifiedShort}>{ui.catalog.notVerified}</Notice>}
           <SaveIndicator state={save} />
         </div>
-        <Segmented
-          label={ui.mapMode.label}
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: 'three', label: ui.mapMode.three },
-            { value: 'scheme', label: ui.mapMode.scheme },
-          ]}
-        />
+        {headSlot ? createPortal(modeToggle, headSlot) : modeToggle}
       </div>
 
       <div className={`${s.stage} ${mode === 'three' || touch ? s.stageThree : ''}`}>

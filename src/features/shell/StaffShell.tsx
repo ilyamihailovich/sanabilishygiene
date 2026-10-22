@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ui } from '@/content/ui.ru';
 import { api } from '@/ui/api';
 import { cx } from '@/ui/cx';
@@ -51,6 +51,20 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
     await api.post('/api/v1/auth/logout').catch(() => undefined);
     router.replace('/login');
   };
+
+  // Нижнее меню телефона: выбранная вкладка до завершения перехода и положение подложки
+  const routeTab = items.findIndex((item) => item.match(pathname));
+  const [pendingTab, setPendingTab] = useState<number | null>(null);
+  const [blurKey, setBlurKey] = useState(0);
+  const activeTab = pendingTab ?? routeTab;
+  const tabbarRef = useRef<HTMLElement>(null);
+  const [thumb, setThumb] = useState<{ x: number; width: number } | null>(null);
+  useEffect(() => setPendingTab(null), [pathname]);
+  useLayoutEffect(() => {
+    const nav = tabbarRef.current;
+    const tab = nav?.querySelectorAll<HTMLElement>(`.${s.tab}`)[activeTab];
+    setThumb(tab ? { x: tab.offsetLeft, width: tab.offsetWidth } : null);
+  }, [activeTab, items.length]);
 
   const initials = staff.displayName
     .split(' ')
@@ -104,14 +118,28 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
           </div>
         </Popover>
 
-        <main className={s.main}>{children}</main>
+        {/* смена раздела: короткое размытие экрана; два одинаковых класса перезапускают анимацию без пересоздания страницы */}
+        <main className={cx(s.main, blurKey > 0 && (blurKey % 2 ? s.mainSwitchA : s.mainSwitchB))}>
+          {children}
+        </main>
 
-        <nav className={cx(glassClass, s.tabbar)} aria-label="Разделы">
-          {items.map((item) => {
-            const active = item.match(pathname);
+        <nav ref={tabbarRef} className={cx(glassClass, s.tabbar)} aria-label="Разделы">
+          {/* одна подложка на всё меню: переезжает к нажатой кнопке сразу, не дожидаясь загрузки раздела */}
+          {thumb && <motion.span className={s.tabThumb} initial={false} animate={thumb} transition={spring} />}
+          {items.map((item, i) => {
+            const active = i === activeTab;
             return (
-              <Link key={item.href} href={item.href} className={s.tab} aria-current={active ? 'page' : undefined}>
-                {active && <motion.span layoutId="tab-thumb" className={s.tabThumb} transition={spring} />}
+              <Link
+                key={item.href}
+                href={item.href}
+                className={s.tab}
+                aria-current={active ? 'page' : undefined}
+                onClick={() => {
+                  if (i === activeTab) return;
+                  setPendingTab(i);
+                  setBlurKey((k) => k + 1);
+                }}
+              >
                 {item.icon}
                 <span>{item.label}</span>
               </Link>

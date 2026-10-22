@@ -250,7 +250,7 @@ function Scene({
         />
       )}
       {/* фуркация — пометка для врача, пациенту не показывается */}
-      {!readOnly && <Furcations nodes={nodes} content={content} view={view} />}
+      {!readOnly && <Furcations nodes={nodes} content={content} view={view} onTooth={onTooth} />}
       {capture && <CaptureSignal view={view} />}
     </>
   );
@@ -517,7 +517,7 @@ function Markers({ nodes, elements, visual, selectedKey, highlight, readOnly, ca
   );
 }
 
-function Furcations({ nodes, content, view }: { nodes: JawNodes; content: ThreeViewProps['content']; view: ViewKey }) {
+function Furcations({ nodes, content, view, onTooth }: { nodes: JawNodes; content: ThreeViewProps['content']; view: ViewKey; onTooth?: ThreeViewProps['onTooth'] }) {
   const marked = Object.entries(content.teeth).filter(
     ([tooth, t]) => t.furcation && t.state !== 'MISSING' && !(view === 'upper' && Number(tooth) > 30) && !(view === 'lower' && Number(tooth) < 30),
   );
@@ -530,11 +530,15 @@ function Furcations({ nodes, content, view }: { nodes: JawNodes; content: ThreeV
           <Fragment key={tooth}>
           {createPortal(
           <Html center zIndexRange={[15, 0]}>
-            <span className={s.furcation} title={`Фуркация ${tooth}`} aria-label={`Открытая фуркация, зуб ${tooth}`}>
-              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-                <path d="M9 15V9M9 9 4 3M9 9l5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-            </span>
+            {/* подпись словом: значок без текста не читается; нажатие открывает карточку зуба с отметкой фуркации */}
+            <button
+              type="button"
+              className={s.furcation}
+              aria-label={`Открытая фуркация, зуб ${tooth}`}
+              onClick={(e) => onTooth?.(Number(tooth), e.currentTarget)}
+            >
+              фуркация
+            </button>
           </Html>,
           anchor,
         )}

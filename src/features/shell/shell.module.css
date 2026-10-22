@@ -139,6 +139,33 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+.mainSwitchA {
+  animation: tab-switch-a 420ms var(--ease-out);
+}
+
+.mainSwitchB {
+  animation: tab-switch-b 420ms var(--ease-out);
+}
+
+@keyframes tab-switch-a {
+  0% { filter: blur(0); }
+  35% { filter: blur(8px); opacity: 0.75; }
+  100% { filter: blur(0); }
+}
+
+@keyframes tab-switch-b {
+  0% { filter: blur(0); }
+  35% { filter: blur(8px); opacity: 0.75; }
+  100% { filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mainSwitchA,
+  .mainSwitchB {
+    animation: none;
+  }
+}
+
 .main {
   max-width: var(--content-max);
   margin: 0 auto;
@@ -195,8 +222,10 @@
   }
   .tabThumb {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
+    top: 6px;
+    bottom: 6px;
+    left: 0;
+    border-radius: 27px;
     background: rgba(74, 45, 107, 0.1);
   }
   .tab > :not(.tabThumb) {
