@@ -22,6 +22,8 @@
   padding: var(--space-6);
   border-radius: var(--radius-card);
   background: var(--color-surface);
+  /* диалог может открываться внутри акцентной карточки с белым текстом: цвет задаём явно */
+  color: var(--color-text);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
   pointer-events: auto;
 }

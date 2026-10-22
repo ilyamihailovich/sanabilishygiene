@@ -17,6 +17,7 @@
   border: 0;
   border-radius: var(--radius-field);
   background: var(--color-surface-sunken);
+  color: var(--color-text);
   font-size: var(--fs-body);
   font-variant-numeric: tabular-nums;
   transition:

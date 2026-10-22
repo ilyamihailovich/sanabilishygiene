@@ -16,6 +16,7 @@
   max-height: min(88dvh, 720px);
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--color-surface);
+  color: var(--color-text);
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.12);
   padding-bottom: env(safe-area-inset-bottom);
   touch-action: none;
