@@ -4,7 +4,8 @@ export type QualityTier = 'high' | 'mid' | 'low';
 
 /*
   Материалы задаются в коде, параметры из файла модели игнорируются.
-  Зубы: слоновая кость, сатин, лёгкое просвечивание режущего края; десна: бледно-розовая, мягкая;
+  Зубы: слоновая кость, глянец эмали с бликами (лак), лёгкое просвечивание режущего края;
+  десна: влажная поверхность с мягким бликом;
   кость в «Анатомии»: молочный акрил; имплантат: сатиновый титан без хрома.
 */
 export function createMaterials(tier: QualityTier) {
@@ -12,32 +13,32 @@ export function createMaterials(tier: QualityTier) {
   const enamel = physical
     ? new THREE.MeshPhysicalMaterial({
         color: '#f6efe1',
-        roughness: 0.33,
+        roughness: 0.2,
         metalness: 0,
         ior: 1.62,
-        specularIntensity: 0.55,
-        clearcoat: 0.22,
-        clearcoatRoughness: 0.4,
-        sheen: 0.25,
+        specularIntensity: 0.9,
+        clearcoat: 1,
+        clearcoatRoughness: 0.07,
+        sheen: 0.1,
         sheenRoughness: 0.6,
         sheenColor: new THREE.Color('#fffaf0'),
         ...(tier === 'high'
           ? { transmission: 0.12, thickness: 0.0025, attenuationColor: new THREE.Color('#f1dfc0'), attenuationDistance: 0.006 }
           : {}),
       })
-    : new THREE.MeshStandardMaterial({ color: '#f4ecdc', roughness: 0.42 });
+    : new THREE.MeshStandardMaterial({ color: '#f4ecdc', roughness: 0.24 });
   const root = physical
     ? new THREE.MeshPhysicalMaterial({ color: '#e6d9bf', roughness: 0.55, sheen: 0.2, sheenColor: new THREE.Color('#f5ecd8') })
     : new THREE.MeshStandardMaterial({ color: '#e6d9bf', roughness: 0.6 });
   const gum = physical
     ? new THREE.MeshPhysicalMaterial({
-        color: '#efa4a4',
-        roughness: 0.55,
-        sheen: 0.55,
-        sheenRoughness: 0.5,
-        sheenColor: new THREE.Color('#f7cfca'),
-        clearcoat: 0.06,
-        clearcoatRoughness: 0.6,
+        color: '#ec9c9e',
+        roughness: 0.42,
+        sheen: 0.6,
+        sheenRoughness: 0.45,
+        sheenColor: new THREE.Color('#f9d3cf'),
+        clearcoat: 0.45,
+        clearcoatRoughness: 0.28,
       })
     : new THREE.MeshStandardMaterial({ color: '#efa4a4', roughness: 0.6 });
   const bone = new THREE.MeshPhysicalMaterial({

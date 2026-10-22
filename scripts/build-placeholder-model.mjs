@@ -87,7 +87,8 @@ function archLayout(arch) {
 
 function outline(tooth, w, d) {
   const i = idx(tooth);
-  const n = i >= 6 ? 3.2 : i >= 4 ? 2.3 : i === 3 ? 2.1 : 2.4;
+  // резцы почти прямоугольные в сечении: соседние смыкаются по всей вестибулярной кромке, без тёмной щели
+  const n = i >= 6 ? 3.2 : i >= 4 ? 2.3 : i === 3 ? 2.1 : 4.2;
   const shape = new THREE.Shape();
   const steps = 48;
   for (let k = 0; k <= steps; k++) {
@@ -104,10 +105,11 @@ function outline(tooth, w, d) {
 }
 
 /** Коронка: экструзия окклюзионного контура со скруглением, бугры, сужение к шейке и режущему краю. */
-function crownGeometry(tooth, arch) {
+function crownGeometry(tooth, arch, slot) {
   const i = idx(tooth);
   const dim = DIM[arch];
-  const w = dim.w[i - 1];
+  // ширина коронки по месту на дуге: соседние зубы смыкаются в точке контакта, без щели
+  const w = slot ? slot - GAP : dim.w[i - 1];
   const d = dim.d[i - 1];
   const h = dim.h[i - 1];
   const bevel = Math.min(w, d) * 0.22;
@@ -130,9 +132,11 @@ function crownGeometry(tooth, arch) {
     const t = THREE.MathUtils.clamp(v.y / h, 0, 1); // 0 — шейка, 1 — жевательная поверхность
     // Мезиодистально: узкая шейка, наибольшая ширина в зоне контакта (около 70 % высоты) —
     // между соседями остаётся треугольный межзубной промежуток, его заполняет сосочек
-    const contact = i <= 3 ? 0.78 : 0.68;
+    // резцы: шейка шире и контакт ниже — межзубной промежуток узкий, как у центральных резцов в норме
+    const contact = i <= 2 ? 0.46 : i === 3 ? 0.78 : 0.68;
+    const neck = i <= 2 ? 0.9 : i === 3 ? 0.72 : 0.66;
     const sm = (a, b, x) => THREE.MathUtils.smoothstep(x, a, b);
-    let sx = (i <= 3 ? 0.7 : 0.66) + (1 - (i <= 3 ? 0.7 : 0.66)) * sm(0, contact, t) - (i >= 4 ? 0.07 : 0.02) * sm(contact, 1, t);
+    let sx = neck + (1 - neck) * sm(0, contact, t) - (i >= 4 ? 0.07 : i === 3 ? 0.02 : 0) * sm(contact, 1, t);
     // Вестибулооральная выпуклость: максимум у шейки и в средней трети
     let sz = 0.86 + 0.14 * Math.sin(Math.min(1, t / 0.45) * Math.PI * 0.5) - (i >= 4 ? 0.16 : 0) * sm(0.55, 1, t);
     if (i <= 2) sz *= 1 - 0.68 * t ** 1.5; // резцы: тонкий режущий край
@@ -286,7 +290,13 @@ function gumSegment(field, k, crown, ridge, isFirst, isLast) {
     const base = OCCLUSAL + 16;
     // торец дуги сходится и по ширине, и по высоте: без тонкой вертикальной пластины
     const prof = gumProfile(w, w, crest + (1 - endFade) * (base - crest - 0.5), base, Math.min(1.2, w * 0.5));
-    const [q, v] = prof[j];
+    let [q, v] = prof[j];
+    // объём десны: валик над корнем каждого зуба с вестибулярной стороны; на стыках сегментов он нулевой
+    if (!ridge && q > 0 && v > crest) {
+      const along = Math.sin(Math.PI * x) ** 2;
+      const height = Math.sin(Math.PI * Math.min(1, (v - crest) / (base - crest)));
+      q += 0.75 * along * height ** 0.8;
+    }
     const p = field.point(s);
     return new THREE.Vector3(p.x + p.nx * q, field.sign * v, p.z + p.nz * q);
   };
@@ -362,7 +372,7 @@ const M = {
 function placeTooth(group, layoutItem, arch) {
   const { tooth, x, z, tx, tz, nx, nz } = layoutItem;
   const sign = arch === 'upper' ? 1 : -1; // вверх от окклюзионной плоскости — верхняя челюсть
-  const crown = crownGeometry(tooth, arch);
+  const crown = crownGeometry(tooth, arch, layoutItem.slot);
   const node = new THREE.Group();
   node.name = `tooth_${tooth}`;
   // локальный базис: X — по касательной, Y — длинная ось к коронке, Z — наружу
