@@ -421,14 +421,24 @@ function CameraRig({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, presets]);
 
-  // доворот к выбранному месту: сдвиг камеры и цели на 60 % пути, ракурс сохраняется
+  // поворот к выбранному месту: камера облетает челюсть и смотрит на точку снаружи дуги, точка — в центре, чуть ближе
   useEffect(() => {
     const c = controls.current;
     if (!focus || !c || capture) return;
-    const shift = focus.point.clone().sub(c.target).multiplyScalar(0.6);
+    const p = focus.point;
+    const centers = [nodes.maxilla, nodes.mandible].map((o) => new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()));
+    const center = centers.reduce((a, b) => (a.distanceTo(p) <= b.distanceTo(p) ? a : b));
+    const outward = p.clone().sub(center).setY(0);
+    if (outward.lengthSq() < 1e-8) outward.set(0, 0, 1);
+    outward.normalize();
+    const camDir = camera.position.clone().sub(c.target).normalize();
+    const dir = outward.multiplyScalar(0.8).add(camDir.clone().multiplyScalar(0.2));
+    dir.y = camDir.y;
+    dir.normalize();
+    const dist = THREE.MathUtils.clamp(camera.position.distanceTo(c.target) * 0.78, 0.09, 0.3);
     const from = { position: camera.position.clone(), target: c.target.clone() };
-    const to = { position: camera.position.clone().add(shift), target: c.target.clone().add(shift) };
-    tween.current = { from, to, t: 0, ms: VIEW_MS };
+    const to = { position: p.clone().addScaledVector(dir, dist), target: p.clone() };
+    tween.current = { from, to, t: 0, ms: 900 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus?.n]);
 
@@ -438,8 +448,14 @@ function CameraRig({
     if (tw && c) {
       tw.t = Math.min(1, tw.t + (delta * 1000) / tw.ms);
       const k = easeInOut(tw.t);
-      camera.position.lerpVectors(tw.from.position, tw.to.position, k);
+      // облёт вокруг цели: направление по сфере, расстояние отдельно, чтобы камера не проходила сквозь модель
       c.target.lerpVectors(tw.from.target, tw.to.target, k);
+      const a = tw.from.position.clone().sub(tw.from.target);
+      const b = tw.to.position.clone().sub(tw.to.target);
+      const len = THREE.MathUtils.lerp(a.length(), b.length(), k);
+      const q = new THREE.Quaternion().setFromUnitVectors(a.clone().normalize(), b.clone().normalize());
+      const dir = a.normalize().applyQuaternion(new THREE.Quaternion().slerp(q, k));
+      camera.position.copy(c.target).addScaledVector(dir, len);
       if (tw.t >= 1) tween.current = null;
     }
     c?.update();
@@ -620,6 +636,11 @@ function Furcations({
               </button>
               {open === tooth && (
                 <span ref={keepInside} className={`${glassClass} ${s.furcationTip}`} role="tooltip">
+                  <button type="button" className={s.tipClose} aria-label="Закрыть" onClick={() => setOpen(null)}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                      <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+                  </button>
                   <b>Фуркация, зуб {tooth}</b>
                   <span>Открытая фуркация: убыль кости в области разветвления корней многокорневого зуба. Отметка ставится и снимается в карточке зуба.</span>
                   {onTooth && (
