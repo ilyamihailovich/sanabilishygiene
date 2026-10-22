@@ -290,3 +290,28 @@
     flex: 1 1 100%;
   }
 }
+
+.tabsScroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 2px var(--gutter);
+}
+
+.tabsScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.tabsScroll > * {
+  width: max-content;
+}
+
+.kindChip {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.3;
+}

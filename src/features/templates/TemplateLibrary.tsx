@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import { ApiError, api } from '@/ui/api';
 import { Button } from '@/ui/Button';
-import { CounterChip } from '@/ui/Chip';
 import { Dialog } from '@/ui/Dialog';
 import { Select, TextField } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
@@ -70,6 +69,8 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
           </Button>
         )}
       </div>
+      {/* на узком экране разделы прокручиваются вбок */}
+      <div className={s.tabsScroll}>
       <Segmented
         label="Раздел"
         value={tab}
@@ -80,12 +81,13 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
           { value: 'archived', label: ui.templates.archived },
         ]}
       />
+      </div>
       {rows.length ? (
         <div className={s.picker}>
           {rows.map((t) => (
             <div key={t.id} className={s.pickCard} style={{ cursor: 'default' }}>
               <div>
-                <CounterChip>{ui.templates.kinds[t.kind]}</CounterChip>
+                <span className={s.kindChip}>{ui.templates.kinds[t.kind]}</span>
                 <p className={s.pickTitle} style={{ marginTop: 'var(--space-3)' }}>
                   {t.title}
                 </p>

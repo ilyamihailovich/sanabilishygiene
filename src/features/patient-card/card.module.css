@@ -549,7 +549,7 @@ button.brushRow[aria-pressed='true'] {
 
 /* больше воздуха между заголовком, числом и текстом */
 .roomy {
-  gap: var(--space-6);
+  gap: var(--space-12);
 }
 
 /* число слева, «3 из 25» у правого края */

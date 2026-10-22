@@ -240,7 +240,11 @@ export function Bleeding({ snapshot }: { snapshot: IssueSnapshot }) {
   return (
     <div className={s.screening}>
       <div className={cx(s.bigValue, s.bigValueSplit)}>
-        <span>{map.boib.pct} %</span>
+        {/* узкий неразрывный пробел перед знаком процента */}
+        <span>
+          {map.boib.pct}
+          {'\u202F'}%
+        </span>
         <span className={s.bigMeta}>
           {map.boib.bleeding} из {map.boib.examined}
         </span>
