@@ -270,9 +270,18 @@ function assignMaterials(group: THREE.Object3D, mats: JawMaterials) {
 }
 
 function Shadows({ nodes }: { nodes: JawNodes }) {
+  // плоскость тени — под нижней челюстью в раскрытом положении, иначе при раскрытии челюсть уходит «в тень»
   const y = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(nodes.root);
-    return box.min.y - 0.004;
+    const prev = nodes.pivot.rotation.x;
+    nodes.pivot.rotation.x = OPEN_ANGLE;
+    nodes.root.updateMatrixWorld(true);
+    const box = new THREE.Box3();
+    nodes.root.traverse((o) => {
+      if (o instanceof THREE.Mesh && o.visible && !/_root$|^bone|^implant/.test(o.name)) box.expandByObject(o);
+    });
+    nodes.pivot.rotation.x = prev;
+    nodes.root.updateMatrixWorld(true);
+    return box.min.y - 0.006;
   }, [nodes]);
   return <ContactShadows position={[0, y, 0]} opacity={0.32} scale={0.3} blur={2.6} far={0.12} resolution={512} color="#3a3340" />;
 }
