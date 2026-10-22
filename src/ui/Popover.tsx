@@ -21,6 +21,8 @@ interface PopoverProps {
   children: ReactNode;
   /** Значение, при смене которого поповер плавно переезжает к новому якорю (например, ключ выбранного маркера). */
   track?: unknown;
+  /** Узкий поповер для коротких подсказок, например плашки промежутка у пациента. */
+  narrow?: boolean;
 }
 
 const GAP = 12;
@@ -34,7 +36,7 @@ function anchorRect(anchor: PopoverProps['anchor']): DOMRect {
 }
 
 /** Поповер на десктопе: стекло, лёгкое масштабирование, закрытие по Esc и клику вне. */
-export function Popover({ open, onClose, anchor, label, children, track }: PopoverProps) {
+export function Popover({ open, onClose, anchor, label, children, track, narrow }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number; origin: string; animate: boolean } | null>(null);
 
@@ -134,7 +136,7 @@ export function Popover({ open, onClose, anchor, label, children, track }: Popov
           ref={ref}
           role="dialog"
           aria-label={label}
-          className={cx(glassClass, s.popover)}
+          className={cx(glassClass, s.popover, narrow && s.narrow)}
           style={style}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}

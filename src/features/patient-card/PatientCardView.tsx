@@ -222,7 +222,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
                   </div>
                 </>
               )}
-              <Popover open={infoEl !== null} onClose={() => setInfo(null)} anchor={infoAnchor} label="Промежуток" track={info}>
+              <Popover open={infoEl !== null} onClose={() => setInfo(null)} anchor={infoAnchor} label="Промежуток" track={info} narrow>
                 {infoEl && <ElementInfo element={infoEl} snapshot={snapshot} />}
               </Popover>
             </div>

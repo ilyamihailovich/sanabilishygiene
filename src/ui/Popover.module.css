@@ -9,6 +9,11 @@
   transform-origin: var(--origin, top center);
 }
 
+.narrow {
+  width: min(264px, calc(100vw - 96px));
+  padding: var(--space-4);
+}
+
 .arrow {
   position: absolute;
   width: 14px;
