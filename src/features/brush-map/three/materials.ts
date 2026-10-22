@@ -12,11 +12,14 @@ export function createMaterials(tier: QualityTier) {
   const physical = tier !== 'low';
   const enamel = physical
     ? new THREE.MeshPhysicalMaterial({
-        color: '#f6efe1',
+        // светлее и чуть самосветящаяся: эмаль не уходит в серое в тени
+        color: '#fcf8ef',
+        emissive: new THREE.Color('#fff6e6'),
+        emissiveIntensity: 0.08,
         roughness: 0.2,
         metalness: 0,
         ior: 1.62,
-        specularIntensity: 0.9,
+        specularIntensity: 1,
         clearcoat: 1,
         clearcoatRoughness: 0.07,
         sheen: 0.1,
@@ -26,7 +29,7 @@ export function createMaterials(tier: QualityTier) {
           ? { transmission: 0.12, thickness: 0.0025, attenuationColor: new THREE.Color('#f1dfc0'), attenuationDistance: 0.006 }
           : {}),
       })
-    : new THREE.MeshStandardMaterial({ color: '#f4ecdc', roughness: 0.24 });
+    : new THREE.MeshStandardMaterial({ color: '#faf5ea', emissive: new THREE.Color('#fff6e6'), emissiveIntensity: 0.08, roughness: 0.24 });
   const root = physical
     ? new THREE.MeshPhysicalMaterial({ color: '#e6d9bf', roughness: 0.55, sheen: 0.2, sheenColor: new THREE.Color('#f5ecd8') })
     : new THREE.MeshStandardMaterial({ color: '#e6d9bf', roughness: 0.6 });
