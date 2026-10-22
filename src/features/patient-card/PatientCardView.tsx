@@ -16,7 +16,7 @@ import { Popover } from '@/ui/Popover';
 import { Segmented } from '@/ui/Segmented';
 import { ToggleGroup } from '@/ui/ToggleGroup';
 import { cx } from '@/ui/cx';
-import { boibTone, toneStyle } from '@/ui/tone';
+import { boibTone, psrTone, toneStyle } from '@/ui/tone';
 import { archBox, elementAnchor, toothGeom } from '../brush-map/geometry';
 import { SchemeView } from '../brush-map/scheme/SchemeView';
 import { SchemeZoom } from '../brush-map/scheme/SchemeZoom';
@@ -266,7 +266,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
         ))}
 
         {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
-          <section className={cx(s.block, s.roomy)} aria-labelledby="pc-psr">
+          <section className={cx(s.block, s.roomy)} aria-labelledby="pc-psr" style={toneStyle(psrTone(snapshot.psr.summary.maxCode))}>
             <h2 id="pc-psr" className={s.blockTitle}>
               {ui.patient.screening}
             </h2>
