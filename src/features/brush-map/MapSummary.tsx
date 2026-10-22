@@ -66,14 +66,6 @@ export function NeedCard({ legend, onPick, picked }: { legend: SizeLegend[]; onP
 }
 
 export function BoibCard({ boib, previous }: { boib: BoibResult; previous: (BoibResult & { date: string }) | null }) {
-  const trend =
-    previous && boib.pct !== null
-      ? boib.pct < previous.pct!
-        ? ui.map.trendDown
-        : boib.pct > previous.pct!
-          ? ui.map.trendUp
-          : ui.map.trendSame
-      : null;
   const incomparable = previous && boib.examined && Math.abs(previous.examined - boib.examined) > boib.examined / 3;
   return (
     <Card style={boib.pct === null ? undefined : toneStyle(boibTone(boib.pct))}>
@@ -90,7 +82,12 @@ export function BoibCard({ boib, previous }: { boib: BoibResult; previous: (Boib
           </div>
           {(previous || incomparable) && (
             <p className={s.indexNote}>
-              {previous && `${ui.map.previous} ${formatDate(previous.date)}: ${previous.pct} %${trend ? `, ${trend}` : ''}`}
+              {previous && (
+                <span className={s.indexPrev}>
+                  <span>Прошлый визит {formatDate(previous.date)}</span>
+                  <span>{previous.pct} %</span>
+                </span>
+              )}
               {previous && incomparable && <br />}
               {incomparable && ui.map.incomparable}
             </p>

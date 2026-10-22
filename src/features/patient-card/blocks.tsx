@@ -27,7 +27,7 @@ export function brushRows(snapshot: IssueSnapshot): BrushRow[] {
     return {
       ref: u.ref,
       label: c ? c.label : (u.freeText ?? '—'),
-      meta: c ? `${c.brand}${c.line ? `, ${c.line}` : ''} · проход ${c.passageMm.replace('.', ',')} мм` : ui.map.freeText,
+      meta: c ? `проход ${c.passageMm.replace('.', ',')} мм` : ui.map.freeText,
       color: c?.colorHex ?? null,
       count: u.count,
       where: u.keys.map((k) => labels.get(k) ?? k),
@@ -44,6 +44,20 @@ export function alternatives(snapshot: IssueSnapshot) {
   };
 }
 
+/** Места применения: промежутки плашками. */
+function Where({ list }: { list: string[] }) {
+  return (
+    <span className={s.brushWhere}>
+      <span className="visually-hidden">{ui.patient.whereToUse}: </span>
+      {list.map((w) => (
+        <span key={w} className={s.whereChip}>
+          {w}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function BrushList({ rows, active, onPick, compact }: { rows: BrushRow[]; active?: string | null; onPick?: (ref: string) => void; compact?: boolean }) {
   return (
     <ul className={`${s.brushList} ${compact ? s.brushCompact : ''}`}>
@@ -54,9 +68,7 @@ export function BrushList({ rows, active, onPick, compact }: { rows: BrushRow[];
             <span className={s.brushText}>
               <span className={s.brushLabel}>{r.label}</span>
               <span className={s.brushMeta}>{r.meta}</span>
-              <span className={s.brushWhere}>
-                {ui.patient.whereToUse}: {r.where.join(', ')}
-              </span>
+              <Where list={r.where} />
             </span>
             <span className={s.brushCount}>{countLabel(r.count, ui.map.interspaces)}</span>
           </>
@@ -106,9 +118,7 @@ export function AlternativesNote({ snapshot, compact }: { snapshot: IssueSnapsho
             <AltIcon kind={r.kind} />
             <span className={s.brushText}>
               <span className={s.brushLabel}>{r.label}</span>
-              <span className={s.brushWhere}>
-                {ui.patient.whereToUse}: {r.list.join(', ')}
-              </span>
+              <Where list={r.list} />
             </span>
             <span className={s.brushCount}>{countLabel(r.list.length, ui.map.interspaces)}</span>
           </div>

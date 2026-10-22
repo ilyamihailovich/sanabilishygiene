@@ -54,7 +54,7 @@ import { SaveIndicator } from '../visit/SaveIndicator';
 import { useAutosave } from '../visit/useAutosave';
 import { VIEW_H, VIEW_W, archBox, elementAnchor, toothGeom } from './geometry';
 import { HoverCard } from './HoverCard';
-import { ElementForm, sizeMeta } from './input/ElementForm';
+import { ElementForm } from './input/ElementForm';
 import { ToothForm } from './input/ToothForm';
 import { BoibCard, NeedCard, legendFromUsage } from './MapSummary';
 import { MirrorDialog } from './MirrorDialog';
@@ -155,7 +155,8 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     () =>
       legendFromUsage(summarizeSizes(content), (id) => {
         const c = catalogById.get(id);
-        return c ? { label: c.label, meta: sizeMeta(c), color: c.colorHex } : null;
+        // бренд и вид ёршика очевидны из контекста; врачу важен проход
+        return c ? { label: c.label, meta: `проход ${c.passageMm.replace('.', ',')} мм`, color: c.colorHex } : null;
       }),
     [content, catalogById],
   );
@@ -239,6 +240,10 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
       setView(el.arch === 'upper' ? 'upper' : 'lower');
     }
   };
+
+  // признак, что обработчики клавиатуры подключены (после гидратации); на него опираются браузерные тесты
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   useMapKeyboard(!touch, {
     navigate: (move) => {
@@ -388,7 +393,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   );
 
   return (
-    <div className={s.root}>
+    <div className={s.root} data-ready={ready ? 'true' : undefined}>
       <div className={s.head}>
         <div className={s.headLeft}>
           <CounterChip>{countLabel(activeCount, ui.map.interspaces)}</CounterChip>

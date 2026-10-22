@@ -351,3 +351,10 @@ button.need[aria-pressed='true'] {
     grid-template-columns: 1fr;
   }
 }
+
+/* прошлый визит: дата слева, значение у правого края, как «3 из 25» */
+.indexPrev {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}

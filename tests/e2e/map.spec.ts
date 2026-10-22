@@ -23,6 +23,7 @@ test('клавиатура: стрелки по порядку осмотра, �
   const { visitId } = await newVisitWithMap(page, 'scheme');
   await page.goto(`/visits/${visitId}?step=map`);
   await page.locator('[data-key="17-16"]').waitFor();
+  await page.locator('[data-ready="true"]').waitFor();
 
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('[data-key="17-16"]')).toHaveAttribute('aria-pressed', 'true');

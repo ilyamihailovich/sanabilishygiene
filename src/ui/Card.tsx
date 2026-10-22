@@ -23,11 +23,13 @@ export function Card({ tone = 'surface', interactive = false, padding, className
 export function CardHeader({ title, meta, action }: { title: ReactNode; meta?: ReactNode; action?: ReactNode }) {
   return (
     <div className={s.header}>
-      <div className={s.titleRow}>
-        <h3 className={s.title}>{title}</h3>
-        {meta}
-      </div>
-      {action}
+      <h3 className={s.title}>{title}</h3>
+      {(meta || action) && (
+        <div className={s.headerSide}>
+          {meta && <span className={s.meta}>{meta}</span>}
+          {action}
+        </div>
+      )}
     </div>
   );
 }
