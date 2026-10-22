@@ -22,7 +22,8 @@ export interface IssueSnapshot {
   issueNumber: number;
   issuedAt: string;
   visitDate: string;
-  nextVisit: { date: string | null; months: number | null };
+  /** time — «ЧЧ:ММ», только при точной дате; в выдачах до появления поля отсутствует. */
+  nextVisit: { date: string | null; months: number | null; time?: string | null };
   patientName: string | null;
   /** ФИО для PDF; в выдачах до появления поля отсутствует. */
   patientFullName?: string | null;

@@ -1,4 +1,4 @@
-import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
+import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from 'react';
 import { cx } from './cx';
 import s from './Card.module.css';
 
@@ -6,6 +6,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   tone?: 'surface' | 'muted' | 'dark' | 'accent';
   interactive?: boolean;
   padding?: number;
+  ref?: Ref<HTMLDivElement>;
 }
 
 export function Card({ tone = 'surface', interactive = false, padding, className, style, ...rest }: CardProps) {

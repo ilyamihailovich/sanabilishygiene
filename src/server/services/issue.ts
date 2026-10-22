@@ -88,7 +88,7 @@ export async function buildSnapshot(visitId: string, issueNumber: number): Promi
     issueNumber,
     issuedAt: new Date().toISOString(),
     visitDate: iso(visit.date),
-    nextVisit: { date: visit.nextVisitDate ? iso(visit.nextVisitDate) : null, months: visit.nextVisitMonths },
+    nextVisit: { date: visit.nextVisitDate ? iso(visit.nextVisitDate) : null, months: visit.nextVisitMonths, time: visit.nextVisitDate ? visit.nextVisitTime : null },
     patientName: visit.patient.displayName,
     patientFullName: visit.patient.fullName,
     clinician: clinician ? { name: clinician.displayName, title: clinician.title } : null,

@@ -10,7 +10,7 @@ import { Button } from '@/ui/Button';
 import { CounterChip } from '@/ui/Chip';
 import { GlassPanel, glassClass } from '@/ui/Glass';
 import { Heading } from '@/ui/Heading';
-import { IconDownload, IconShare } from '@/ui/icons';
+import { IconCalendar, IconDownload, IconShare } from '@/ui/icons';
 import { Logo } from '@/ui/Logo';
 import { Popover } from '@/ui/Popover';
 import { Segmented } from '@/ui/Segmented';
@@ -54,7 +54,7 @@ export function useSnapshotVisual(snapshot: IssueSnapshot) {
 }
 
 /** Онлайн-карта пациента. Блоки выводятся, только если заполнены. Номера медкарты здесь нет. */
-export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot; pdfUrl: string }) {
+export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snapshot: IssueSnapshot; pdfUrl: string; calendarUrl?: string | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [mode, setMode] = useState<'three' | 'scheme'>('three');
   const [view, setView] = useState<ViewKey>('overview');
@@ -289,6 +289,13 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
               {ui.patient.nextVisit}
             </h2>
             <NextVisit snapshot={snapshot} />
+            {calendarUrl && (
+              <a href={calendarUrl} className={s.reminder}>
+                <Button variant="secondary" leading={<IconCalendar size={18} />} tabIndex={-1}>
+                  Установить напоминание
+                </Button>
+              </a>
+            )}
           </section>
         )}
 

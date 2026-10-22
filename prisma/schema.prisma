@@ -101,6 +101,8 @@ model Visit {
   clinicianId     String?
   status          VisitStatus @default(DRAFT)
   nextVisitDate   DateTime?   @db.Date
+  /// Время повторного визита «ЧЧ:ММ», только вместе с датой; нужно для события в календаре пациента
+  nextVisitTime   String?
   nextVisitMonths Int?
   createdById     String
   createdAt       DateTime    @default(now())

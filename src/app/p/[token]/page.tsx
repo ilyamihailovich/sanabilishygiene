@@ -17,5 +17,7 @@ export default async function PatientCardPage({ params }: { params: Promise<{ to
   const found = await issueByToken(token);
   if (!found) notFound();
   await audit({ actor: 'PATIENT_LINK', action: 'link.open', entityType: 'visit', entityId: found.issue.visitId, meta: { issue: found.issue.number } });
-  return <PatientCardView snapshot={publicSnapshotOf(found.issue)} pdfUrl={`/p/${token}/pdf`} />;
+  const snapshot = publicSnapshotOf(found.issue);
+  const hasNext = Boolean(snapshot.nextVisit.date || snapshot.nextVisit.months);
+  return <PatientCardView snapshot={snapshot} pdfUrl={`/p/${token}/pdf`} calendarUrl={hasNext ? `/p/${token}/visit.ics` : null} />;
 }

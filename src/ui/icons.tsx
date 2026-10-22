@@ -66,6 +66,13 @@ export const IconMinus = (p: IconProps) => (
   </Svg>
 );
 
+export const IconCalendar = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="5.5" width="16" height="14" rx="3" />
+    <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M12 13v3.5M10.25 14.75h3.5" />
+  </Svg>
+);
+
 export const IconCheck = (p: IconProps) => (
   <Svg {...p}>
     <path d="m5 12.5 4.5 4.5L19 7.5" />

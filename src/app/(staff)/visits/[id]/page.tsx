@@ -51,6 +51,7 @@ export default async function VisitPage({ params, searchParams }: { params: Prom
         date: visit.date.toISOString().slice(0, 10),
         clinicianId: visit.clinicianId,
         nextVisitDate: visit.nextVisitDate?.toISOString().slice(0, 10) ?? null,
+        nextVisitTime: visit.nextVisitTime,
         nextVisitMonths: visit.nextVisitMonths,
         status: visit.status,
         patient: { id: visit.patient.id, cardNumber: visit.patient.cardNumber, displayName: visit.patient.displayName, fullName: visit.patient.fullName },

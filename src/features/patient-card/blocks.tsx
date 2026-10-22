@@ -76,22 +76,44 @@ export function BrushList({ rows, active, onPick, compact }: { rows: BrushRow[];
   );
 }
 
-export function AlternativesNote({ snapshot }: { snapshot: IssueSnapshot }) {
-  const alt = alternatives(snapshot);
-  if (!alt.floss.length && !alt.none.length) return null;
+/** Значок альтернативы как на карте: белый кружок с полосой (нить) или пунктиром (не требуется). */
+function AltIcon({ kind }: { kind: 'floss' | 'none' }) {
   return (
-    <div className={s.note}>
-      {alt.floss.length > 0 && (
-        <p>
-          {ui.patient.floss}: {alt.floss.join(', ')}
-        </p>
+    <svg className={s.altIcon} width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="#fff" stroke="#1d1d1f" strokeWidth="1.5" />
+      {kind === 'floss' ? (
+        <path d="M7.5 13h11" stroke="#1d1d1f" strokeWidth="2.6" strokeLinecap="round" />
+      ) : (
+        <path d="M7.5 13h11" stroke="#8a8a8f" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="2.2 2.6" />
       )}
-      {alt.none.length > 0 && (
-        <p>
-          {ui.patient.notNeeded}: {alt.none.join(', ')}
-        </p>
-      )}
-    </div>
+    </svg>
+  );
+}
+
+export function AlternativesNote({ snapshot, compact }: { snapshot: IssueSnapshot; compact?: boolean }) {
+  const alt = alternatives(snapshot);
+  const rows = [
+    { kind: 'floss' as const, label: ui.patient.floss, list: alt.floss },
+    { kind: 'none' as const, label: ui.patient.notNeeded, list: alt.none },
+  ].filter((r) => r.list.length > 0);
+  if (!rows.length) return null;
+  return (
+    <ul className={`${s.brushList} ${compact ? s.brushCompact : ''}`}>
+      {rows.map((r) => (
+        <li key={r.kind}>
+          <div className={s.brushRow}>
+            <AltIcon kind={r.kind} />
+            <span className={s.brushText}>
+              <span className={s.brushLabel}>{r.label}</span>
+              <span className={s.brushWhere}>
+                {ui.patient.whereToUse}: {r.list.join(', ')}
+              </span>
+            </span>
+            <span className={s.brushCount}>{countLabel(r.list.length, ui.map.interspaces)}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 

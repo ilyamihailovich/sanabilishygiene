@@ -494,7 +494,8 @@ button.brushRow[aria-pressed='true'] {
   padding: 1.5mm 0;
 }
 
-.brushCompact .brushDot {
+.brushCompact .brushDot,
+.brushCompact .altIcon {
   width: 5mm;
   height: 5mm;
 }
@@ -523,4 +524,16 @@ button.brushRow[aria-pressed='true'] {
 
 .stepsCompact .stepArt {
   max-width: 30mm;
+}
+
+.altIcon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+}
+
+.reminder {
+  align-self: flex-start;
+  text-decoration: none;
 }

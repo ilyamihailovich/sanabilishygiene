@@ -87,7 +87,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
         <section className={s.block}>
           <h2 className={s.blockTitle}>{ui.patient.yourBrushes}</h2>
           <BrushList rows={rows} compact />
-          <AlternativesNote snapshot={snapshot} />
+          <AlternativesNote snapshot={snapshot} compact />
         </section>
       )}
 

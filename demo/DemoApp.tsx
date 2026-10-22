@@ -262,12 +262,20 @@ function StaffRoutes({ path }: { path: string }) {
 export function DemoApp() {
   const [tab, setTab] = useState<Tab>('doctor');
   const [pdfKind, setPdfKind] = useState<'staff' | 'public'>('staff');
+  const [notice, setNotice] = useState<string | null>(null);
   const path = usePath();
 
   // Кнопки «PDF» и «Печать» в прототипе открывают вкладку со страницами PDF
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest('a');
+      if (a && a.getAttribute('href')?.endsWith('.ics')) {
+        // просмотрщик прототипа блокирует скачивание файлов; в приложении телефон откроет «Добавить в Календарь»
+        e.preventDefault();
+        setNotice('В приложении здесь откроется «Добавить в Календарь». В прототипе скачивание файлов заблокировано.');
+        setTimeout(() => setNotice(null), 4000);
+        return;
+      }
       if (a && a.getAttribute('href')?.includes('/pdf')) {
         e.preventDefault();
         // «Скачать PDF» на онлайн-карте отдаёт вариант по ссылке, кнопки врача — вариант с ФИО
@@ -312,7 +320,12 @@ export function DemoApp() {
           </StaffShell>
         ))}
 
-      {tab === 'patient' && <PatientCardView snapshot={{ ...snapshot, patientFullName: undefined }} pdfUrl="#/pdf" />}
+      {tab === 'patient' && <PatientCardView snapshot={{ ...snapshot, patientFullName: undefined }} pdfUrl="#/pdf" calendarUrl="#visit.ics" />}
+      {notice && (
+        <div className={s.notice} role="status">
+          {notice}
+        </div>
+      )}
 
       {tab === 'pdf' && (
         <main className={s.pdf}>

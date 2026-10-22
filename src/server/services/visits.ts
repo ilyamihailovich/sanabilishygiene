@@ -15,6 +15,7 @@ export const visitPatchSchema = z
     clinicianId: z.string().nullable().optional(),
     nextVisitDate: dateString.nullable().optional(),
     nextVisitMonths: z.number().int().min(1).max(24).nullable().optional(),
+    nextVisitTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Время в формате ЧЧ:ММ').nullable().optional(),
   })
   .refine((v) => !(v.nextVisitDate && v.nextVisitMonths), 'Укажите дату или число месяцев, не оба значения');
 
@@ -75,11 +76,16 @@ export async function updateVisit(id: string, patch: z.infer<typeof visitPatchSc
   if (patch.nextVisitDate !== undefined) {
     data.nextVisitDate = patch.nextVisitDate ? toDate(patch.nextVisitDate) : null;
     if (patch.nextVisitDate) data.nextVisitMonths = null;
+    else data.nextVisitTime = null;
   }
   if (patch.nextVisitMonths !== undefined) {
     data.nextVisitMonths = patch.nextVisitMonths;
-    if (patch.nextVisitMonths) data.nextVisitDate = null;
+    if (patch.nextVisitMonths) {
+      data.nextVisitDate = null;
+      data.nextVisitTime = null;
+    }
   }
+  if (patch.nextVisitTime !== undefined) data.nextVisitTime = patch.nextVisitTime;
   const visit = await db().visit.update({ where: { id }, data });
   await audit({ userId, action: 'visit.update', entityType: 'visit', entityId: id });
   return visit;

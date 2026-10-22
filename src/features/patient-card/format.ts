@@ -14,7 +14,7 @@ export function dateLong(iso: string): string {
 
 export function nextVisitText(snapshot: IssueSnapshot): string | null {
   const { date, months: m } = snapshot.nextVisit;
-  if (date) return dateLong(date);
+  if (date) return snapshot.nextVisit.time ? `${dateLong(date)}, ${snapshot.nextVisit.time}` : dateLong(date);
   if (m) {
     const [y, mo, d] = snapshot.visitDate.split('-').map(Number);
     const target = new Date(Date.UTC(y!, mo! - 1 + m, d!));

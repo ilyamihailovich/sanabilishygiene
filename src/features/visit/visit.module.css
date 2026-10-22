@@ -258,6 +258,10 @@ select.metaInput {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
+  /* срок в месяцах на всю ширину, под ним дата и время */
+  .nextVisit select {
+    grid-column: 1 / -1;
+  }
   .metaInput {
     display: block;
     width: 100%;
@@ -266,13 +270,15 @@ select.metaInput {
     text-overflow: ellipsis;
   }
   /* iOS рисует поле даты по-своему: по центру, с собственной шириной и нулевой высотой без значения */
-  input.metaInput[type='date'] {
+  input.metaInput[type='date'],
+  input.metaInput[type='time'] {
     -webkit-appearance: none;
     appearance: none;
     line-height: 44px;
     text-align: left;
   }
-  input.metaInput[type='date']::-webkit-date-and-time-value {
+  input.metaInput[type='date']::-webkit-date-and-time-value,
+  input.metaInput[type='time']::-webkit-date-and-time-value {
     text-align: left;
     margin: 0;
   }

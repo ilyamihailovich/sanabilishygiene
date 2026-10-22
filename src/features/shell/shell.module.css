@@ -167,7 +167,7 @@
     bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 40;
     display: flex;
-    gap: 2px;
+    gap: 4px;
     padding: 6px;
     border-radius: var(--radius-capsule);
     transform: translateX(-50%);
@@ -179,13 +179,16 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    width: 76px;
-    height: 52px;
-    border-radius: 26px;
+    /* подписи не прижимаются к краям капсулы */
+    min-width: 96px;
+    height: 54px;
+    padding: 0 var(--space-4);
+    border-radius: 27px;
     color: var(--color-text-secondary);
     font-size: 12px;
     font-weight: var(--fw-medium);
     text-decoration: none;
+    transition: color var(--dur) var(--ease-out);
   }
   .tab[aria-current='page'] {
     color: var(--accent);

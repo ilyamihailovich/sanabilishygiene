@@ -36,7 +36,8 @@ const DIM = {
   lower: { w: [5.2, 5.8, 6.8, 7.0, 7.1, 11.0, 10.4, 10.0], d: [5.8, 6.0, 7.5, 7.6, 8.0, 10.4, 10.1, 9.8], h: [9.0, 9.5, 11.0, 8.5, 8.0, 7.5, 7.0, 6.5], r: [12.5, 14, 16, 14, 14, 14, 13, 11] },
 };
 const ARCH = { upper: { rx: 25.5, ry: 41, cz: -6 }, lower: { rx: 24, ry: 38, cz: -5.5 } };
-const GAP = 0.35;
+// Зазор между соседними коронками в точке контакта: почти касаются, промежуток ниже образуется сужением к шейке
+const GAP = 0.08;
 const OCCLUSAL = 0.25;
 
 function archLayout(arch) {
@@ -127,23 +128,36 @@ function crownGeometry(tooth, arch) {
   for (let k = 0; k < pos.count; k++) {
     v.fromBufferAttribute(pos, k);
     const t = THREE.MathUtils.clamp(v.y / h, 0, 1); // 0 — шейка, 1 — жевательная поверхность
-    const cervical = 0.82 + 0.18 * Math.sin(Math.min(t, 0.6) / 0.6 * Math.PI / 2);
-    let sx = cervical;
-    let sz = cervical;
-    if (i <= 2) sz *= 1 - 0.62 * t ** 1.6; // резцы: режущий край
+    // Мезиодистально: узкая шейка, наибольшая ширина в зоне контакта (около 70 % высоты) —
+    // между соседями остаётся треугольный межзубной промежуток, его заполняет сосочек
+    const contact = i <= 3 ? 0.78 : 0.68;
+    const sm = (a, b, x) => THREE.MathUtils.smoothstep(x, a, b);
+    let sx = (i <= 3 ? 0.7 : 0.66) + (1 - (i <= 3 ? 0.7 : 0.66)) * sm(0, contact, t) - (i >= 4 ? 0.07 : 0.02) * sm(contact, 1, t);
+    // Вестибулооральная выпуклость: максимум у шейки и в средней трети
+    let sz = 0.86 + 0.14 * Math.sin(Math.min(1, t / 0.45) * Math.PI * 0.5) - (i >= 4 ? 0.16 : 0) * sm(0.55, 1, t);
+    if (i <= 2) sz *= 1 - 0.68 * t ** 1.5; // резцы: тонкий режущий край
     if (i === 3) {
-      sx *= 1 - 0.45 * t ** 2.2;
-      sz *= 1 - 0.4 * t ** 2;
+      sx *= 1 - 0.42 * t ** 2.2;
+      sz *= 1 - 0.38 * t ** 2;
     }
     v.x *= sx;
     v.z *= sz;
-    if (t > 0.7 && i >= 4) {
-      // бугры жевательных зубов
-      const cx = Math.cos((v.x / (w / 2)) * Math.PI * (i >= 6 ? 1 : 0.5));
-      const cz = Math.cos((v.z / (d / 2)) * Math.PI);
-      v.y += (t - 0.7) * h * 0.18 * (cx * cz - 0.4);
+    // резцы и клыки: вестибулярная поверхность выпуклая, оральная — вогнутая
+    if (i <= 3) v.z += 0.35 * Math.sin(t * Math.PI) * (d / 8);
+    if (t > 0.72 && i >= 4) {
+      // бугры: премоляры — щёчный и язычный, моляры — четыре; между ними фиссура
+      const nxp = v.x / (w / 2);
+      const nzp = v.z / (d / 2);
+      const k = (t - 0.72) / 0.28;
+      const bump = (cx, cz, r) => Math.exp(-((nxp - cx) ** 2 + (nzp - cz) ** 2) / r);
+      const cusps =
+        i >= 6
+          ? bump(-0.45, 0.45, 0.12) + bump(0.45, 0.45, 0.12) + bump(-0.45, -0.45, 0.12) + bump(0.45, -0.45, 0.12)
+          : bump(0, 0.5, 0.16) + 0.85 * bump(0, -0.5, 0.16);
+      const fissure = Math.exp(-(nzp ** 2) / 0.02) + (i >= 6 ? Math.exp(-(nxp ** 2) / 0.02) * 0.7 : 0);
+      v.y += k * h * (0.2 * cusps - 0.09 * fissure - 0.06);
     }
-    if (i === 3 && t > 0.75) v.y += (t - 0.75) * h * 0.25 * (1 - Math.abs(v.x) / (w / 2));
+    if (i === 3 && t > 0.72) v.y += (t - 0.72) * h * 0.3 * (1 - Math.abs(v.x) / (w / 2));
     pos.setXYZ(k, v.x, v.y, v.z);
   }
   const merged = mergeVertices(g.deleteAttribute('uv') && g, 0.02);
@@ -172,35 +186,138 @@ function rootGeometry(tooth, arch, w, d) {
   return g;
 }
 
-/** Сегмент десны вокруг шейки с сосочками по краям; ridge — без лунки и сосочков. Тело закрывает корни. */
-function gumGeometry(slot, d, ridge) {
-  const W = slot + 1.4;
-  const D = d * 1.6;
-  const H = 13;
-  const g = new THREE.BoxGeometry(W, H, D, 18, 16, 16);
-  const pos = g.attributes.position;
-  const v = new THREE.Vector3();
-  for (let k = 0; k < pos.count; k++) {
-    v.fromBufferAttribute(pos, k);
-    const top = (v.y + H / 2) / H; // 0 — у основания, 1 — у десневого края
-    const ex = (v.x / (W / 2)) ** 2;
-    // поперечное сечение: мягкий валик у края, к основанию стенки сходятся
-    const roundTop = Math.sqrt(Math.max(0, 1 - Math.max(0, (top - 0.7) / 0.3) ** 2));
-    const roundBase = Math.sqrt(Math.max(0, 1 - Math.max(0, (0.25 - top) / 0.25) ** 2));
-    const taper = 0.8 + 0.2 * top;
-    v.z *= taper * (0.7 + 0.3 * roundTop) * (0.55 + 0.45 * roundBase);
-    if (top > 0.6) {
-      const ez = (v.z / (D / 2)) ** 2;
-      const scallop = ridge ? -1.4 * (1 - 0.5 * ez) : -2.4 * (1 - ex) * (1 - 0.6 * ez) + 0.7 * ex;
-      v.y += scallop * ((top - 0.6) / 0.4);
+/*
+  Десна: одна непрерывная поверхность вдоль дуги, разрезанная на сегменты по позициям зубов.
+  Сечение — валик с лабиальной и оральной стенкой и скруглённым гребнем; высота гребня
+  у шейки зуба ниже (десневой край), между зубами выше (сосочек). Сегменты gum_XX и ridge_XX
+  одной позиции совпадают на границах по вершинам и нормалям: на стыке высота — у сосочка,
+  наклон скаллопа нулевой, поэтому любые сочетания стыкуются без шва (ТЗ, раздел о десне).
+*/
+const PROFILE = 40;
+const ALONG = 26;
+
+/** Сечение в координатах (q — наружу от линии дуги, v — к верхушке корня). */
+function gumProfile(wl, wi, crest, base, r) {
+  const pts = [];
+  const arc = (cx, cy, a0, a1, n) => {
+    for (let k = 0; k <= n; k++) {
+      const a = a0 + ((a1 - a0) * k) / n;
+      pts.push([cx + r * Math.cos(a), cy - r * Math.sin(a)]);
     }
-    pos.setXYZ(k, v.x, v.y, v.z);
+  };
+  // альвеолярный валик слегка выпуклый, к основанию сходится
+  pts.push([wl * 0.9, base]);
+  pts.push([wl * 1.12, base - (base - crest) * 0.4]);
+  pts.push([wl * 1.04, base - (base - crest) * 0.75]);
+  arc(wl - r, crest + r, 0, Math.PI / 2, 8);
+  arc(-(wi - r), crest + r, Math.PI / 2, Math.PI, 8);
+  pts.push([-wi * 1.04, base - (base - crest) * 0.75]);
+  pts.push([-wi * 1.12, base - (base - crest) * 0.4]);
+  pts.push([-wi * 0.9, base]);
+  // основание замыкает сечение: десна — цельное тело, как гипсовая модель, без открытого верха
+  pts.push([0, base]);
+  pts.push([wl * 0.9, base]);
+  // равномерная переразбивка по длине, чтобы у всех сечений одинаковое число точек
+  const len = [0];
+  for (let k = 1; k < pts.length; k++) len.push(len[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+  const total = len[len.length - 1];
+  const out = [];
+  for (let j = 0; j < PROFILE; j++) {
+    const target = (total * j) / (PROFILE - 1);
+    // последняя точка — конец сечения: из-за округления findIndex может её не найти
+    let k = j === PROFILE - 1 ? len.length - 1 : len.findIndex((l) => l >= target);
+    if (k < 1) k = k < 0 ? len.length - 1 : 1;
+    const f = (target - len[k - 1]) / (len[k] - len[k - 1] || 1);
+    out.push([pts[k - 1][0] + (pts[k][0] - pts[k - 1][0]) * f, pts[k - 1][1] + (pts[k][1] - pts[k - 1][1]) * f]);
   }
-  g.deleteAttribute('uv');
-  const merged = mergeVertices(g, 0.01);
-  merged.computeVertexNormals();
-  merged.translate(0, -H / 2, 0);
-  return merged;
+  return out;
+}
+
+/** Параметры дуги десны по длине s: точка, нормаль наружу, ширина и высота гребня. */
+function gumField(arch, layout, crowns) {
+  const sign = arch === 'upper' ? 1 : -1;
+  const at = layout[0].at;
+  const total = layout[layout.length - 1].s + layout[layout.length - 1].slot / 2;
+  const point = (s) => {
+    // за концами дуги — продолжение по касательной
+    const c = Math.min(Math.max(s, 0.01), total - 0.01);
+    const p = at(c);
+    return { ...p, x: p.x + p.tx * (s - c), z: p.z + p.tz * (s - c) };
+  };
+  const bounds = layout.map((it) => [it.s - it.slot / 2, it.s + it.slot / 2]);
+  const papilla = (k) => {
+    // высота сосочка на границе k (между зубами k-1 и k) — по более низкой коронке
+    const a = crowns[Math.max(0, k - 1)];
+    const b = crowns[Math.min(crowns.length - 1, k)];
+    return OCCLUSAL + Math.min(a.h, b.h) * 0.5;
+  };
+  const depthAt = (s) => {
+    const k = layout.findIndex((it) => it.s >= s);
+    if (k < 0) return crowns[crowns.length - 1].d;
+    if (k === 0) return crowns[0].d;
+    const f = (s - layout[k - 1].s) / (layout[k].s - layout[k - 1].s);
+    return crowns[k - 1].d + (crowns[k].d - crowns[k - 1].d) * f;
+  };
+  return { sign, point, bounds, papilla, depthAt, total };
+}
+
+function gumSegment(field, k, crown, ridge, isFirst, isLast) {
+  const [s0, s1] = field.bounds[k];
+  const ext = 3.5; // десна за последним зубом закругляется
+  const from = isFirst ? s0 - ext : s0;
+  const to = isLast ? s1 + ext : s1;
+  const pLeft = field.papilla(k);
+  const pRight = field.papilla(k + 1);
+  const cervical = OCCLUSAL + crown.h * 0.8;
+  const surface = (s, j) => {
+    const x = THREE.MathUtils.clamp((s - s0) / (s1 - s0), 0, 1);
+    // плавный переход между сосочками: наклон на стыке нулевой, нормали соседних сегментов совпадают
+    const lerp = pLeft + (pRight - pLeft) * x * x * (3 - 2 * x);
+    // скаллоп: у шейки зуба край уходит к корню, у границ — сосочек; наклон на границах нулевой
+    const dip = (1 - Math.cos(2 * Math.PI * x)) / 2;
+    const crest = lerp + (ridge ? 0.35 : cervical - lerp) * dip;
+    // за концами дуги валик сходится в точку
+    const endFade =
+      isFirst && s < s0 ? Math.sin((Math.max(0, s - from) / (s0 - from)) * Math.PI / 2) : isLast && s > s1 ? Math.cos((Math.min(to - s1, s - s1) / (to - s1)) * Math.PI / 2) : 1;
+    const d = field.depthAt(Math.min(Math.max(s, s0), s1));
+    // стенка десны прилегает к шейке: чуть шире коронки у шейки
+    const w = (d * 0.43 + 0.7) * Math.max(0.04, endFade);
+    // общее основание для всех сегментов: сечения соседей на стыке совпадают
+    const base = OCCLUSAL + 16;
+    // торец дуги сходится и по ширине, и по высоте: без тонкой вертикальной пластины
+    const prof = gumProfile(w, w, crest + (1 - endFade) * (base - crest - 0.5), base, Math.min(1.2, w * 0.5));
+    const [q, v] = prof[j];
+    const p = field.point(s);
+    return new THREE.Vector3(p.x + p.nx * q, field.sign * v, p.z + p.nz * q);
+  };
+  const positions = [];
+  const normals = [];
+  const eps = 0.4;
+  for (let a = 0; a <= ALONG; a++) {
+    const s = from + ((to - from) * a) / ALONG;
+    for (let j = 0; j < PROFILE; j++) {
+      const P = surface(s, j);
+      const ds = surface(s + eps, j).sub(surface(s - eps, j));
+      const du = surface(s, Math.min(PROFILE - 1, j + 1)).sub(surface(s, Math.max(0, j - 1)));
+      const n = new THREE.Vector3().crossVectors(du, ds).normalize().multiplyScalar(field.sign);
+      positions.push(P.x, P.y, P.z);
+      normals.push(n.x, n.y, n.z);
+    }
+  }
+  const index = [];
+  for (let a = 0; a < ALONG; a++) {
+    for (let j = 0; j < PROFILE - 1; j++) {
+      const i0 = a * PROFILE + j;
+      const i1 = i0 + PROFILE;
+      if (field.sign > 0) index.push(i0, i0 + 1, i1, i0 + 1, i1 + 1, i1);
+      else index.push(i0, i1, i0 + 1, i0 + 1, i1, i1 + 1);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  g.setIndex(index);
+  return g;
 }
 
 function implantGeometry() {
@@ -231,21 +348,6 @@ function basisFor(t, y, outward) {
     z = new THREE.Vector3().crossVectors(x, y);
   }
   return new THREE.Matrix4().makeBasis(x, y, z.normalize());
-}
-
-/** Отражение по Y с сохранением направления граней. */
-function flipY(g) {
-  g.scale(1, -1, 1);
-  const index = g.index;
-  if (index) {
-    for (let k = 0; k < index.count; k += 3) {
-      const a = index.getX(k + 1);
-      index.setX(k + 1, index.getX(k + 2));
-      index.setX(k + 2, a);
-    }
-  }
-  g.computeVertexNormals();
-  return g;
 }
 
 const mat = (name, color) => new THREE.MeshStandardMaterial({ name, color, roughness: 0.5 });
@@ -310,18 +412,9 @@ function buildArch(arch) {
     placed.set(item.tooth, { item, crown });
     const margin = sign * (OCCLUSAL + crown.h * 0.78);
     const basis = basisFor(new THREE.Vector3(item.tx, 0, item.tz), new THREE.Vector3(0, 1, 0), new THREE.Vector3(item.nx, 0, item.nz));
-    for (const ridge of [false, true]) {
-      // верх сегмента (y=0) на уровне десневого края, тело уходит к корням
-      const g = gumGeometry(item.slot, crown.d, ridge);
-      if (sign > 0) flipY(g);
-      const mesh = new THREE.Mesh(g, M.gum);
-      mesh.name = `${ridge ? 'ridge' : 'gum'}_${item.tooth}`;
-      mesh.quaternion.setFromRotationMatrix(basis);
-      mesh.position.set(item.x, margin + sign * (ridge ? 0.4 : 0), item.z);
-      gums.add(mesh);
-    }
-    const b = new THREE.BoxGeometry(item.slot + 0.4, 20, crown.d * 1.35, 2, 2, 2);
-    b.translate(0, sign * 10, 0);
+    // кость под десной: не выше её основания, иначе торчит из-за дуги
+    const b = new THREE.BoxGeometry(item.slot + 0.4, 11, crown.d * 1.2, 2, 2, 2);
+    b.translate(0, sign * 5.5, 0);
     b.applyMatrix4(basis);
     b.translate(item.x, margin + sign * 1.5, item.z);
     bones.push(b.toNonIndexed());
@@ -346,12 +439,43 @@ function buildArch(arch) {
     }
   }
 
-  // межзубные промежутки: середина между соседями на уровне сосочка, с вестибулярной стороны
+  // десна: непрерывные сегменты вдоль дуги
+  const crowns = layout.map((it) => placed.get(it.tooth).crown);
+  const field = gumField(arch, layout, crowns);
+  const segs = layout.map((item, k) => ({
+    gum: gumSegment(field, k, crowns[k], false, k === 0, k === layout.length - 1),
+    ridge: gumSegment(field, k, crowns[k], true, k === 0, k === layout.length - 1),
+  }));
+  // На стыке одна нормаль на все четыре сочетания (десна или гребень слева и справа): шва нет ни в одном варианте
+  for (let k = 0; k + 1 < segs.length; k++) {
+    const sides = [
+      [segs[k].gum, ALONG],
+      [segs[k].ridge, ALONG],
+      [segs[k + 1].gum, 0],
+      [segs[k + 1].ridge, 0],
+    ];
+    for (let j = 0; j < PROFILE; j++) {
+      const n = new THREE.Vector3();
+      for (const [g, row] of sides) n.add(new THREE.Vector3().fromBufferAttribute(g.attributes.normal, row * PROFILE + j));
+      n.normalize();
+      for (const [g, row] of sides) g.attributes.normal.setXYZ(row * PROFILE + j, n.x, n.y, n.z);
+    }
+  }
+  layout.forEach((item, k) => {
+    for (const ridge of [false, true]) {
+      const mesh = new THREE.Mesh(ridge ? segs[k].ridge : segs[k].gum, M.gum);
+      mesh.name = `${ridge ? 'ridge' : 'gum'}_${item.tooth}`;
+      gums.add(mesh);
+    }
+  });
+
+  // межзубные промежутки: середина между соседями чуть выше вершины сосочка, с вестибулярной стороны
   for (let k = 0; k + 1 < layout.length; k++) {
     const a = placed.get(layout[k].tooth);
     const b = placed.get(layout[k + 1].tooth);
     const p = layout[k].at((a.item.s + b.item.s) / 2);
-    const margin = sign * (OCCLUSAL + Math.min(a.crown.h, b.crown.h) * 0.78 + 0.6);
+    // ёршик вводится между вершиной сосочка и точкой контакта
+    const margin = sign * (OCCLUSAL + Math.min(a.crown.h, b.crown.h) * 0.5 - 0.5);
     const n = new THREE.Vector3(p.nx, 0, p.nz);
     const depth = Math.min(a.crown.d, b.crown.d) * 0.62;
     group.add(empty(`ip_${a.item.tooth}_${b.item.tooth}`, new THREE.Vector3(p.x, margin, p.z).addScaledVector(n, depth), n));

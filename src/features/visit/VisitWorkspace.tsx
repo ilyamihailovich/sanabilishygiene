@@ -49,6 +49,7 @@ interface Props {
     date: string;
     clinicianId: string | null;
     nextVisitDate: string | null;
+    nextVisitTime?: string | null;
     nextVisitMonths: number | null;
     status: 'DRAFT' | 'ISSUED';
     patient: { id: string; cardNumber: string; displayName: string | null; fullName?: string | null };
@@ -179,6 +180,16 @@ export function VisitWorkspace(props: Props) {
                 aria-label={ui.visit.nextVisitDate}
                 value={visit.nextVisitDate ?? ''}
                 onChange={(e) => patchVisit({ nextVisitDate: e.target.value || null })}
+              />
+              <input
+                className={s.metaInput}
+                type="time"
+                step={300}
+                aria-label="Время повторного визита"
+                title={visit.nextVisitDate ? 'Время визита: попадёт в напоминание пациента' : 'Сначала укажите дату'}
+                disabled={!visit.nextVisitDate}
+                value={visit.nextVisitTime ?? ''}
+                onChange={(e) => patchVisit({ nextVisitTime: e.target.value || null })}
               />
             </div>
           </div>
