@@ -52,7 +52,7 @@ export function InterspaceForm({ value, onChange, sizes, density }: InterspaceFo
               <BrushSizeButton
                 key={size.id}
                 label={size.label}
-                meta={size.meta}
+                title={size.meta}
                 color={size.color}
                 {...(size.hotkey ? { hotkey: size.hotkey } : {})}
                 pressed={value.sizeId === size.id}

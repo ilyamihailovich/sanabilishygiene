@@ -15,13 +15,14 @@ export function ElementInfo({ element, snapshot }: { element: MapElement; snapsh
   const d = element.data;
   const size = d.size;
   const c = size && 'catalogId' in size ? snapshot.brushMap?.sizes[size.catalogId] : undefined;
+  const dot = c?.colorHex ?? (size && 'freeText' in size ? size.color : undefined);
   const title = element.kind === 'edge' ? `Поверхность ${element.label}` : `Промежуток ${element.label}`;
   return (
     <div className={s.info}>
       <span className={s.infoTitle}>{title}</span>
       {size ? (
         <span className={s.infoSize}>
-          <span className={s.infoDot} style={c ? { background: c.colorHex } : undefined} data-free={c ? undefined : 'true'} aria-hidden="true" />
+          <span className={s.infoDot} style={dot ? { background: dot } : undefined} data-free={dot ? undefined : 'true'} aria-hidden="true" />
           <span>
             <span className={s.infoLabel}>{c ? c.label : 'freeText' in size ? size.freeText : '—'}</span>
             {c && <span className={s.infoMeta}>проход {c.passageMm.replace('.', ',')} мм</span>}

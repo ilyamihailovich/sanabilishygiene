@@ -3,22 +3,21 @@ import s from './BrushSizeButton.module.css';
 
 interface BrushSizeButtonProps {
   label: string;
-  meta: string;
-  color: string;
+  /** Подробности размера: в подсказке, на плитке только обозначение. */
+  title?: string;
+  /** null — свой размер без цвета: пунктирная метка. */
+  color: string | null;
   hotkey?: string;
   pressed: boolean;
   onClick: () => void;
 }
 
 /** Крупная кнопка размера ёршика: цвет, обозначение, диаметр прохода, клавиша быстрого ввода. */
-export function BrushSizeButton({ label, meta, color, hotkey, pressed, onClick }: BrushSizeButtonProps) {
+export function BrushSizeButton({ label, title, color, hotkey, pressed, onClick }: BrushSizeButtonProps) {
   return (
-    <button type="button" aria-pressed={pressed} className={s.button} onClick={onClick}>
-      <span className={s.dot} style={{ background: color }} aria-hidden="true" />
-      <span className={s.text}>
-        <span className={s.label}>{label}</span>
-        <span className={s.meta}>{meta}</span>
-      </span>
+    <button type="button" aria-pressed={pressed} className={s.button} onClick={onClick} title={title}>
+      <span className={s.dot} style={color ? { background: color } : undefined} data-free={color ? undefined : 'true'} aria-hidden="true" />
+      <span className={s.label}>{label}</span>
       {pressed ? (
         <span className={s.check}>
           <IconCheck size={20} />

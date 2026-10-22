@@ -22,7 +22,7 @@ export function legendFromUsage(usage: SizeUsage[], lookup: (id: string) => { la
       ref: u.ref,
       label: c?.label ?? u.freeText ?? '—',
       meta: c?.meta ?? ui.map.freeText,
-      color: c?.color ?? null,
+      color: c?.color ?? u.color ?? null,
       count: u.count,
     };
   });

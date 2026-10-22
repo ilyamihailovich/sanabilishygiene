@@ -31,7 +31,7 @@ export function PresentView({ visitId, content, catalog }: { visitId: string; co
     (el: MapElement): MarkerVisual => {
       const sz = el.data.size;
       if (!sz) return { color: null, label: null };
-      if ('freeText' in sz) return { color: null, label: sz.freeText };
+      if ('freeText' in sz) return { color: sz.color ?? null, label: sz.freeText };
       const c = byId.get(sz.catalogId);
       return { color: c?.colorHex ?? null, label: c?.label ?? null };
     },

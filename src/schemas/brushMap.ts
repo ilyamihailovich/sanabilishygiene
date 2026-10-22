@@ -10,7 +10,11 @@ export const toothSchema = z.object({
 
 export const sizeRefSchema = z.union([
   z.object({ catalogId: z.string().min(1).max(64) }),
-  z.object({ freeText: z.string().trim().min(1).max(40) }),
+  z.object({
+    freeText: z.string().trim().min(1).max(40),
+    /** Цвет своего размера на карте и в легенде; без цвета — пунктирная метка. */
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  }),
 ]);
 
 export const approachSchema = z.enum(['VESTIBULAR', 'ORAL']);

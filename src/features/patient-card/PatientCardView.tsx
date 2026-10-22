@@ -45,7 +45,7 @@ export function useSnapshotVisual(snapshot: IssueSnapshot) {
     (el: MapElement): MarkerVisual => {
       const size = el.data.size;
       if (!size) return { color: null, label: null };
-      if ('freeText' in size) return { color: null, label: size.freeText };
+      if ('freeText' in size) return { color: size.color ?? null, label: size.freeText };
       const c = snapshot.brushMap?.sizes[size.catalogId];
       return { color: c?.colorHex ?? null, label: c?.label ?? null };
     },

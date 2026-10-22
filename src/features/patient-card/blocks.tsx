@@ -17,7 +17,7 @@ export interface BrushRow {
   where: string[];
 }
 
-/** «Ваши ёршики»: размеры, количество, где применять. Свободный ввод — текстом, без цвета. */
+/** «Ваши ёршики»: размеры, количество, где применять. Свой размер — с цветом, если врач его выбрал. */
 export function brushRows(snapshot: IssueSnapshot): BrushRow[] {
   const map = snapshot.brushMap;
   if (!map) return [];
@@ -28,7 +28,7 @@ export function brushRows(snapshot: IssueSnapshot): BrushRow[] {
       ref: u.ref,
       label: c ? c.label : (u.freeText ?? '—'),
       meta: c ? `проход ${c.passageMm.replace('.', ',')} мм` : ui.map.freeText,
-      color: c?.colorHex ?? null,
+      color: c?.colorHex ?? u.color ?? null,
       count: u.count,
       where: u.keys.map((k) => labels.get(k) ?? k),
     };

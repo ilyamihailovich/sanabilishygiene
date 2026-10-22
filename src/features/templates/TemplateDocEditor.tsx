@@ -66,7 +66,7 @@ export function TemplateDocEditor({ documentId, rev, initial, catalog, brushMap,
     const byId = new Map(catalog.map((c) => [c.id, c]));
     return summarizeSizes(brushMap).map((u) => {
       const c = u.catalogId ? byId.get(u.catalogId) : undefined;
-      return { ref: u.ref, label: c?.label ?? u.freeText ?? '—', color: c?.colorHex ?? null, count: u.count };
+      return { ref: u.ref, label: c?.label ?? u.freeText ?? '—', color: c?.colorHex ?? u.color ?? null, count: u.count };
     });
   }, [brushMap, catalog]);
 

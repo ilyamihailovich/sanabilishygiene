@@ -24,6 +24,9 @@ interface ElementFormProps {
 
 const t = ui.interspace;
 
+/** Цвета для своего размера: не совпадают с цветами каталога, чтобы метки не путались. */
+const FREE_COLORS = ['#e7a1c4', '#8e63c2', '#3fa9a6', '#9fc54a', '#c98a3c', '#8b8b90', '#2f2f33'];
+
 export function sizeMeta(c: CatalogItem) {
   return `${c.brand} · проход ${c.passageMm.replace('.', ',')} мм${c.verified ? '' : ' · не проверен'}`;
 }
@@ -31,14 +34,18 @@ export function sizeMeta(c: CatalogItem) {
 /** Ввод данных промежутка: одинаковый для схемы и 3D, поповер на десктопе и лист на смартфоне. */
 export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRemoveExtra }: ElementFormProps) {
   const d = element.data;
-  const freeText = d.size && 'freeText' in d.size ? d.size.freeText : '';
-  const [showFree, setShowFree] = useState(Boolean(freeText));
+  const free = d.size && 'freeText' in d.size ? d.size : null;
+  const freeText = free?.freeText ?? '';
+  const [showFree, setShowFree] = useState(Boolean(free));
+  const [draftColor, setDraftColor] = useState<string | undefined>(free?.color);
   const catalogId = d.size && 'catalogId' in d.size ? d.size.catalogId : null;
   const isEdge = element.kind === 'edge';
   const enabled = !isEdge || d.enabled === true;
 
-  const pickSize = (id: string) =>
+  const pickSize = (id: string) => {
+    setShowFree(false);
     onPatch(catalogId === id ? { size: null } : { size: { catalogId: id }, alternative: null });
+  };
 
   return (
     <div className={s.form}>
@@ -55,12 +62,18 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
                   <BrushSizeButton
                     key={c.id}
                     label={c.label}
-                    meta={sizeMeta(c)}
+                    title={sizeMeta(c)}
                     color={c.colorHex}
                     pressed={catalogId === c.id}
                     onClick={() => pickSize(c.id)}
                   />
                 ))}
+                <BrushSizeButton
+                  label={free?.freeText ?? 'Свой'}
+                  color={free ? (free.color ?? null) : (draftColor ?? null)}
+                  pressed={showFree}
+                  onClick={() => setShowFree((v) => !v)}
+                />
               </div>
             ) : (
               <div className={s.compactSizes}>
@@ -81,6 +94,7 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
               </div>
             )}
             {showFree ? (
+              <div className={s.free}>
               <input
                 className={s.freeInput}
                 aria-label={ui.map.freeText}
@@ -90,7 +104,7 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
                 autoFocus={!freeText}
                 onBlur={(e) => {
                   const v = e.target.value.trim();
-                  if (v && v !== freeText) onPatch({ size: { freeText: v }, alternative: null });
+                  if (v && v !== freeText) onPatch({ size: { freeText: v, ...(draftColor ? { color: draftColor } : {}) }, alternative: null });
                   if (!v && freeText) onPatch({ size: null });
                 }}
                 onKeyDown={(e) => {
@@ -98,7 +112,26 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
                   e.stopPropagation();
                 }}
               />
-            ) : (
+              <div className={s.freeColors} role="radiogroup" aria-label="Цвет своего размера">
+                {FREE_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    role="radio"
+                    aria-checked={draftColor === color}
+                    aria-label={`Цвет ${color}`}
+                    className={s.freeColor}
+                    style={{ background: color }}
+                    onClick={() => {
+                      const next = draftColor === color ? undefined : color;
+                      setDraftColor(next);
+                      if (free) onPatch({ size: { freeText: free.freeText, ...(next ? { color: next } : {}) }, alternative: null });
+                    }}
+                  />
+                ))}
+              </div>
+              </div>
+            ) : density === 'touch' ? null : (
               <button type="button" className={s.linkButton} onClick={() => setShowFree(true)}>
                 {ui.map.freeText}
               </button>

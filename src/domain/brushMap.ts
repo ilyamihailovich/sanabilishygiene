@@ -235,6 +235,7 @@ export interface SizeUsage {
   ref: string;
   catalogId?: string;
   freeText?: string;
+  color?: string;
   count: number;
   keys: string[];
 }
@@ -248,7 +249,7 @@ export function summarizeSizes(content: BrushMapContent): SizeUsage[] {
     const ref = 'catalogId' in size ? `c:${size.catalogId}` : `f:${size.freeText.toLowerCase()}`;
     const entry =
       map.get(ref) ??
-      ('catalogId' in size ? { ref, catalogId: size.catalogId, count: 0, keys: [] } : { ref, freeText: size.freeText, count: 0, keys: [] });
+      ('catalogId' in size ? { ref, catalogId: size.catalogId, count: 0, keys: [] } : { ref, freeText: size.freeText, ...(size.color ? { color: size.color } : {}), count: 0, keys: [] });
     entry.count++;
     entry.keys.push(el.key);
     map.set(ref, entry);

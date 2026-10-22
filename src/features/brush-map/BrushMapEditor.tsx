@@ -145,7 +145,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     (el: MapElement): MarkerVisual => {
       const size = el.data.size;
       if (!size) return { color: null, label: null };
-      if ('freeText' in size) return { color: null, label: size.freeText };
+      if ('freeText' in size) return { color: size.color ?? null, label: size.freeText };
       const c = catalogById.get(size.catalogId);
       return { color: c?.colorHex ?? null, label: c?.label ?? '?' };
     },
