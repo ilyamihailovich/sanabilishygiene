@@ -24,6 +24,8 @@ export interface IssueSnapshot {
   visitDate: string;
   nextVisit: { date: string | null; months: number | null };
   patientName: string | null;
+  /** ФИО для PDF; в выдачах до появления поля отсутствует. */
+  patientFullName?: string | null;
   clinician: { name: string; title: string | null } | null;
   clinic: Settings['clinic'];
   brushSteps: string[] | null;

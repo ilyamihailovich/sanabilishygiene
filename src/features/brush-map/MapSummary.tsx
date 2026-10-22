@@ -4,6 +4,7 @@ import type { BoibResult, SizeUsage } from '@/domain/brushMap';
 import { Card, CardHeader } from '@/ui/Card';
 import { CounterChip } from '@/ui/Chip';
 import { formatDate } from '@/ui/format';
+import { boibTone, toneStyle } from '@/ui/tone';
 import s from './editor.module.css';
 
 export interface SizeLegend {
@@ -75,7 +76,7 @@ export function BoibCard({ boib, previous }: { boib: BoibResult; previous: (Boib
       : null;
   const incomparable = previous && boib.examined && Math.abs(previous.examined - boib.examined) > boib.examined / 3;
   return (
-    <Card>
+    <Card style={boib.pct === null ? undefined : toneStyle(boibTone(boib.pct))}>
       <CardHeader title="BOIB" meta={boib.examined ? <CounterChip>{`${boib.examined} ${ui.map.boibExamined}`}</CounterChip> : undefined} />
       {boib.pct === null ? (
         <p className={s.muted}>{ui.map.boibNone}</p>

@@ -1,10 +1,11 @@
 import type { DocumentType } from '@/generated/prisma/enums';
 import type { Prisma } from '@/generated/prisma/client';
 import { computeBoib, emptyBrushMap } from '@/domain/brushMap';
+import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 import { emptyPsr, summarizePsr } from '@/domain/psr';
 import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
 import { psrSchema } from '@/schemas/psr';
-import { filledDocumentSchema, templateStructureSchema, type FilledDocument, type TemplateStructure } from '@/schemas/template';
+import { filledDocumentSchema, templateStructureSchema } from '@/schemas/template';
 import { audit } from '../audit';
 import { db } from '../db';
 import { HttpError, badRequest, conflict, notFound } from '../http';
@@ -33,38 +34,36 @@ function metrics(type: DocumentType, content: unknown) {
   return {};
 }
 
-export function fillFromTemplate(templateId: string, version: number, title: string, structure: TemplateStructure): FilledDocument {
-  return {
-    schema: 1,
-    templateId,
-    templateVersion: version,
-    title,
-    sections: structure.sections.map((section) => ({
-      ...section,
-      enabled: true,
-      items: section.items.map((item) => ({ ...item, enabled: true, selected: [], value: '' })),
-    })),
-  };
-}
-
-/** Новая карта на основе прошлой: формула и размеры сохраняются, отметки осмотра сбрасываются. */
-export function carryOverBrushMap(previous: BrushMapContent): BrushMapContent {
-  const elements = Object.fromEntries(
-    Object.entries(previous.elements).map(([key, data]) => [key, { ...data, bleeding: null, pain: false }]),
-  );
-  return { ...previous, elements };
-}
+export { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 
 const SINGLE: DocumentType[] = ['BRUSH_MAP', 'PSR', 'HYGIENE_PLAN'];
 
-export async function createDocument(visitId: string, type: DocumentType, templateId: string | null, userId: string) {
+/** Как начать карту ёршиков: чистая карта с формулой, отмеченной перед осмотром, или перенос с прошлого визита. */
+export interface MapStart {
+  from: 'empty' | 'previous';
+  teeth?: BrushMapContent['teeth'];
+}
+
+export async function createDocument(visitId: string, type: DocumentType, templateId: string | null, userId: string, start?: MapStart) {
   const visit = await db().visit.findUnique({ where: { id: visitId }, include: { documents: true } });
   if (!visit) throw notFound('Визит не найден');
   if (SINGLE.includes(type) && visit.documents.some((d) => d.type === type)) throw conflict('Такой документ уже есть в визите');
 
   let content: unknown;
   let templateVersionId: string | null = null;
-  if (type === 'BRUSH_MAP') content = emptyBrushMap();
+  if (type === 'BRUSH_MAP') {
+    const previous =
+      start?.from === 'previous'
+        ? await db().document.findFirst({
+            where: { type: 'BRUSH_MAP', visit: { patientId: visit.patientId, id: { not: visit.id }, date: { lte: visit.date } } },
+            orderBy: { visit: { date: 'desc' } },
+          })
+        : null;
+    if (start?.from === 'previous' && !previous) throw notFound('Прошлой карты ёршиков нет');
+    content = previous
+      ? carryOverBrushMap(brushMapSchema.parse(previous.content))
+      : brushMapSchema.parse({ ...emptyBrushMap(), teeth: { ...emptyBrushMap().teeth, ...start?.teeth } });
+  }
   else if (type === 'PSR') content = emptyPsr();
   else {
     if (!templateId) throw badRequest('Выберите шаблон');

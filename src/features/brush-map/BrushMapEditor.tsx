@@ -31,7 +31,9 @@ import { useTouchLayout } from '@/ui/hooks/useMediaQuery';
 import { IconButton } from '@/ui/IconButton';
 import {
   IconKeyboard,
+  IconMinus,
   IconMirror,
+  IconPlus,
   IconRedo,
   IconRotate,
   IconUndo,
@@ -50,14 +52,14 @@ import { ToggleGroup } from '@/ui/ToggleGroup';
 import { useToast } from '@/ui/Toast';
 import { SaveIndicator } from '../visit/SaveIndicator';
 import { useAutosave } from '../visit/useAutosave';
-import { archBox, elementAnchor, toothGeom } from './geometry';
+import { VIEW_H, VIEW_W, archBox, elementAnchor, toothGeom } from './geometry';
 import { HoverCard } from './HoverCard';
 import { ElementForm, sizeMeta } from './input/ElementForm';
 import { ToothForm } from './input/ToothForm';
 import { BoibCard, NeedCard, legendFromUsage } from './MapSummary';
 import { MirrorDialog } from './MirrorDialog';
 import { SchemeView, neighboursOf } from './scheme/SchemeView';
-import { SchemeZoom } from './scheme/SchemeZoom';
+import { SchemeZoom, type SchemeZoomHandle } from './scheme/SchemeZoom';
 import type { MarkerVisual } from './scheme/SvgMarker';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { webgl2Available } from './three/types';
@@ -80,6 +82,7 @@ export const viewIcons: Record<ViewKey, React.ReactNode> = {
 };
 
 type Jaw = 'upper' | 'lower';
+const FULL_BOX = { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
 /** Начало осмотра: 18→28 на верхней, 38→48 на нижней челюсти. */
 const JAW_START: Record<Jaw, [number, number]> = { upper: [17, 16], lower: [37, 36] };
 const jawStart = (jaw: Jaw) => {
@@ -110,6 +113,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   const [jaw, setJaw] = useState<Jaw>('upper');
   const [zoomTarget, setZoomTarget] = useState(() => jawStart('upper'));
   const jawBounds = useMemo(() => archBox(jaw), [jaw]);
+  const zoom = useRef<SchemeZoomHandle>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [panel, setPanel] = useState<'element' | 'tooth' | null>(null);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
@@ -123,6 +127,9 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
 
   const elements = useMemo(() => listElements(content), [content]);
   const byKey = useMemo(() => new Map(elements.map((e) => [e.key, e])), [elements]);
+  const selectedEl = selectedKey ? byKey.get(selectedKey) : undefined;
+  // на компьютере кнопка «+» приближает к выбранному промежутку, без выбора — к началу осмотра
+  const deskTarget = useMemo(() => (selectedEl ? elementAnchor(selectedEl) : jawStart('upper')), [selectedEl]);
   const catalogById = useMemo(() => new Map(catalog.map((c) => [c.id, c])), [catalog]);
   const hotkeyIds = useMemo(() => {
     const ordered = hotkeyOrder.filter((id) => catalogById.has(id));
@@ -424,7 +431,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           {mode === 'scheme' ? (
             <motion.div
               key="scheme"
-              className={`${s.scheme} ${touch ? s.schemeTouch : ''}`}
+              className={`${s.scheme} ${touch ? s.schemeTouch : s.schemeFill}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -449,17 +456,23 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
                   )}
                 </SchemeZoom>
               ) : (
-                <SchemeView
-                  content={content}
-                  elements={elements}
-                  visual={visual}
-                  selectedKey={selectedKey}
-                  selectedTooth={selectedTooth}
-                  markerRadius={16}
-                  onElement={onElement}
-                  onTooth={onTooth}
-                  onHover={(key, target) => setHover(key && target ? { key, target } : null)}
-                />
+                <SchemeZoom ref={zoom} bounds={FULL_BOX} intro={false} target={deskTarget}>
+                  {(box) => (
+                    <SchemeView
+                      content={content}
+                      elements={elements}
+                      visual={visual}
+                      selectedKey={selectedKey}
+                      selectedTooth={selectedTooth}
+                      box={box}
+                      live
+                      markerRadius={16}
+                      onElement={onElement}
+                      onTooth={onTooth}
+                      onHover={(key, target) => setHover(key && target ? { key, target } : null)}
+                    />
+                  )}
+                </SchemeZoom>
               )}
             </motion.div>
           ) : (
@@ -487,6 +500,12 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           <IconButton label={ui.common.undo} icon={<IconUndo size={20} />} variant="ghost" size={40} disabled={!history.canUndo} onClick={history.undo} />
           <IconButton label={ui.common.redo} icon={<IconRedo size={20} />} variant="ghost" size={40} disabled={!history.canRedo} onClick={history.redo} />
           <IconButton label={ui.map.mirror} icon={<IconMirror size={20} />} variant="ghost" size={40} onClick={() => setMirror(true)} />
+          {!touch && mode === 'scheme' && (
+            <>
+              <IconButton label="Приблизить (Ctrl + колесо)" icon={<IconPlus size={20} />} variant="ghost" size={40} onClick={() => zoom.current?.zoomBy(1.5)} />
+              <IconButton label="Отдалить" icon={<IconMinus size={20} />} variant="ghost" size={40} onClick={() => zoom.current?.zoomBy(1 / 1.5)} />
+            </>
+          )}
           {!touch && <IconButton label={`${ui.map.shortcuts} (?)`} icon={<IconKeyboard size={20} />} variant="ghost" size={40} onClick={() => setHelp(true)} />}
         </GlassPanel>
 

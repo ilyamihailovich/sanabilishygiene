@@ -21,7 +21,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
   if (!patient) notFound();
   return (
     <PatientCard
-      patient={{ id: patient.id, cardNumber: patient.cardNumber, displayName: patient.displayName }}
+      patient={{ id: patient.id, cardNumber: patient.cardNumber, displayName: patient.displayName, fullName: patient.fullName }}
       visits={patient.visits.map((v) => ({
         id: v.id,
         date: v.date.toISOString(),

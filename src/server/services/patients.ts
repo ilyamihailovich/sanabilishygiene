@@ -18,6 +18,13 @@ export const patientInputSchema = z.object({
     .transform((s) => (s === '' ? null : s))
     .nullable()
     .default(null),
+  fullName: z
+    .string()
+    .trim()
+    .max(120)
+    .transform((s) => (s === '' ? null : s))
+    .nullable()
+    .default(null),
 });
 
 export async function searchPatients(query: string, take = 20) {

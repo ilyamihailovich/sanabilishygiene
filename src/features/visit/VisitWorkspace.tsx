@@ -21,6 +21,7 @@ import { formatDate } from '@/ui/format';
 import { Num } from '@/ui/Num';
 import { useMediaQuery } from '@/ui/hooks/useMediaQuery';
 import { BrushMapEditor } from '../brush-map/BrushMapEditor';
+import { BrushMapStart, type MapStartChoice } from '../brush-map/BrushMapStart';
 import { IssuePanel } from '../issue/IssuePanel';
 import { PsrEditor } from '../psr/PsrEditor';
 import type { StaffInfo } from '../shell/StaffContext';
@@ -59,6 +60,8 @@ interface Props {
   blockers: string[];
   previousBoib: (BoibResult & { date: string }) | null;
   furcationTeeth: number[];
+  /** Дата визита с прошлой картой ёршиков пациента: из неё можно начать новую. */
+  previousMapDate?: string | null;
   share: string | null;
   lastIssue: { id: string; number: number; issuedAt: string } | null;
 }
@@ -100,10 +103,10 @@ export function VisitWorkspace(props: Props) {
     }
   };
 
-  const createDoc = async (type: VisitDoc['type'], templateId: string | null = null) => {
+  const createDoc = async (type: VisitDoc['type'], templateId: string | null = null, start?: MapStartChoice) => {
     setBusy(true);
     try {
-      await api.post(`/api/v1/visits/${visit.id}/documents`, { type, templateId });
+      await api.post(`/api/v1/visits/${visit.id}/documents`, { type, templateId, start });
       router.refresh();
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Ошибка', 'error');
@@ -244,12 +247,7 @@ export function VisitWorkspace(props: Props) {
                   previousBoib={props.previousBoib}
                 />
               ) : (
-                <Card className={s.cta}>
-                  <p className={s.ctaText}>Карта межзубных ёршиков: формула зубов, размеры для каждого промежутка, кровоточивость и индекс BOIB.</p>
-                  <Button disabled={!canWrite || busy} onClick={() => createDoc('BRUSH_MAP')}>
-                    Начать карту ёршиков
-                  </Button>
-                </Card>
+                <BrushMapStart previousDate={props.previousMapDate ?? null} disabled={!canWrite || busy} onStart={(start) => createDoc('BRUSH_MAP', null, start)} />
               ))}
 
             {step === 'psr' &&

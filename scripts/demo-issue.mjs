@@ -44,7 +44,7 @@ await call(admin, 'PUT', '/api/v1/admin/settings', {
 });
 
 const card = process.env.CARD ?? `D-${Date.now().toString().slice(-5)}`;
-const patient = await call(doctor, 'POST', '/api/v1/patients', { cardNumber: card, displayName: sample.patient.displayName });
+const patient = await call(doctor, 'POST', '/api/v1/patients', { cardNumber: card, displayName: sample.patient.displayName, fullName: sample.patient.fullName });
 const visit = await call(doctor, 'POST', `/api/v1/patients/${patient.id}/visits`, { copyBrushMap: false });
 const map = await call(doctor, 'POST', `/api/v1/visits/${visit.id}/documents`, { type: 'BRUSH_MAP' });
 const ids = catalog.map((c) => c.id);
@@ -56,7 +56,6 @@ for (const k of [...upper, ...lower]) elements[k] = { size: { catalogId: pick(k)
 elements['11-21'] = { size: null, alternative: 'FLOSS', bleeding: null, pain: false, openContact: false, approach: 'VESTIBULAR', method: 'THROUGH' };
 const teeth = {};
 for (const t of [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28, 48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]) teeth[t] = { state: t % 10 === 8 ? 'MISSING' : 'PRESENT', furcation: t === 46 };
-teeth[36] = { state: 'IMPLANT', furcation: false };
 await call(doctor, 'PATCH', `/api/v1/documents/${map.id}`, { content: { schema: 1, teeth, elements, extras: [] }, rev: map.rev });
 
 const psr = await call(doctor, 'POST', `/api/v1/visits/${visit.id}/documents`, { type: 'PSR' });

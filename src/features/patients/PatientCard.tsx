@@ -22,7 +22,7 @@ import s from './patients.module.css';
 const docLabels = { BRUSH_MAP: 'Карта ёршиков', PSR: 'Скрининг', HYGIENE_PLAN: 'Схема гигиены', AFTERCARE: 'Памятка' } as const;
 
 interface Props {
-  patient: { id: string; cardNumber: string; displayName: string | null };
+  patient: { id: string; cardNumber: string; displayName: string | null; fullName: string | null };
   visits: Array<{
     id: string;
     date: string;
@@ -43,6 +43,7 @@ export function PatientCard({ patient, visits }: Props) {
   const [edit, setEdit] = useState(false);
   const [card, setCard] = useState(patient.cardNumber);
   const [name, setName] = useState(patient.displayName ?? '');
+  const [fullName, setFullName] = useState(patient.fullName ?? '');
   const [busy, setBusy] = useState(false);
 
   const start = async (copyBrushMap: boolean) => {
@@ -58,7 +59,7 @@ export function PatientCard({ patient, visits }: Props) {
 
   const save = async () => {
     try {
-      await api.patch(`/api/v1/patients/${patient.id}`, { cardNumber: card, displayName: name });
+      await api.patch(`/api/v1/patients/${patient.id}`, { cardNumber: card, displayName: name, fullName });
       setEdit(false);
       router.refresh();
     } catch (err) {
@@ -156,6 +157,7 @@ export function PatientCard({ patient, visits }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <TextField label={ui.patients.cardNumber} value={card} onChange={(e) => setCard(e.target.value)} />
           <TextField label={ui.patients.displayName} hint={ui.patients.displayNameHint} value={name} onChange={(e) => setName(e.target.value)} />
+          <TextField label={ui.patients.fullName} hint={ui.patients.fullNameHint} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
         </div>
       </Dialog>
     </div>

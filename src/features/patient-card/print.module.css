@@ -123,7 +123,18 @@
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6mm;
+  gap: 4mm;
+}
+
+/* Скрининг и кровоточивость: две карточки с мягким тоном состояния */
+.bento {
+  padding: 5mm;
+  border-radius: 4mm;
+}
+
+.patient {
+  color: var(--print-text);
+  font-weight: 600;
 }
 
 .legendNote {

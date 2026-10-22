@@ -1,7 +1,12 @@
 import QRCode from 'qrcode';
 
 /** Подмена API: прототип работает без сервера, изменения живут до перезагрузки страницы. */
-export function installMockApi(patientUrl: string, patients: Array<{ id: string; cardNumber: string; displayName: string | null }>) {
+export interface MockDocs {
+  create: (visitId: string, body: { type: string; templateId: string | null; start?: { from: 'empty' | 'previous'; teeth?: Record<string, unknown> } }) => { id: string };
+  remove: (id: string) => void;
+}
+
+export function installMockApi(patientUrl: string, patients: Array<{ id: string; cardNumber: string; displayName: string | null }>, docsApi: MockDocs) {
   const revs = new Map<string, number>();
   const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
   const realFetch = window.fetch.bind(window);
@@ -10,7 +15,13 @@ export function installMockApi(patientUrl: string, patients: Array<{ id: string;
     if (!url.includes('/api/v1/')) return realFetch(input, init);
     const method = (init?.method ?? 'GET').toUpperCase();
     const path = url.slice(url.indexOf('/api/v1/'));
+    const createDoc = /^\/api\/v1\/visits\/([^/]+)\/documents$/.exec(path);
+    if (createDoc && method === 'POST') return json(docsApi.create(createDoc[1]!, JSON.parse(String(init?.body ?? '{}'))), 201);
     const doc = /^\/api\/v1\/documents\/([^/]+)$/.exec(path);
+    if (doc && method === 'DELETE') {
+      docsApi.remove(doc[1]!);
+      return json({ ok: true });
+    }
     if (doc && method === 'PATCH') {
       const next = (revs.get(doc[1]!) ?? 1) + 1;
       revs.set(doc[1]!, next);

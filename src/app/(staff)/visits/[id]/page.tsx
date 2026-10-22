@@ -15,7 +15,7 @@ export default async function VisitPage({ params, searchParams }: { params: Prom
   const visit = await getVisit(id);
   if (!visit) notFound();
 
-  const [catalog, doctors, templates, psrTexts, blockers, previous, token, lastIssue] = await Promise.all([
+  const [catalog, doctors, templates, psrTexts, blockers, previous, token, lastIssue, previousMap] = await Promise.all([
     listCatalog(),
     db().user.findMany({ where: { role: 'DOCTOR', isActive: true }, select: { id: true, displayName: true, title: true }, orderBy: { displayName: 'asc' } }),
     listTemplates(session),
@@ -28,6 +28,11 @@ export default async function VisitPage({ params, searchParams }: { params: Prom
     }),
     activeLinkToken(id),
     db().visitIssue.findFirst({ where: { visitId: id }, orderBy: { number: 'desc' }, select: { id: true, number: true, issuedAt: true } }),
+    db().document.findFirst({
+      where: { type: 'BRUSH_MAP', visit: { patientId: visit.patientId, id: { not: id }, date: { lte: visit.date } } },
+      orderBy: { visit: { date: 'desc' } },
+      select: { visit: { select: { date: true } } },
+    }),
   ]);
 
   const furcationTeeth = (() => {
@@ -64,6 +69,7 @@ export default async function VisitPage({ params, searchParams }: { params: Prom
           : null
       }
       furcationTeeth={furcationTeeth}
+      previousMapDate={previousMap?.visit.date.toISOString().slice(0, 10) ?? null}
       share={token ? patientUrl(token) : null}
       lastIssue={lastIssue ? { id: lastIssue.id, number: lastIssue.number, issuedAt: lastIssue.issuedAt.toISOString() } : null}
     />

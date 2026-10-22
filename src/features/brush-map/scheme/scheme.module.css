@@ -20,6 +20,15 @@
   touch-action: none;
 }
 
+@media (pointer: fine) {
+  .zoom[data-zoomed] {
+    cursor: grab;
+  }
+  .zoom[data-zoomed]:active {
+    cursor: grabbing;
+  }
+}
+
 .svg {
   display: block;
   width: 100%;

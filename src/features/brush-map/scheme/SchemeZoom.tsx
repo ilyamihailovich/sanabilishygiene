@@ -1,7 +1,7 @@
 'use client';
 
 import { animate } from 'motion/react';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import type { Box } from '../geometry';
 import s from './scheme.module.css';
 
@@ -15,8 +15,15 @@ interface Props {
   /** Границы челюсти в единицах схемы: при z = 1 видна вся челюсть. */
   bounds: Box;
   /** Куда приближаться после открытия (начало осмотра) и при выборе маркера. */
-  target: { x: number; y: number };
+  target?: { x: number; y: number };
+  /** Открыть целиком и затем приблизиться к target. Без него схема остаётся целиком. */
+  intro?: boolean;
   children: (box: Box) => ReactNode;
+}
+
+export interface SchemeZoomHandle {
+  zoomBy: (factor: number) => void;
+  reset: () => void;
 }
 
 const MIN_Z = 1;
@@ -26,8 +33,11 @@ const TAP_SLOP = 8;
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Схема одной челюсти на телефоне: открывается целиком, затем приближается к началу осмотра; щипок меняет масштаб, палец сдвигает. */
-export function SchemeZoom({ bounds, target, children }: Props) {
+/**
+ * Приближение и сдвиг схемы. Телефон: щипок и палец. Компьютер: перетаскивание мышью,
+ * колесо с Ctrl (щипок на тачпаде) и кнопки через zoomBy. Обычное колесо прокручивает страницу.
+ */
+export const SchemeZoom = forwardRef<SchemeZoomHandle, Props>(function SchemeZoom({ bounds, target, intro = true, children }, handle) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [cam, setCam] = useState<Camera>({ cx: bounds.x + bounds.w / 2, cy: bounds.y + bounds.h / 2, z: MIN_Z });
@@ -84,7 +94,7 @@ export function SchemeZoom({ bounds, target, children }: Props) {
     anim.current?.stop();
     setCam({ cx: bounds.x + bounds.w / 2, cy: bounds.y + bounds.h / 2, z: MIN_Z });
     camRef.current = { cx: bounds.x + bounds.w / 2, cy: bounds.y + bounds.h / 2, z: MIN_Z };
-    flyTo({ cx: target.x, cy: target.y, z: START_Z }, 0.7);
+    if (intro && target) flyTo({ cx: target.x, cy: target.y, z: START_Z }, 0.7);
     return () => anim.current?.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bounds, size.w > 0]);
@@ -92,7 +102,7 @@ export function SchemeZoom({ bounds, target, children }: Props) {
   // Выбор маркера вне видимой области: плавный сдвиг к нему
   const lastTarget = useRef(target);
   useEffect(() => {
-    if (lastTarget.current.x === target.x && lastTarget.current.y === target.y) return;
+    if (!target || (lastTarget.current?.x === target.x && lastTarget.current?.y === target.y)) return;
     lastTarget.current = target;
     if (!touched.current) return;
     flyTo({ cx: target.x, cy: target.y, z: Math.max(camRef.current.z, START_Z) });
@@ -103,6 +113,51 @@ export function SchemeZoom({ bounds, target, children }: Props) {
   const box: Box = size.w
     ? { x: view.cx - size.w / (2 * sc), y: view.cy - size.h / (2 * sc), w: size.w / sc, h: size.h / sc }
     : bounds;
+
+  /** Масштаб с неподвижной точкой (px, py) в координатах контейнера. */
+  const zoomAt = useCallback(
+    (factor: number, px: number, py: number, from: Camera = camRef.current, mid = { x: px, y: py }) => {
+      const scale = fit * from.z;
+      const vb = clamp(from);
+      const ux = vb.cx - size.w / (2 * scale) + px / scale;
+      const uy = vb.cy - size.h / (2 * scale) + py / scale;
+      const z = Math.min(MAX_Z, Math.max(MIN_Z, from.z * factor));
+      const ns = fit * z;
+      return clamp({ z, cx: ux - mid.x / ns + size.w / (2 * ns), cy: uy - mid.y / ns + size.h / (2 * ns) });
+    },
+    [clamp, fit, size],
+  );
+
+  useImperativeHandle(
+    handle,
+    () => ({
+      zoomBy: (factor) => {
+        touched.current = true;
+        const c = camRef.current;
+        // приближение к выбранному промежутку или началу осмотра: в центре схемы между челюстями пусто
+        if (factor > 1 && target && c.z <= MIN_Z + 0.01) return flyTo({ cx: target.x, cy: target.y, z: c.z * factor });
+        flyTo(zoomAt(factor, size.w / 2, size.h / 2));
+      },
+      reset: () => flyTo({ cx: bounds.x + bounds.w / 2, cy: bounds.y + bounds.h / 2, z: MIN_Z }),
+    }),
+    [bounds, flyTo, size, target, zoomAt],
+  );
+
+  // Ctrl + колесо и щипок на тачпаде (браузер присылает его как wheel с ctrlKey)
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      anim.current?.stop();
+      touched.current = true;
+      const r = el.getBoundingClientRect();
+      setCam(zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX - r.left, e.clientY - r.top));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [zoomAt]);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     anim.current?.stop();
@@ -130,12 +185,7 @@ export function SchemeZoom({ bounds, target, children }: Props) {
       const oldDist = Math.hypot(prev.x - other.x, prev.y - other.y) || 1;
       const newDist = Math.hypot(e.clientX - other.x, e.clientY - other.y);
       travel.current += TAP_SLOP;
-      const vb = clamp(c);
-      const ux = vb.cx - size.w / (2 * scale) + oldMid.x / scale;
-      const uy = vb.cy - size.h / (2 * scale) + oldMid.y / scale;
-      const z = Math.min(MAX_Z, Math.max(MIN_Z, c.z * (newDist / oldDist)));
-      const ns = fit * z;
-      setCam(clamp({ z, cx: ux - newMid.x / ns + size.w / (2 * ns), cy: uy - newMid.y / ns + size.h / (2 * ns) }));
+      setCam(zoomAt(newDist / oldDist, oldMid.x, oldMid.y, c, newMid));
     }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
   };
@@ -148,10 +198,12 @@ export function SchemeZoom({ bounds, target, children }: Props) {
     <div
       ref={ref}
       className={s.zoom}
+      data-zoomed={view.z > MIN_Z + 0.01 ? 'true' : undefined}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && onPointerUp(e)}
       onClickCapture={(e) => {
         // Сдвиг или щипок не считается нажатием на зуб или маркер
         if (travel.current > TAP_SLOP) {
@@ -163,4 +215,4 @@ export function SchemeZoom({ bounds, target, children }: Props) {
       {children(box)}
     </div>
   );
-}
+});

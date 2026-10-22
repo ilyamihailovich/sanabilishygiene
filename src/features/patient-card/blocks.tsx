@@ -210,14 +210,13 @@ export function Bleeding({ snapshot }: { snapshot: IssueSnapshot }) {
         <span>{map.boib.pct} %</span>
         <span className={s.bigMeta}>
           {map.boib.bleeding} из {map.boib.examined}
-          {prev && (
-            <>
-              <br />
-              {dateLong(prev.date)}: {prev.pct} %
-            </>
-          )}
         </span>
       </div>
+      {prev && (
+        <p className={s.bigNote}>
+          Прошлый визит {dateLong(prev.date)}: {prev.pct} %
+        </p>
+      )}
       {map.boibText && <p className={s.paragraph}>{map.boibText}</p>}
     </div>
   );

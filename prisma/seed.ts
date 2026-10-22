@@ -102,7 +102,7 @@ async function main() {
 async function seedDemo() {
   const sample = JSON.parse(readFileSync(new URL('./sample-content.json', import.meta.url), 'utf8')) as {
     doctor: { displayName: string; title: string };
-    patient: { cardNumber: string; displayName: string };
+    patient: { cardNumber: string; displayName: string; fullName: string };
     brushes: { brand: string; line: string; sizes: Array<[string, number, string]> };
     psr: Record<string, { staff: string; patient: string }>;
     brushSteps: string[];
@@ -165,7 +165,7 @@ async function seedDemo() {
     const teeth = Object.fromEntries(
       [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28, 48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38].map((t) => [
         String(t),
-        { state: t % 10 === 8 ? 'MISSING' : t === 36 ? 'IMPLANT' : 'PRESENT', furcation: t === 46 },
+        { state: t % 10 === 8 ? 'MISSING' : 'PRESENT', furcation: t === 46 },
       ]),
     );
     const patient = await db.patient.create({ data: { ...sample.patient, createdById: doctor.id } });

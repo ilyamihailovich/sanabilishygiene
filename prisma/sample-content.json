@@ -6,7 +6,8 @@
   },
   "patient": {
     "cardNumber": "10482",
-    "displayName": "Анна"
+    "displayName": "Анна",
+    "fullName": "Иванова Анна Михайловна"
   },
   "brushes": {
     "brand": "Межзубный ёршик",

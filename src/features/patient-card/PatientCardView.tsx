@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import { listElements, type MapElement } from '@/domain/brushMap';
+import type { Arch } from '@/domain/teeth';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import { Button } from '@/ui/Button';
 import { CounterChip } from '@/ui/Chip';
@@ -11,15 +12,20 @@ import { GlassPanel, glassClass } from '@/ui/Glass';
 import { Heading } from '@/ui/Heading';
 import { IconDownload, IconShare } from '@/ui/icons';
 import { Logo } from '@/ui/Logo';
+import { Popover } from '@/ui/Popover';
 import { Segmented } from '@/ui/Segmented';
 import { ToggleGroup } from '@/ui/ToggleGroup';
 import { cx } from '@/ui/cx';
+import { boibTone, psrTone, toneStyle } from '@/ui/tone';
+import { archBox, elementAnchor, toothGeom } from '../brush-map/geometry';
 import { SchemeView } from '../brush-map/scheme/SchemeView';
+import { SchemeZoom } from '../brush-map/scheme/SchemeZoom';
 import type { MarkerVisual } from '../brush-map/scheme/SvgMarker';
 import { webgl2Available } from '../brush-map/three/types';
 import { VIEW_ORDER, type ViewKey } from '../brush-map/useMapKeyboard';
 import { viewIconsPublic } from './viewIcons';
 import { AlternativesNote, Bleeding, BrushList, Contacts, DocumentBody, HowTo, NextVisit, Screening, brushRows } from './blocks';
+import { ElementInfo } from './ElementInfo';
 import { dateLong, greeting } from './format';
 import s from './card.module.css';
 
@@ -27,6 +33,12 @@ const ThreeView = dynamic(() => import('../brush-map/three/ThreeView').then((m) 
   ssr: false,
   loading: () => <div className={s.hint} style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>{ui.map.loading3d}</div>,
 });
+
+/** Начало осмотра на челюсти: к нему схема приближается после открытия. */
+const jawStart = (jaw: Arch) => {
+  const [a, b] = (jaw === 'upper' ? [17, 16] : [37, 36]).map(toothGeom) as [ReturnType<typeof toothGeom>, ReturnType<typeof toothGeom>];
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+};
 
 export function useSnapshotVisual(snapshot: IssueSnapshot) {
   return useCallback(
@@ -48,7 +60,16 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
   const [view, setView] = useState<ViewKey>('overview');
   const [picked, setPicked] = useState<string | null>(null);
   const [canShare, setCanShare] = useState(false);
+  const [jaw, setJaw] = useState<Arch>('upper');
+  const [zoomTarget, setZoomTarget] = useState(() => jawStart('upper'));
+  const jawBounds = useMemo(() => archBox(jaw), [jaw]);
+  const [info, setInfo] = useState<string | null>(null);
+  const infoAnchor = useRef<HTMLElement | null>(null);
   const visual = useSnapshotVisual(snapshot);
+  const showInfo = useCallback((key: string, target: Element) => {
+    infoAnchor.current = target as HTMLElement;
+    setInfo((k) => (k === key ? null : key));
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -60,6 +81,7 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
 
   const map = snapshot.brushMap;
   const elements = useMemo(() => (map ? listElements(map.content).filter((e) => e.active) : []), [map]);
+  const infoEl = info ? (elements.find((e) => e.key === info) ?? null) : null;
   const rows = useMemo(() => brushRows(snapshot), [snapshot]);
   const highlight = useMemo(() => {
     const row = rows.find((r) => r.ref === picked);
@@ -110,7 +132,7 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
         </div>
 
         {map && (
-          <section className={s.block} aria-labelledby="pc-map">
+          <section className={cx(s.block, s.mapBlock)} aria-labelledby="pc-map">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <h2 id="pc-map" className={s.blockTitle}>
                 {ui.patient.brushMap}
@@ -118,14 +140,17 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
               <Segmented
                 label={ui.mapMode.label}
                 value={mode}
-                onChange={setMode}
+                onChange={(m) => {
+                  setInfo(null);
+                  setMode(m);
+                }}
                 options={[
                   { value: 'three', label: ui.mapMode.three },
                   { value: 'scheme', label: ui.mapMode.scheme },
                 ]}
               />
             </div>
-            <div className={cx(s.stage, mode === 'scheme' && s.stageScheme)}>
+            <div className={s.stage}>
               {mode === 'three' ? (
                 <>
                   <ThreeView
@@ -136,6 +161,8 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
                     highlight={highlight}
                     intro
                     readOnly
+                    selectedKey={info}
+                    onElement={showInfo}
                     onFallback={() => setMode('scheme')}
                   />
                   <div className={s.stageViews}>
@@ -144,15 +171,60 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
                         label={ui.views.label}
                         value={view}
                         size={46}
-                        onChange={(v) => v && setView(v)}
+                        onChange={(v) => {
+                          setInfo(null);
+                          if (v) setView(v);
+                        }}
                         options={VIEW_ORDER.map((v) => ({ value: v, label: ui.views[v], content: viewIconsPublic[v] }))}
                       />
                     </GlassPanel>
                   </div>
                 </>
               ) : (
-                <SchemeView content={map.content} elements={elements} visual={visual} highlight={highlight} readOnly markerRadius={17} />
+                <>
+                  <SchemeZoom bounds={jawBounds} target={zoomTarget}>
+                    {(box) => (
+                      <SchemeView
+                        content={map.content}
+                        elements={elements}
+                        visual={visual}
+                        highlight={highlight}
+                        selectedKey={info}
+                        box={box}
+                        live
+                        arch={jaw}
+                        readOnly
+                        markerRadius={15}
+                        onElement={(key, target) => {
+                          const el = elements.find((e) => e.key === key);
+                          if (el) setZoomTarget(elementAnchor(el));
+                          showInfo(key, target);
+                        }}
+                      />
+                    )}
+                  </SchemeZoom>
+                  <div className={s.stageViews}>
+                    <GlassPanel aria-label="Челюсть">
+                      <Segmented
+                        label="Челюсть"
+                        value={jaw}
+                        onChange={(v) => {
+                          setInfo(null);
+                          setJaw(v);
+                          setZoomTarget(jawStart(v));
+                        }}
+                        options={[
+                          { value: 'upper', label: 'Верхняя' },
+                          { value: 'lower', label: 'Нижняя' },
+                        ]}
+                      />
+                    </GlassPanel>
+                  </div>
+                </>
               )}
+              <Popover open={infoEl !== null} onClose={() => setInfo(null)} anchor={infoAnchor} label="Промежуток" track={info}>
+                {infoEl && <ElementInfo element={infoEl} snapshot={snapshot} />}
+              </Popover>
             </div>
           </section>
         )}
@@ -194,7 +266,7 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
         ))}
 
         {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
-          <section className={s.block} aria-labelledby="pc-psr">
+          <section className={s.block} aria-labelledby="pc-psr" style={toneStyle(psrTone(snapshot.psr.summary.maxCode))}>
             <h2 id="pc-psr" className={s.blockTitle}>
               {ui.patient.screening}
             </h2>
@@ -203,7 +275,7 @@ export function PatientCardView({ snapshot, pdfUrl }: { snapshot: IssueSnapshot;
         )}
 
         {map && map.boib.pct !== null && (
-          <section className={s.block} aria-labelledby="pc-boib">
+          <section className={s.block} aria-labelledby="pc-boib" style={toneStyle(boibTone(map.boib.pct))}>
             <h2 id="pc-boib" className={s.blockTitle}>
               {ui.patient.bleeding}
             </h2>

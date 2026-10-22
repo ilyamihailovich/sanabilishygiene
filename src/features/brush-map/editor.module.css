@@ -38,6 +38,13 @@
   padding: var(--space-6) var(--space-12) var(--space-6) var(--space-6);
 }
 
+/* Схема с приближением на компьютере: на всю сцену */
+.scheme.schemeFill {
+  position: absolute;
+  inset: var(--space-4) 72px var(--space-4) var(--space-4);
+  padding: 0;
+}
+
 /* Схема с жестами (телефон, планшет): между переключателем челюсти и пультом размеров */
 .scheme.schemeTouch {
   position: absolute;

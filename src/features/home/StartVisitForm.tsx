@@ -30,6 +30,7 @@ export function StartVisitForm() {
   const [found, setFound] = useState<Patient | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [busy, setBusy] = useState(false);
 
   const lookup = async (e: FormEvent) => {
@@ -56,7 +57,7 @@ export function StartVisitForm() {
   const create = async () => {
     setBusy(true);
     try {
-      const p = await api.post<Patient>('/api/v1/patients', { cardNumber: card, displayName: name });
+      const p = await api.post<Patient>('/api/v1/patients', { cardNumber: card, displayName: name, fullName });
       await startVisit(p.id, false);
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Ошибка', 'error');
@@ -121,6 +122,7 @@ export function StartVisitForm() {
       >
         <div className={s.dialogBody}>
           <TextField label={ui.patients.displayName} hint={ui.patients.displayNameHint} value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
+          <TextField label={ui.patients.fullName} hint={ui.patients.fullNameHint} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
         </div>
       </Dialog>
     </>

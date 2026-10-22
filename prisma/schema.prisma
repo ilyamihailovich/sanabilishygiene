@@ -85,6 +85,8 @@ model Patient {
   id          String   @id @default(cuid())
   cardNumber  String   @unique
   displayName String?
+  /// ФИО для PDF. Необязательно; в приветствии онлайн-карты используется displayName
+  fullName    String?
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

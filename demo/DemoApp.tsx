@@ -14,7 +14,10 @@ import { TemplateEditor } from '@/features/templates/TemplateEditor';
 import { TemplateLibrary } from '@/features/templates/TemplateLibrary';
 import { VisitWorkspace, type VisitDoc } from '@/features/visit/VisitWorkspace';
 import { ui } from '@/content/ui.ru';
-import { brushMapSchema } from '@/schemas/brushMap';
+import { emptyBrushMap } from '@/domain/brushMap';
+import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
+import { emptyPsr } from '@/domain/psr';
+import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import type { TemplateStructure } from '@/schemas/template';
 import type { CatalogItem } from '@/server/services/catalog';
@@ -23,6 +26,8 @@ import { Heading } from '@/ui/Heading';
 import { Segmented } from '@/ui/Segmented';
 import sample from '../prisma/sample-content.json';
 import data from './data.json';
+import { addDoc, removeDoc, seedDocs, useDocs } from './docStore';
+import type { MockDocs } from './mockApi';
 import { navigate, usePath } from './router';
 import s from './demo.module.css';
 
@@ -65,12 +70,12 @@ const staff: StaffInfo = {
 
 /* Пациенты и визиты прототипа. Заполнен один визит: пациент 10482, остальные показывают список и пустой визит. */
 export const patients = [
-  { id: 'p-10482', cardNumber: sample.patient.cardNumber, displayName: sample.patient.displayName as string | null },
-  { id: 'p-10391', cardNumber: '10391', displayName: 'Михаил' },
-  { id: 'p-10377', cardNumber: '10377', displayName: null },
-  { id: 'p-10215', cardNumber: '10215', displayName: 'Елена' },
-  { id: 'p-10164', cardNumber: '10164', displayName: 'Дмитрий' },
-  { id: 'p-10102', cardNumber: '10102', displayName: 'Ольга' },
+  { id: 'p-10482', cardNumber: sample.patient.cardNumber, displayName: sample.patient.displayName as string | null, fullName: sample.patient.fullName as string | null },
+  { id: 'p-10391', cardNumber: '10391', displayName: 'Михаил', fullName: null },
+  { id: 'p-10377', cardNumber: '10377', displayName: null, fullName: null },
+  { id: 'p-10215', cardNumber: '10215', displayName: 'Елена', fullName: null },
+  { id: 'p-10164', cardNumber: '10164', displayName: 'Дмитрий', fullName: null },
+  { id: 'p-10102', cardNumber: '10102', displayName: 'Ольга', fullName: null },
 ];
 
 interface DemoVisit {
@@ -99,6 +104,33 @@ const doctors = [{ id: staff.id, displayName: staff.displayName, title: sample.d
 const psrTexts = Object.entries(sample.psr).map(([code, t]) => ({ code, staffText: t.staff, approved: true }));
 const templateRefs = templates.map((t) => ({ id: t.id, kind: t.kind, title: t.title, personal: t.personal }));
 
+seedDocs(MAIN_VISIT, documents);
+const mainMap = brushMapSchema.parse(documents.find((d) => d.type === 'BRUSH_MAP')!.content);
+
+/** Создание и удаление документов в прототипе: те же функции, что на сервере, без базы. */
+export const demoDocs: MockDocs = {
+  create(visitId, { type, templateId, start }) {
+    const id = `d-${Math.random().toString(36).slice(2, 10)}`;
+    let content: unknown;
+    let templateVersionId: string | null = null;
+    if (type === 'BRUSH_MAP') {
+      const base = emptyBrushMap();
+      content =
+        start?.from === 'previous'
+          ? carryOverBrushMap(mainMap)
+          : brushMapSchema.parse({ ...base, teeth: { ...base.teeth, ...(start?.teeth as BrushMapContent['teeth'] | undefined) } });
+    } else if (type === 'PSR') content = emptyPsr();
+    else {
+      const t = templates.find((x) => x.id === templateId) ?? templates.find((x) => x.kind === (type === 'HYGIENE_PLAN' ? 'HYGIENE_PLAN' : 'AFTERCARE'))!;
+      content = fillFromTemplate(t.id, t.version, t.title, t.structure);
+      templateVersionId = `${t.id}-v${t.version}`;
+    }
+    addDoc(visitId, { id, type: type as DocType, rev: 1, content, templateVersionId });
+    return { id };
+  },
+  remove: removeDoc,
+};
+
 const furcationTeeth = (() => {
   const map = documents.find((d) => d.type === 'BRUSH_MAP');
   if (!map) return [];
@@ -113,6 +145,9 @@ function Visit({ id }: { id: string }) {
   // Новый визит из карточки пациента: id вида v-new-<patientId>
   const patientId = v?.patientId ?? (id.startsWith('v-new-') ? id.slice(6) : 'p-10482');
   const p = patients.find((x) => x.id === patientId) ?? patients[0]!;
+  const docs = useDocs(id);
+  // прошлая карта есть только у пациента 10482: заполненный визит прототипа
+  const previousMapDate = patientId === 'p-10482' && !main ? snapshot.visitDate : null;
   return (
     <VisitWorkspace
       key={id}
@@ -127,7 +162,8 @@ function Visit({ id }: { id: string }) {
         status: v?.status ?? 'DRAFT',
         patient: p,
       }}
-      documents={main ? documents : []}
+      documents={docs}
+      previousMapDate={previousMapDate}
       catalog={catalog}
       doctors={doctors}
       templates={templateRefs}

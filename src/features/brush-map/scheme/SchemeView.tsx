@@ -117,7 +117,7 @@ function SchemeViewImpl({
                   <circle r={Math.min(g.w, g.d) * 0.1} fill="var(--color-text)" />
                 </g>
               )}
-              {t.furcation && t.state !== 'MISSING' && (
+              {t.furcation && t.state !== 'MISSING' && !readOnly && !print && (
                 <path
                   d={`M${g.x + g.nx * (g.d / 2 - 2)} ${g.y + g.ny * (g.d / 2 - 2)}l${-g.ny * 6 - g.nx * 9} ${g.nx * 6 - g.ny * 9}M${g.x + g.nx * (g.d / 2 - 2)} ${g.y + g.ny * (g.d / 2 - 2)}l${g.ny * 6 - g.nx * 9} ${-g.nx * 6 - g.ny * 9}`}
                   stroke="var(--accent)"
@@ -179,7 +179,7 @@ function SchemeViewImpl({
                 {v.label ?? (el.data.alternative === 'FLOSS' ? 'нить' : '—')}
               </text>
             ) : null;
-          if (readOnly || !onElement) {
+          if (!onElement) {
             return (
               <g key={el.key}>
                 {marker}

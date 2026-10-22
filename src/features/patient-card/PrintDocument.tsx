@@ -1,6 +1,7 @@
 import { ui } from '@/content/ui.ru';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import { Logo } from '@/ui/Logo';
+import { boibTone, psrTone, toneStyle } from '@/ui/tone';
 import { PrintScheme } from './PrintScheme';
 import { AlternativesNote, Bleeding, BrushList, DocumentBody, HowTo, NextVisit, Screening, brushRows } from './blocks';
 import { dateLong } from './format';
@@ -13,6 +14,8 @@ interface Props {
   renders: Partial<Record<'upper' | 'lower' | 'front', string>>;
 }
 
+const BENTO_BASE = '#f5f5f7';
+
 /** Печатная версия A4: та же структура блоков, белый фон, размеры подписаны текстом для ч/б печати. */
 export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
   const map = snapshot.brushMap;
@@ -20,7 +23,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
   const hasRenders = Boolean(renders.upper && renders.lower);
 
   return (
-    <article className={s.doc}>
+    <article className={`${s.doc} ${card.print}`}>
       <header className={s.head}>
         <div>
           <div className={s.brand}>
@@ -30,7 +33,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
             Рекомендации <span className={s.titleRest}>по гигиене полости рта</span>
           </h1>
           <div className={s.meta}>
-            {snapshot.patientName && <span>{snapshot.patientName}</span>}
+            {(snapshot.patientFullName ?? snapshot.patientName) && <span className={s.patient}>{snapshot.patientFullName ?? snapshot.patientName}</span>}
             <span>
               {ui.patient.visitDate}: {dateLong(snapshot.visitDate)}
             </span>
@@ -111,13 +114,13 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
 
       <div className={s.cols}>
         {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
-          <section className={s.block}>
+          <section className={`${s.block} ${s.bento}`} style={toneStyle(psrTone(snapshot.psr.summary.maxCode), BENTO_BASE)}>
             <h2 className={s.blockTitle}>{ui.patient.screening}</h2>
             <Screening snapshot={snapshot} />
           </section>
         )}
         {map && map.boib.pct !== null && (
-          <section className={s.block}>
+          <section className={`${s.block} ${s.bento}`} style={toneStyle(boibTone(map.boib.pct), BENTO_BASE)}>
             <h2 className={s.blockTitle}>{ui.patient.bleeding}</h2>
             <Bleeding snapshot={snapshot} />
           </section>

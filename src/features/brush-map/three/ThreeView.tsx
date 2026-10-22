@@ -19,6 +19,7 @@ declare global {
   }
 }
 
+const FOV = 28;
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const INTRO_MS = 1500;
 const VIEW_MS = 650;
@@ -60,8 +61,9 @@ export function ThreeView(props: ThreeViewProps) {
     <div className={s.root} onPointerDown={() => (skip.current = true)}>
       <Canvas
         className={s.canvas}
-        dpr={props.capture ? 1.5 : tier === 'low' ? 1 : tier === 'mid' ? [1, 1.5] : [1, 2]}
-        camera={{ fov: 28, near: 0.005, far: 3, position: [0, 0.01, 0.2] }}
+        // PDF: 1200 px на 85 мм — около 360 dpi, больше не нужно, а программная отрисовка на сервере дорогая
+        dpr={props.capture ? 1 : tier === 'low' ? 1 : tier === 'mid' ? [1, 1.5] : [1, 2]}
+        camera={{ fov: FOV, near: 0.005, far: 3, position: [0, 0.01, 0.2] }}
         gl={{
           antialias: true,
           alpha: true,
@@ -232,7 +234,7 @@ function Scene({
     <>
       <primitive object={gltf.scene} onClick={handleClick} />
       <CameraRig nodes={nodes} view={view} opening={opening} capture={Boolean(capture)} onReady={() => setReady(true)} />
-      {tier !== 'low' && <Shadows nodes={nodes} />}
+      {tier !== 'low' && !capture && <Shadows nodes={nodes} />}
       {ready && (
         <Markers
           nodes={nodes}
@@ -247,7 +249,8 @@ function Scene({
           onHover={onHover}
         />
       )}
-      <Furcations nodes={nodes} content={content} view={view} />
+      {/* фуркация — пометка для врача, пациенту не показывается */}
+      {!readOnly && <Furcations nodes={nodes} content={content} view={view} />}
       {capture && <CaptureSignal view={view} />}
     </>
   );
@@ -284,19 +287,58 @@ function computePresets(nodes: JawNodes, aspect: number): Record<ViewKey, Preset
   nodes.root.updateMatrixWorld(true);
   const upper = new THREE.Box3().setFromObject(nodes.maxilla).getCenter(new THREE.Vector3());
   const lower = new THREE.Box3().setFromObject(nodes.mandible).getCenter(new THREE.Vector3());
+  // Окклюзионные ракурсы: камера подбирается по проекции челюсти, чтобы обе дуги занимали кадр одинаково
+  const points = (obj: THREE.Object3D) => {
+    const pts: THREE.Vector3[] = [];
+    const p = new THREE.Vector3();
+    obj.traverse((o) => {
+      // корни, кость и имплантат в окклюзионном виде не видны и в кадр не входят
+      if (!(o instanceof THREE.Mesh) || !o.geometry.attributes.position || /_root$|^bone|^implant/.test(o.name)) return;
+      const pos = o.geometry.attributes.position;
+      const step = Math.max(1, Math.floor(pos.count / 400));
+      for (let i = 0; i < pos.count; i += step) pts.push(p.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).clone());
+    });
+    return pts;
+  };
+  const upperPts = points(nodes.maxilla);
+  const lowerPts = points(nodes.mandible);
   nodes.pivot.rotation.x = prev;
   nodes.root.updateMatrixWorld(true);
+  const occlusal = (target: THREE.Vector3, normal: THREE.Vector3, pts: THREE.Vector3[]): Preset => {
+    const dir = normal.clone().multiplyScalar(0.96).add(new THREE.Vector3(0, 0, 0.28)).normalize();
+    const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.001, 5);
+    let t = target.clone();
+    let dist = 0.135;
+    for (let pass = 0; pass < 3; pass++) {
+      cam.position.copy(t).addScaledVector(dir, dist);
+      cam.lookAt(t);
+      cam.updateMatrixWorld(true);
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      const v3 = new THREE.Vector3();
+      for (const q of pts) {
+        v3.copy(q).project(cam);
+        minX = Math.min(minX, v3.x);
+        maxX = Math.max(maxX, v3.x);
+        minY = Math.min(minY, v3.y);
+        maxY = Math.max(maxY, v3.y);
+      }
+      // центр проекции в центр кадра, большая сторона — 84 % кадра
+      const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0);
+      const up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      const halfH = Math.tan((FOV / 2) * (Math.PI / 180)) * dist;
+      t = t.clone().addScaledVector(right, ((minX + maxX) / 2) * halfH * aspect).addScaledVector(up, ((minY + maxY) / 2) * halfH);
+      dist *= Math.max(maxX - minX, maxY - minY) / 2 / 0.84;
+    }
+    return { target: t, position: t.clone().addScaledVector(dir, dist) };
+  };
   const mid = upper.clone().add(lower).multiplyScalar(0.5);
   const far = aspect < 1 ? Math.min(1.9, 0.9 / aspect) : 1;
   const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z).multiplyScalar(far);
   const lowerNormal = new THREE.Vector3(0, Math.cos(OPEN_ANGLE), Math.sin(OPEN_ANGLE));
   return {
     overview: { target: mid.clone().add(new THREE.Vector3(0, 0, 0.004)), position: mid.clone().add(v(0, 0.032, 0.185)) },
-    upper: { target: upper.clone(), position: upper.clone().add(v(0, -0.135, 0.04)) },
-    lower: {
-      target: lower.clone(),
-      position: lower.clone().add(lowerNormal.multiplyScalar(0.135 * far)).add(new THREE.Vector3(0, 0, 0.04 * far)),
-    },
+    upper: occlusal(upper, new THREE.Vector3(0, -1, 0), upperPts),
+    lower: occlusal(lower, lowerNormal, lowerPts),
     right: { target: mid.clone().add(new THREE.Vector3(-0.012, 0, -0.006)), position: mid.clone().add(v(-0.15, 0.012, 0.035)) },
     left: { target: mid.clone().add(new THREE.Vector3(0.012, 0, -0.006)), position: mid.clone().add(v(0.15, 0.012, 0.035)) },
     front: { target: mid.clone().add(new THREE.Vector3(0, 0, 0.02)), position: mid.clone().add(v(0, 0.004, 0.16)) },
@@ -445,7 +487,7 @@ function Markers({ nodes, elements, visual, selectedKey, highlight, readOnly, ca
               }}
               className={capture ? `${s.markerWrap} ${s.captureWrap}` : s.markerWrap}
             >
-              {readOnly || !onElement ? (
+              {!onElement ? (
                 <span className={s.marker}>{marker}</span>
               ) : (
                 <button
