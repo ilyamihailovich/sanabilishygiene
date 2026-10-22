@@ -66,6 +66,16 @@ describe('выдача пациенту и ссылка', () => {
     await admin.json('PATCH', `/api/v1/admin/brushes/${sizeId}`, { label: 'Тест 1' });
   });
 
+  it('ФИО: на странице по ссылке его нет, в снимке выдачи для PDF врача есть', async () => {
+    const v = await issuableVisit(doctor, sizeId);
+    await doctor.json('PATCH', `/api/v1/patients/${v.patientId}`, { cardNumber: v.card, displayName: 'Тест', fullName: 'Проверочная Фамилия Отчество' });
+    await doctor.json('PATCH', `/api/v1/visits/${v.visitId}`, { clinicianId: doctorId });
+    const { url } = await doctor.json<{ url: string }>('POST', `/api/v1/visits/${v.visitId}/issue`);
+    const html = await (await anonymous(pathOf(url))).text();
+    expect(html).toContain('Тест');
+    expect(html).not.toContain('Проверочная');
+  });
+
   it('PDF: A4, имя файла с датой', async () => {
     const v = await issuableVisit(doctor, sizeId);
     await doctor.json('PATCH', `/api/v1/visits/${v.visitId}`, { clinicianId: doctorId });

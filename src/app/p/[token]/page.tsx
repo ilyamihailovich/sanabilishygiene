@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PatientCardView } from '@/features/patient-card/PatientCardView';
 import { audit } from '@/server/audit';
-import { issueByToken, snapshotOf } from '@/server/services/issue';
+import { issueByToken, publicSnapshotOf } from '@/server/services/issue';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,5 +17,5 @@ export default async function PatientCardPage({ params }: { params: Promise<{ to
   const found = await issueByToken(token);
   if (!found) notFound();
   await audit({ actor: 'PATIENT_LINK', action: 'link.open', entityType: 'visit', entityId: found.issue.visitId, meta: { issue: found.issue.number } });
-  return <PatientCardView snapshot={snapshotOf(found.issue)} pdfUrl={`/p/${token}/pdf`} />;
+  return <PatientCardView snapshot={publicSnapshotOf(found.issue)} pdfUrl={`/p/${token}/pdf`} />;
 }

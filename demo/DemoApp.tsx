@@ -34,6 +34,7 @@ import s from './demo.module.css';
 declare global {
   interface Window {
     __DEMO_PDF_PAGES?: string[];
+    __DEMO_PDF_PAGES_PUBLIC?: string[];
   }
 }
 
@@ -260,6 +261,7 @@ function StaffRoutes({ path }: { path: string }) {
 /** Интерактивный прототип: рабочее место врача, онлайн-карта пациента и PDF на образце данных. */
 export function DemoApp() {
   const [tab, setTab] = useState<Tab>('doctor');
+  const [pdfKind, setPdfKind] = useState<'staff' | 'public'>('staff');
   const path = usePath();
 
   // Кнопки «PDF» и «Печать» в прототипе открывают вкладку со страницами PDF
@@ -268,6 +270,8 @@ export function DemoApp() {
       const a = (e.target as HTMLElement).closest('a');
       if (a && a.getAttribute('href')?.includes('/pdf')) {
         e.preventDefault();
+        // «Скачать PDF» на онлайн-карте отдаёт вариант по ссылке, кнопки врача — вариант с ФИО
+        setPdfKind(a.getAttribute('href')?.startsWith('#') ? 'public' : 'staff');
         setTab('pdf');
         window.scrollTo({ top: 0 });
       }
@@ -308,11 +312,25 @@ export function DemoApp() {
           </StaffShell>
         ))}
 
-      {tab === 'patient' && <PatientCardView snapshot={snapshot} pdfUrl="#/pdf" />}
+      {tab === 'patient' && <PatientCardView snapshot={{ ...snapshot, patientFullName: undefined }} pdfUrl="#/pdf" />}
 
       {tab === 'pdf' && (
         <main className={s.pdf}>
-          {(window.__DEMO_PDF_PAGES ?? []).map((src, i) => (
+          <div className={s.pdfHead}>
+            <Segmented
+              label="Вариант PDF"
+              value={pdfKind}
+              onChange={setPdfKind}
+              options={[
+                { value: 'staff', label: 'PDF врача' },
+                { value: 'public', label: 'PDF по ссылке' },
+              ]}
+            />
+            <span className={s.pdfNote}>
+              {pdfKind === 'staff' ? 'Скачивает или печатает врач: в шапке полное ФИО.' : 'Скачивается с онлайн-карты по ссылке: только имя, без фамилии.'}
+            </span>
+          </div>
+          {((pdfKind === 'public' ? window.__DEMO_PDF_PAGES_PUBLIC : window.__DEMO_PDF_PAGES) ?? []).map((src, i) => (
             <figure key={i} className={s.page}>
               <img src={src} alt={`PDF, страница ${i + 1}`} />
               <figcaption>Страница {i + 1}</figcaption>

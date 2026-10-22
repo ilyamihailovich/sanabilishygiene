@@ -253,6 +253,7 @@ model Patient {
   id          String   @id @default(cuid())
   cardNumber  String   @unique           // номер медкарты, нормализованный (trim, без пробелов)
   displayName String?                    // имя для обращения
+  fullName    String?                    // ФИО: только в PDF врача; на онлайн-карте и в PDF по ссылке не выводится и в браузер не передаётся
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

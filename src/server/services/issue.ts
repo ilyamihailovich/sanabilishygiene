@@ -160,6 +160,12 @@ export function snapshotOf(issue: { snapshot: unknown }): IssueSnapshot {
   return issue.snapshot as IssueSnapshot;
 }
 
+/** Снимок для всего, что доступно по ссылке пациента: без ФИО, только имя для обращения. */
+export function publicSnapshotOf(issue: { snapshot: unknown }): IssueSnapshot {
+  const { patientFullName: _hidden, ...rest } = snapshotOf(issue);
+  return rest;
+}
+
 export function highlightKeys(snapshot: IssueSnapshot, sizeRef: string): string[] {
   if (!snapshot.brushMap) return [];
   return listElements(snapshot.brushMap.content)

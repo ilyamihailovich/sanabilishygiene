@@ -9,7 +9,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
     const { token } = await ctx.params;
     const found = await issueByToken(token);
     if (!found) throw notFound();
-    const pdf = await getIssuePdf(found.issue.id);
+    // по ссылке пациента — вариант без ФИО
+    const pdf = await getIssuePdf(found.issue.id, 'public');
     await audit({ actor: 'PATIENT_LINK', action: 'pdf.download', entityType: 'visit', entityId: found.issue.visitId, meta: { issue: found.issue.number } });
     return pdfResponse(pdf, found.issue, false);
   } catch (e) {

@@ -4,17 +4,21 @@ import QRCode from 'qrcode';
 import { PrintDocument } from '@/features/patient-card/PrintDocument';
 import { verifyInternal } from '@/server/crypto';
 import { db } from '@/server/db';
-import { activeLinkToken, patientUrl, snapshotOf } from '@/server/services/issue';
+import { activeLinkToken, patientUrl, publicSnapshotOf, snapshotOf } from '@/server/services/issue';
 import { readData } from '@/server/storage';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-/** Печатная вёрстка для сервиса PDF. Открывается только с короткоживущей подписью. */
-export default async function PrintPage({ params, searchParams }: { params: Promise<{ issueId: string }>; searchParams: Promise<{ sig?: string }> }) {
+/**
+ * Печатная вёрстка для сервиса PDF. Открывается только с короткоживущей подписью.
+ * Вариант public (PDF по ссылке пациента) печатается без ФИО; вариант входит в подпись.
+ */
+export default async function PrintPage({ params, searchParams }: { params: Promise<{ issueId: string }>; searchParams: Promise<{ sig?: string; variant?: string }> }) {
   const { issueId } = await params;
-  const { sig } = await searchParams;
-  if (!verifyInternal(`print:${issueId}`, sig)) notFound();
+  const { sig, variant } = await searchParams;
+  const isPublic = variant === 'public';
+  if (!verifyInternal(`print:${issueId}:${isPublic ? 'public' : 'staff'}`, sig)) notFound();
   const issue = await db().visitIssue.findUnique({ where: { id: issueId } });
   if (!issue) notFound();
   const token = await activeLinkToken(issue.visitId);
@@ -29,7 +33,7 @@ export default async function PrintPage({ params, searchParams }: { params: Prom
   }
   return (
     <>
-      <PrintDocument snapshot={snapshotOf(issue)} qrSvg={qrSvg} renders={renders} />
+      <PrintDocument snapshot={isPublic ? publicSnapshotOf(issue) : snapshotOf(issue)} qrSvg={qrSvg} renders={renders} />
       <script dangerouslySetInnerHTML={{ __html: 'document.fonts.ready.then(()=>{window.__printReady=true})' }} />
     </>
   );
