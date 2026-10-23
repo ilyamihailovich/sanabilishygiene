@@ -72,10 +72,12 @@ export function createMaterials(tier: QualityTier) {
           clearcoatRoughness: 0.05,
         })
       : new THREE.MeshStandardMaterial({ color, emissive: new THREE.Color(glow), emissiveIntensity: intensity, roughness: 0.18, envMapIntensity: 2.2 });
-  // эмаль под тонмаппингом почти белая: коронки выделяются светимостью, а не только цветом
-  const crown = restoration('#ffffff', '#ffffff', 0.3);
+  // коронка — с сиреневым отливом и ореолом (crownHalo), коронка на имплантате — самая белая
+  const crown = restoration('#f6f1ff', '#e6d8ff', 0.3);
   const implantCrown = restoration('#ffffff', '#f2f7ff', 0.45);
-  return { enamel, root, gum, bone, titanium, crown, implantCrown };
+  const crownHalo = createHalo('#9b6ee0');
+  withImplantWindows(gum);
+  return { enamel, root, gum, bone, titanium, crown, implantCrown, crownHalo };
 }
 
 export type JawMaterials = ReturnType<typeof createMaterials>;
@@ -85,11 +87,82 @@ export function setFade(materials: THREE.Material[], opacity: number) {
   for (const m of materials) {
     const base = (m.userData.baseOpacity as number | undefined) ?? (m.userData.baseOpacity = m.opacity);
     m.opacity = base * opacity;
-    const transparent = opacity < 0.999 || base < 1;
+    // keepTransparent: материал прозрачен всегда (ореол) или пока есть окна имплантатов (десна)
+    const keep = m.userData.keepTransparent === true;
+    const transparent = keep || opacity < 0.999 || base < 1;
     if (m.transparent !== transparent) {
       m.transparent = transparent;
       m.needsUpdate = true;
     }
-    m.depthWrite = !transparent;
+    m.depthWrite = keep ? m.userData.keepDepthWrite === true && base >= 1 && opacity >= 0.999 : !transparent;
   }
+}
+
+/** Мягкий ореол по контуру: оболочка чуть больше зуба, прозрачная в центре и цветная к краям силуэта. */
+function createHalo(color: string) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uOpacity: { value: 1 } },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vView = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        float rim = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 1.6);
+        gl_FragColor = vec4(uColor, rim * 0.9 * uOpacity);
+      }`,
+    transparent: true,
+    depthWrite: false,
+  });
+  m.userData.keepTransparent = true;
+  return m;
+}
+
+export const MAX_IMPLANT_WINDOWS = 8;
+
+/**
+ * Окна в десне над имплантатами: вокруг центра имплантата десна плавно становится полупрозрачной, внутри виден винт.
+ * Центры и радиусы задаются каждый кадр в userData.implantWindows (мировые координаты), число — в userData.implantCount.
+ */
+function withImplantWindows(m: THREE.Material) {
+  const windows = Array.from({ length: MAX_IMPLANT_WINDOWS }, () => new THREE.Vector4(0, 0, 0, 0));
+  const count = { value: 0 };
+  m.userData.implantWindows = windows;
+  m.userData.implantCount = count;
+  m.customProgramCacheKey = () => 'gum-implant-windows';
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uImplants = { value: windows };
+    shader.uniforms.uImplantCount = count;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vImplantWorld;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvImplantWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vImplantWorld;
+        uniform vec4 uImplants[${MAX_IMPLANT_WINDOWS}];
+        uniform int uImplantCount;`,
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        `#include <opaque_fragment>
+        float implantFade = 1.0;
+        for (int i = 0; i < ${MAX_IMPLANT_WINDOWS}; i++) {
+          if (i >= uImplantCount) break;
+          float d = distance(vImplantWorld, uImplants[i].xyz) / uImplants[i].w;
+          implantFade = min(implantFade, mix(0.22, 1.0, smoothstep(0.75, 1.45, d)));
+        }
+        gl_FragColor.a *= implantFade;`,
+      );
+  };
 }

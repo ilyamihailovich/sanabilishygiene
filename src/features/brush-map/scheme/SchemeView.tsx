@@ -41,7 +41,7 @@ export interface SchemeViewProps {
 const FULL: Box = { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
 
 function toothClass(state: ToothState) {
-  return state === 'MISSING' ? s.missing : state === 'PONTIC' ? s.pontic : state === 'CROWN' || state === 'IMPLANT' ? s.crown : undefined;
+  return state === 'MISSING' ? s.missing : state === 'PONTIC' ? s.pontic : state === 'CROWN' ? s.crown : state === 'IMPLANT' ? s.implant : undefined;
 }
 
 function SchemeViewImpl({

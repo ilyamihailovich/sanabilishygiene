@@ -190,6 +190,23 @@ function Scene({
       parts.node.visible = state !== 'MISSING';
       const mats = tooth >= 30 ? lowerMats : upperMats;
       if (parts.crown) parts.crown.material = state === 'IMPLANT' ? mats.implantCrown : state === 'CROWN' ? mats.crown : mats.enamel;
+      // коронка: сиреневый ореол — оболочка чуть больше коронки вокруг её центра
+      if (state === 'CROWN' && parts.crown) {
+        const geo = parts.crown.geometry;
+        if (!geo.boundingBox) geo.computeBoundingBox();
+        const center = geo.boundingBox!.getCenter(new THREE.Vector3());
+        const halo = new THREE.Mesh(geo, mats.crownHalo);
+        const s = 1.14;
+        halo.scale.setScalar(s);
+        halo.position.copy(center).multiplyScalar(1 - s);
+        halo.renderOrder = 2;
+        halo.raycast = () => undefined;
+        halo.onBeforeRender = () => {
+          mats.crownHalo.uniforms.uOpacity!.value = mats.crownHalo.opacity;
+        };
+        parts.crown.add(halo);
+        implants.current.push(halo);
+      }
       // корни видны только в «Анатомии»: в обычном режиме их закрывают десна и кость
       if (parts.root) parts.root.visible = (state === 'PRESENT' || state === 'CROWN') && Boolean(anatomy);
       const g = nodes.gums.get(tooth);
@@ -204,10 +221,17 @@ function Scene({
           fixture.position.set(0, 0, 0);
           fixture.quaternion.identity();
           fixture.material = tooth >= 30 ? lowerMats.titanium : upperMats.titanium;
+          fixture.userData.implantTooth = tooth;
           axis.add(fixture);
           implants.current.push(fixture);
         }
       }
+    }
+    // окна в десне над имплантатами: десна прозрачна, пока на челюсти есть имплантат
+    for (const [mats, lower] of [[upperMats, false], [lowerMats, true]] as const) {
+      const has = implants.current.some((o) => o.userData.implantTooth !== undefined && o.userData.implantTooth >= 30 === lower);
+      mats.gum.userData.keepTransparent = has;
+      mats.gum.userData.keepDepthWrite = true;
     }
     for (const b of nodes.bones) b.visible = Boolean(anatomy);
     for (const mats of [upperMats, lowerMats]) {
@@ -231,6 +255,20 @@ function Scene({
     fades.current.lower += (target.lower - fades.current.lower) * k;
     setFade(Object.values(upperMats), fades.current.upper);
     setFade(Object.values(lowerMats), fades.current.lower);
+    // центры окон в десне — по текущему положению имплантатов (челюсть раскрывается и вращается)
+    for (const [mats, lower] of [[upperMats, false], [lowerMats, true]] as const) {
+      const windows = mats.gum.userData.implantWindows as THREE.Vector4[];
+      const count = mats.gum.userData.implantCount as { value: number };
+      let n = 0;
+      for (const o of implants.current) {
+        const tooth = o.userData.implantTooth as number | undefined;
+        if (tooth === undefined || tooth >= 30 !== lower || n >= windows.length) continue;
+        windowBox.setFromObject(o);
+        windowBox.getCenter(windowCenter);
+        windows[n++]!.set(windowCenter.x, windowCenter.y, windowCenter.z, windowBox.getSize(windowSize).length() * 0.5);
+      }
+      count.value = n;
+    }
     nodes.maxilla.visible = fades.current.upper > 0.02;
     nodes.mandible.visible = fades.current.lower > 0.02;
   });
@@ -276,6 +314,10 @@ function Scene({
     </>
   );
 }
+
+const windowBox = new THREE.Box3();
+const windowCenter = new THREE.Vector3();
+const windowSize = new THREE.Vector3();
 
 function assignMaterials(group: THREE.Object3D, mats: JawMaterials) {
   group.traverse((o) => {
