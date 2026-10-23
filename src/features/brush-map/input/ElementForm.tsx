@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import type { MapElement } from '@/domain/brushMap';
-import { brushBrand, formatMm } from '@/domain/brushes';
+import { brushBrand } from '@/domain/brushes';
 import type { ElementData } from '@/schemas/brushMap';
 import type { CatalogItem } from '@/server/services/catalog';
 import { BrushSizeButton } from '@/ui/brush/BrushSizeButton';
@@ -32,7 +32,7 @@ const t = ui.interspace;
 const FREE_COLORS = ['#e7a1c4', '#8e63c2', '#3fa9a6', '#9fc54a', '#c98a3c', '#8b8b90', '#2f2f33'];
 
 export function sizeMeta(c: CatalogItem) {
-  return `${brushBrand(c)} · ${formatMm(c.passageMm)}${c.verified ? '' : ' · не проверен'}`;
+  return `${brushBrand(c)} · ${c.label}${c.isoSize ? ` · ${c.isoSize}` : ''}${c.verified ? '' : ' · не проверен'}`;
 }
 
 /** Производители в порядке каталога. */
@@ -94,7 +94,7 @@ export function ElementForm({ element, catalog: all, hotkeys, density, brand, on
                 {catalog.map((c) => (
                   <BrushSizeButton
                     key={c.id}
-                    label={formatMm(c.passageMm)}
+                    label={c.label}
                     title={sizeMeta(c)}
                     color={c.colorHex}
                     pressed={catalogId === c.id}
@@ -120,7 +120,7 @@ export function ElementForm({ element, catalog: all, hotkeys, density, brand, on
                     title={`${sizeMeta(c)}${hotkeys.get(c.id) ? `, клавиша ${hotkeys.get(c.id)}` : ''}`}
                   >
                     <span className={s.dot} style={{ background: c.colorHex }} aria-hidden="true" />
-                    {formatMm(c.passageMm)}
+                    {c.label}
                     {hotkeys.get(c.id) && <kbd className={s.kbd}>{hotkeys.get(c.id)}</kbd>}
                   </button>
                 ))}

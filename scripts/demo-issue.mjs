@@ -28,10 +28,10 @@ const doctor = await session('doctor@sanabilis.local', 'demo-password');
 // образец каталога (только для локальной проверки)
 let catalog = await call(admin, 'GET', '/api/v1/admin/brushes');
 for (const [k, { brand, line, sizes }] of sample.brushes.entries()) {
-  for (const [i, [passage, color]] of sizes.entries()) {
-    const label = `${String(passage).replace('.', ',')} мм`;
+  for (const [i, [passage, color, isoSize, variant]] of sizes.entries()) {
+    const label = `${String(passage).replace('.', ',')} мм${variant ? ` ${variant}` : ''}`;
     if (catalog.some((c) => c.brand === brand && c.line === line && c.label === label)) continue;
-    await call(admin, 'POST', '/api/v1/admin/brushes', { brand, line, label, passageMm: passage, colorHex: color, verified: true, sortOrder: k * 100 + i + 1 });
+    await call(admin, 'POST', '/api/v1/admin/brushes', { brand, line, label, isoSize, passageMm: passage, colorHex: color, verified: true, sortOrder: k * 100 + i + 1 });
   }
 }
 catalog = await call(admin, 'GET', '/api/v1/admin/brushes');

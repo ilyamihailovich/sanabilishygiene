@@ -235,7 +235,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   const live = useRef({ content, selectedKey });
   live.current = { content, selectedKey };
   const applyPhrase = (text: string): PhraseOutcome => {
-    const sizes = catalog.map((c) => ({ id: c.id, brand: brushBrand(c), passageMm: c.passageMm }));
+    const sizes = catalog.map((c) => ({ id: c.id, brand: brushBrand(c), passageMm: c.passageMm, variant: !/мм$/.test(c.label) }));
     let next = live.current.content;
     let key = live.current.selectedKey;
     let brand = activeBrand;

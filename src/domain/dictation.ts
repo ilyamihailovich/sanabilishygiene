@@ -12,6 +12,8 @@ export interface DictationSize {
   /** Производитель с линейкой, как в каталоге: «TePe Original». */
   brand: string;
   passageMm: string;
+  /** Особая форма того же размера (конус): по одному числу не выбирается, только в карточке. */
+  variant?: boolean;
 }
 
 export type DictationAction =
@@ -132,7 +134,8 @@ export function parseDictation(text: string, ctx: { elements: MapElement[]; cata
 
   const sizeFor = (mm: string, raw: string) => {
     const own = ctx.catalog.filter((c) => (brand ? c.brand === brand : true) && mmKey(c.passageMm) === mmKey(mm));
-    const hit = own.length === 1 ? own[0] : undefined;
+    const plain = own.length > 1 && brand ? own.filter((c) => !c.variant) : own;
+    const hit = plain.length === 1 ? plain[0] : undefined;
     if (hit) actions.push({ kind: 'size', catalogId: hit.id, brand: hit.brand, mm: hit.passageMm });
     else if (own.length > 1) unknown.push(`${raw} мм: назовите производителя`);
     else unknown.push(brand ? `${raw} мм нет у ${brand}` : `${raw} мм нет в каталоге`);

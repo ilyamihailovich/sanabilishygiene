@@ -103,7 +103,8 @@ async function seedDemo() {
   const sample = JSON.parse(readFileSync(new URL('./sample-content.json', import.meta.url), 'utf8')) as {
     doctor: { displayName: string; title: string };
     patient: { cardNumber: string; displayName: string; fullName: string };
-    brushes: Array<{ brand: string; line: string; sizes: Array<[number, string]> }>;
+    /** Размер: [мм по обозначению производителя, цвет, класс ISO, вариант (например, «конус»)]. */
+    brushes: Array<{ brand: string; line: string; sizes: Array<[number, string, string, string?]> }>;
     psr: Record<string, { staff: string; patient: string }>;
     brushSteps: string[];
   };
@@ -123,14 +124,18 @@ async function seedDemo() {
   for (const [k, { brand: name, line, sizes }] of sample.brushes.entries()) {
     const brand = await db.brushBrand.upsert({ where: { name }, create: { name }, update: {} });
     brandIds.push(brand.id);
-    for (const [i, [passageMm, colorHex]] of sizes.entries()) {
-      const label = `${String(passageMm).replace('.', ',')} мм`;
+    const labels: string[] = [];
+    for (const [i, [passageMm, colorHex, isoSize, variant]] of sizes.entries()) {
+      const label = `${String(passageMm).replace('.', ',')} мм${variant ? ` ${variant}` : ''}`;
+      labels.push(label);
       await db.brushSize.upsert({
         where: { brandId_line_label: { brandId: brand.id, line, label } },
-        create: { brandId: brand.id, line, label, passageMm, colorHex, verified: true, sortOrder: k * 100 + i + 1 },
-        update: { passageMm, colorHex, sortOrder: k * 100 + i + 1, archived: false },
+        create: { brandId: brand.id, line, label, isoSize, passageMm, colorHex, verified: true, sortOrder: k * 100 + i + 1 },
+        update: { isoSize, passageMm, colorHex, sortOrder: k * 100 + i + 1, archived: false },
       });
     }
+    // размеры линейки, которых нет в образце (прежние заглушки), уходят в архив
+    await db.brushSize.updateMany({ where: { brandId: brand.id, line, label: { notIn: labels } }, data: { archived: true } });
   }
 
   for (const [code, text] of Object.entries(sample.psr)) {

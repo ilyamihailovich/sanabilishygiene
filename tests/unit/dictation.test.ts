@@ -8,6 +8,8 @@ const catalog: DictationSize[] = [
   { id: 'tp6', brand: 'TePe Original', passageMm: '0.6' },
   { id: 'tp8', brand: 'TePe Original', passageMm: '0.8' },
   { id: 'tp13', brand: 'TePe Original', passageMm: '1.3' },
+  { id: 'cs14', brand: 'Curasept Proxi', passageMm: '1.4' },
+  { id: 'cs14c', brand: 'Curasept Proxi', passageMm: '1.4', variant: true },
 ];
 const elements = listElements(emptyBrushMap());
 const parse = (text: string, brand: string | null = null) => parseDictation(text, { elements, catalog, brand });
@@ -35,6 +37,10 @@ describe('голосовой ввод', () => {
     const r = parse('ноль шесть');
     expect(r.actions).toEqual([]);
     expect(r.unknown[0]).toMatch(/назовите производителя/);
+  });
+
+  it('при обычном и коническом ёршике одного размера число выбирает обычный', () => {
+    expect(parse('курасепт одна целая четыре').actions[1]).toMatchObject({ kind: 'size', catalogId: 'cs14' });
   });
 
   it('«одна целая три», «1 3 мм» и «06» — размеры', () => {
