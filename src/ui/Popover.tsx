@@ -42,6 +42,8 @@ export function Popover({ open, onClose, anchor, label, children, track, narrow 
 
   useLayoutEffect(() => {
     if (!open) return;
+    // сторона (снизу, сверху, справа, слева) выбирается при открытии и при смене якоря; пока якорь движется, она не меняется
+    let side: 'below' | 'above' | 'right' | 'left' | null = null;
     const place = () => {
       const el = ref.current;
       if (!el) return;
@@ -52,28 +54,48 @@ export function Popover({ open, onClose, anchor, label, children, track, narrow 
       const clampX = (x: number) => Math.min(Math.max(MARGIN, x), vw - width - MARGIN);
       const clampY = (y: number) => Math.min(Math.max(MARGIN, y), vh - height - MARGIN);
       let placed: { left: number; top: number; origin: string };
+      if (following && side) {
+        // следование за якорем: пишем позицию прямо в стиль в том же кадре, без перерисовки React и без анимации
+        const x = side === 'below' || side === 'above' ? clampX(a.left + a.width / 2 - width / 2) : side === 'right' ? a.right + GAP : a.left - GAP - width;
+        const y = side === 'below' ? a.bottom + GAP : side === 'above' ? a.top - GAP - height : clampY(a.top + a.height / 2 - height / 2);
+        el.style.transition = 'none';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        return;
+      }
       if (a.bottom + GAP + height <= vh - MARGIN) {
+        side = 'below';
         placed = { left: clampX(a.left + a.width / 2 - width / 2), top: a.bottom + GAP, origin: 'top center' };
       } else if (a.top - GAP - height >= MARGIN) {
+        side = 'above';
         placed = { left: clampX(a.left + a.width / 2 - width / 2), top: a.top - GAP - height, origin: 'bottom center' };
       } else if (a.right + GAP + width <= vw - MARGIN) {
+        side = 'right';
         placed = { left: a.right + GAP, top: clampY(a.top + a.height / 2 - height / 2), origin: 'center left' };
       } else {
+        side = 'left';
         placed = { left: Math.max(MARGIN, a.left - GAP - width), top: clampY(a.top + a.height / 2 - height / 2), origin: 'center right' };
       }
-      setPos((prev) => ({ ...placed, animate: prev !== null && !following }));
+      setPos((prev) => ({ ...placed, animate: prev !== null }));
     };
     // якорь может двигаться сам (поворот 3D-модели): поповер следует за ним без задержки и не уходит за край экрана
     let following = false;
+    let moving = false;
     let last = '';
     let raf = 0;
     const follow = () => {
       const a = anchorRect(anchor);
-      const key = `${Math.round(a.left)}:${Math.round(a.top)}`;
+      const key = `${a.left.toFixed(1)}:${a.top.toFixed(1)}`;
       if (last && key !== last) {
         following = true;
         place();
         following = false;
+        moving = true;
+      } else if (moving) {
+        // якорь остановился: состояние React догоняет фактическую позицию, чтобы следующая перерисовка не откатила поповер
+        moving = false;
+        const el = ref.current;
+        if (el) setPos((prev) => (prev ? { ...prev, left: parseFloat(el.style.left), top: parseFloat(el.style.top), animate: false } : prev));
       }
       last = key;
       raf = requestAnimationFrame(follow);

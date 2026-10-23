@@ -37,7 +37,11 @@ const result = await build({
   external: ['/fonts.css'],
 });
 
-const js = result.outputFiles.find((f) => f.path.endsWith('.js')).text;
+// Проверка поддержки AVIF и WebP в загрузчике three.js встраивает пробные картинки этих форматов.
+// Прототип такие текстуры не использует, а AVIF мешает публикации по общей ссылке: пробы заменяются пустой строкой (поддержка = нет).
+const js = result.outputFiles
+  .find((f) => f.path.endsWith('.js'))
+  .text.replace(/"data:image\/(avif|webp);base64,[A-Za-z0-9+/=]+"/g, '""');
 const css = result.outputFiles.find((f) => f.path.endsWith('.css'))?.text ?? '';
 // В песочнице артефакта запрещены fetch и, возможно, WebAssembly: модель встраивается без сжатия meshopt
 await MeshoptDecoder.ready;
