@@ -32,6 +32,15 @@ function ctor(): RecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+// страница внутри чужой рамки (например, прототип в просмотре): рамка может запрещать микрофон независимо от настроек браузера
+const framed = () => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+};
+
 const ERRORS: Record<string, string> = {
   'not-allowed': 'Нет доступа к микрофону. Разрешите его в настройках браузера.',
   'service-not-allowed': 'Браузер не разрешает распознавание речи на этой странице.',
@@ -80,7 +89,13 @@ export function useSpeech(onPhrase: (text: string) => void) {
     r.onerror = (e) => {
       if (e.error === 'no-speech' || e.error === 'aborted') return;
       wanted.current = false;
-      setError(ERRORS[e.error] ?? 'Распознавание речи остановилось. Попробуйте ещё раз.');
+      setListening(false);
+      setInterim('');
+      setError(
+        (e.error === 'not-allowed' || e.error === 'service-not-allowed') && framed()
+          ? 'Здесь микрофон закрыт рамкой страницы, разрешение браузера не помогает. Нажмите на поле ниже и диктуйте кнопкой микрофона на клавиатуре.'
+          : (ERRORS[e.error] ?? 'Распознавание речи остановилось. Попробуйте ещё раз.'),
+      );
     };
     // Safari и Chrome останавливают распознавание после паузы: пока врач не выключил микрофон, оно перезапускается
     r.onend = () => {
