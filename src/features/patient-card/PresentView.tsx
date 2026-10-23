@@ -14,8 +14,8 @@ import { ToggleGroup } from '@/ui/ToggleGroup';
 import { ToggleChip } from '@/ui/Chip';
 import type { MarkerVisual } from '../brush-map/scheme/SvgMarker';
 import { SchemeView } from '../brush-map/scheme/SchemeView';
-import { VIEW_ORDER, type ViewKey } from '../brush-map/useMapKeyboard';
-import { viewIconsPublic } from './viewIcons';
+import type { ViewKey } from '../brush-map/useMapKeyboard';
+import { VIEW_ORDER_PUBLIC, viewIconsPublic } from './viewIcons';
 import s from './present.module.css';
 
 const ThreeView = dynamic(() => import('../brush-map/three/ThreeView').then((m) => m.ThreeView), { ssr: false });
@@ -68,10 +68,10 @@ export function PresentView({ visitId, content, catalog }: { visitId: string; co
         </div>
       </div>
       {mode === 'three' ? (
-        <ThreeView content={content} elements={elements} visual={visual} view={view} anatomy={anatomy} intro readOnly onFallback={() => setMode('scheme')} />
+        <ThreeView mirrored content={content} elements={elements} visual={visual} view={view} anatomy={anatomy} intro readOnly onFallback={() => setMode('scheme')} />
       ) : (
         <div className={s.scheme}>
-          <SchemeView content={content} elements={elements} visual={visual} readOnly markerRadius={18} />
+          <SchemeView mirrored content={content} elements={elements} visual={visual} readOnly markerRadius={18} />
         </div>
       )}
       {mode === 'three' && (
@@ -82,7 +82,7 @@ export function PresentView({ visitId, content, catalog }: { visitId: string; co
               value={view}
               size={52}
               onChange={(v) => v && setView(v)}
-              options={VIEW_ORDER.map((v) => ({ value: v, label: ui.views[v], content: viewIconsPublic[v] }))}
+              options={VIEW_ORDER_PUBLIC.map((v) => ({ value: v, label: ui.views[v], content: viewIconsPublic[v] }))}
             />
           </GlassPanel>
         </div>

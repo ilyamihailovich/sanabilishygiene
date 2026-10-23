@@ -16,6 +16,8 @@ export interface ThreeViewProps {
   readOnly?: boolean;
   /** Режим рендера для PDF: без анимации, сигнал готовности в window. */
   capture?: boolean;
+  /** Как в зеркале: правая сторона пациента справа. Для пациента и его документов. */
+  mirrored?: boolean;
   onElement?: (key: string, target: Element) => void;
   onTooth?: (tooth: number, target: Element) => void;
   onHover?: (key: string | null, target: Element | null) => void;

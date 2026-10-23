@@ -146,6 +146,7 @@ function Scene({
   intro,
   readOnly,
   capture,
+  mirrored,
   tier,
   skip,
   onElement,
@@ -155,6 +156,8 @@ function Scene({
   // Источник модели постоянен на всё время работы страницы, порядок хуков не меняется
   const gltf = INLINE_MODEL ? use(inlineModel(INLINE_MODEL)) : useGLTF(MODEL_URL, false, true);
   const nodes = useMemo(() => indexNodes(gltf.scene), [gltf.scene]);
+  // зеркало — отражение модели по горизонтали; модель одна на страницу, значение выставляется при каждом рендере сцены
+  gltf.scene.scale.x = mirrored ? -1 : 1;
   const upperMats = useMemo(() => createMaterials(tier), [tier]);
   const lowerMats = useMemo(() => createMaterials(tier), [tier]);
   const implants = useRef<THREE.Object3D[]>([]);
@@ -185,10 +188,12 @@ function Scene({
     for (const [tooth, parts] of nodes.teeth) {
       const state = content.teeth[String(tooth)]?.state ?? 'PRESENT';
       parts.node.visible = state !== 'MISSING';
+      const mats = tooth >= 30 ? lowerMats : upperMats;
+      if (parts.crown) parts.crown.material = state === 'IMPLANT' ? mats.implantCrown : state === 'CROWN' ? mats.crown : mats.enamel;
       // корни видны только в «Анатомии»: в обычном режиме их закрывают десна и кость
-      if (parts.root) parts.root.visible = state === 'PRESENT' && Boolean(anatomy);
+      if (parts.root) parts.root.visible = (state === 'PRESENT' || state === 'CROWN') && Boolean(anatomy);
       const g = nodes.gums.get(tooth);
-      const solid = state === 'PRESENT' || state === 'IMPLANT';
+      const solid = state === 'PRESENT' || state === 'IMPLANT' || state === 'CROWN';
       if (g?.gum) g.gum.visible = solid || !g.ridge;
       if (g?.ridge) g.ridge.visible = !solid;
       if (state === 'IMPLANT' && nodes.implant) {
@@ -242,7 +247,7 @@ function Scene({
   return (
     <>
       <primitive object={gltf.scene} onClick={handleClick} />
-      <CameraRig nodes={nodes} view={view} opening={opening} capture={Boolean(capture)} focus={focus} onReady={() => setReady(true)} />
+      <CameraRig nodes={nodes} view={view} opening={opening} capture={Boolean(capture)} mirrored={Boolean(mirrored)} focus={focus} onReady={() => setReady(true)} />
       {tier !== 'low' && !capture && <Shadows nodes={nodes} />}
       {ready && (
         <Markers
@@ -306,7 +311,7 @@ interface Preset {
   target: THREE.Vector3;
 }
 
-function computePresets(nodes: JawNodes, aspect: number): Record<ViewKey, Preset> {
+function computePresets(nodes: JawNodes, aspect: number, mirrored: boolean): Record<ViewKey, Preset> {
   const prev = nodes.pivot.rotation.x;
   nodes.pivot.rotation.x = OPEN_ANGLE;
   nodes.root.updateMatrixWorld(true);
@@ -357,6 +362,7 @@ function computePresets(nodes: JawNodes, aspect: number): Record<ViewKey, Preset
     return { target: t, position: t.clone().addScaledVector(dir, dist) };
   };
   const mid = upper.clone().add(lower).multiplyScalar(0.5);
+  const side = mirrored ? -1 : 1;
   const far = aspect < 1 ? Math.min(1.9, 0.9 / aspect) : 1;
   const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z).multiplyScalar(far);
   const lowerNormal = new THREE.Vector3(0, Math.cos(OPEN_ANGLE), Math.sin(OPEN_ANGLE));
@@ -364,8 +370,9 @@ function computePresets(nodes: JawNodes, aspect: number): Record<ViewKey, Preset
     overview: { target: mid.clone().add(new THREE.Vector3(0, 0, 0.004)), position: mid.clone().add(v(0, 0.032, 0.185)) },
     upper: occlusal(upper, new THREE.Vector3(0, -1, 0), upperPts),
     lower: occlusal(lower, lowerNormal, lowerPts),
-    right: { target: mid.clone().add(new THREE.Vector3(-0.012, 0, -0.006)), position: mid.clone().add(v(-0.15, 0.012, 0.035)) },
-    left: { target: mid.clone().add(new THREE.Vector3(0.012, 0, -0.006)), position: mid.clone().add(v(0.15, 0.012, 0.035)) },
+    // правая сторона пациента у врача слева (−x), в зеркале — справа
+    right: { target: mid.clone().add(new THREE.Vector3(-0.012 * side, 0, -0.006)), position: mid.clone().add(v(-0.15 * side, 0.012, 0.035)) },
+    left: { target: mid.clone().add(new THREE.Vector3(0.012 * side, 0, -0.006)), position: mid.clone().add(v(0.15 * side, 0.012, 0.035)) },
     front: { target: mid.clone().add(new THREE.Vector3(0, 0, 0.02)), position: mid.clone().add(v(0, 0.004, 0.16)) },
   };
 }
@@ -375,6 +382,7 @@ function CameraRig({
   view,
   opening,
   capture,
+  mirrored,
   focus,
   onReady,
 }: {
@@ -382,13 +390,14 @@ function CameraRig({
   view: ViewKey;
   opening: MutableRefObject<number>;
   capture: boolean;
+  mirrored: boolean;
   focus: { point: THREE.Vector3; n: number } | null;
   onReady: () => void;
 }) {
   const { camera, size } = useThree();
   const controls = useRef<OrbitControlsImpl>(null);
   const aspect = size.width / Math.max(1, size.height);
-  const presets = useMemo(() => computePresets(nodes, aspect), [nodes, aspect]);
+  const presets = useMemo(() => computePresets(nodes, aspect, mirrored), [nodes, aspect, mirrored]);
   const tween = useRef<{ from: Preset; to: Preset; t: number; ms: number } | null>(null);
   const started = useRef(false);
 

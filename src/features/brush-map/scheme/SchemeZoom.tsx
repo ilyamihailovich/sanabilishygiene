@@ -19,6 +19,8 @@ interface Props {
   /** Открыть целиком и затем приблизиться к target. Без него схема остаётся целиком. */
   intro?: boolean;
   children: (box: Box) => ReactNode;
+  /** Схема нарисована зеркально: жесты переводятся в координаты схемы с отражением по горизонтали. */
+  mirrored?: boolean;
 }
 
 export interface SchemeZoomHandle {
@@ -37,7 +39,7 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
  * Приближение и сдвиг схемы. Телефон: щипок и палец. Компьютер: перетаскивание мышью,
  * колесо с Ctrl (щипок на тачпаде) и кнопки через zoomBy. Обычное колесо прокручивает страницу.
  */
-export const SchemeZoom = forwardRef<SchemeZoomHandle, Props>(function SchemeZoom({ bounds, target, intro = true, children }, handle) {
+export const SchemeZoom = forwardRef<SchemeZoomHandle, Props>(function SchemeZoom({ bounds, target, intro = true, children, mirrored }, handle) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [cam, setCam] = useState<Camera>({ cx: bounds.x + bounds.w / 2, cy: bounds.y + bounds.h / 2, z: MIN_Z });
@@ -153,11 +155,12 @@ export const SchemeZoom = forwardRef<SchemeZoomHandle, Props>(function SchemeZoo
       anim.current?.stop();
       touched.current = true;
       const r = el.getBoundingClientRect();
-      setCam(zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX - r.left, e.clientY - r.top));
+      const px = e.clientX - r.left;
+      setCam(zoomAt(Math.exp(-e.deltaY * 0.01), mirrored ? r.width - px : px, e.clientY - r.top));
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [zoomAt]);
+  }, [zoomAt, mirrored]);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     anim.current?.stop();
@@ -173,15 +176,16 @@ export const SchemeZoom = forwardRef<SchemeZoomHandle, Props>(function SchemeZoo
     const c = camRef.current;
     const scale = fit * c.z;
     if (pts.length === 1) {
-      const dx = e.clientX - prev.x;
+      const dx = (e.clientX - prev.x) * (mirrored ? -1 : 1);
       const dy = e.clientY - prev.y;
       travel.current += Math.hypot(dx, dy);
       if (travel.current > TAP_SLOP) setCam(clamp({ ...c, cx: c.cx - dx / scale, cy: c.cy - dy / scale }));
     } else if (pts.length === 2) {
       const other = pts.find(([id]) => id !== e.pointerId)![1];
       const rect = ref.current.getBoundingClientRect();
-      const oldMid = { x: (prev.x + other.x) / 2 - rect.left, y: (prev.y + other.y) / 2 - rect.top };
-      const newMid = { x: (e.clientX + other.x) / 2 - rect.left, y: (e.clientY + other.y) / 2 - rect.top };
+      const mx = (x: number) => (mirrored ? rect.width - (x - rect.left) : x - rect.left);
+      const oldMid = { x: mx((prev.x + other.x) / 2), y: (prev.y + other.y) / 2 - rect.top };
+      const newMid = { x: mx((e.clientX + other.x) / 2), y: (e.clientY + other.y) / 2 - rect.top };
       const oldDist = Math.hypot(prev.x - other.x, prev.y - other.y) || 1;
       const newDist = Math.hypot(e.clientX - other.x, e.clientY - other.y);
       travel.current += TAP_SLOP;

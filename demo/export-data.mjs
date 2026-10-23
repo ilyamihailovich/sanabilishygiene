@@ -12,14 +12,15 @@ if (!issue) throw new Error('Выдача не найдена');
 const documents = (
   await db.query('select id, type, rev, content, "templateVersionId" from "Document" where "visitId" = $1 order by "createdAt"', [issue.visitId])
 ).rows;
-const brands = Object.values(issue.snapshot.brushMap?.sizes ?? {}).map((x) => x.brand);
+// производители образца: тестовые позиции из базы в прототип не попадают
+const sampleBrands = JSON.parse(readFileSync(new URL('../prisma/sample-content.json', import.meta.url), 'utf8')).brushes.map((b) => b.brand);
 const catalog = (
   await db.query(
     `select s.id, b.name as brand, s.line, s.label, s."isoSize", s."passageMm"::float8::text as "passageMm", s."bristleDiameterMm"::float8::text as "bristleDiameterMm",
             s."colorHex", s.verified, s."sortOrder", s."photoPath" is not null as "hasPhoto", s.archived
        from "BrushSize" s join "BrushBrand" b on b.id = s."brandId"
-      where b.name = any($1) and not s.archived order by s."passageMm"`,
-    [brands],
+      where not s.archived and b.name = any($1) order by s."sortOrder", s."passageMm"`,
+    [sampleBrands],
   )
 ).rows;
 

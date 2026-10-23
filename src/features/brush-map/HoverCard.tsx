@@ -17,8 +17,8 @@ export function HoverCard({ element, target, sizeLabel }: { element: MapElement 
   }, [target]);
   if (!element || !pos) return null;
   const d = element.data;
-  const marks = [d.bleeding && ui.interspace.bleeding, d.pain && ui.interspace.pain, d.openContact && ui.interspace.openContact].filter(Boolean);
-  const alt = d.alternative === 'FLOSS' ? ui.interspace.floss : d.alternative === 'NONE' ? ui.interspace.notNeeded : null;
+  const marks = [d.bleeding && ui.interspace.bleeding].filter(Boolean);
+  const alt = d.alternative === 'FLOSS' ? ui.interspace.floss : null;
   return (
     <div className={cx(glassClass, s.hover)} style={pos} role="tooltip">
       <span className={s.hoverTitle}>{element.label}</span>

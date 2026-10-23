@@ -2,7 +2,7 @@
 
 export type Arch = 'upper' | 'lower';
 export type Side = 'right' | 'left';
-export type ToothState = 'PRESENT' | 'MISSING' | 'IMPLANT' | 'PONTIC';
+export type ToothState = 'PRESENT' | 'CROWN' | 'MISSING' | 'IMPLANT' | 'PONTIC';
 
 /** Порядок по дуге справа налево от пациента. */
 export const ARCH_ORDER: Record<Arch, readonly number[]> = {
@@ -42,6 +42,7 @@ export function opposingTooth(tooth: number): number {
 
 export const toothStateLabels: Record<ToothState, string> = {
   PRESENT: 'Присутствует',
+  CROWN: 'Коронка',
   MISSING: 'Отсутствует',
   IMPLANT: 'Имплантат',
   PONTIC: 'Промежуточная часть протеза',

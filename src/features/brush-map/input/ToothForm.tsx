@@ -7,7 +7,7 @@ import { Switch } from '@/ui/Field';
 import { IconCheck, IconPlus } from '@/ui/icons';
 import s from './ToothForm.module.css';
 
-const STATES: ToothState[] = ['PRESENT', 'MISSING', 'IMPLANT', 'PONTIC'];
+const STATES: ToothState[] = ['PRESENT', 'CROWN', 'IMPLANT', 'MISSING', 'PONTIC'];
 
 interface ToothFormProps {
   tooth: number;

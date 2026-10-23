@@ -24,9 +24,10 @@ const QUADRANTS: Array<{ label: string; teeth: number[] }> = [
   { label: 'Нижняя левая', teeth: [31, 32, 33, 34, 35, 36, 37, 38] },
 ];
 
-const CYCLE: ToothState[] = ['PRESENT', 'MISSING', 'IMPLANT', 'PONTIC'];
+const CYCLE: ToothState[] = ['PRESENT', 'CROWN', 'IMPLANT', 'MISSING', 'PONTIC'];
 const STATE_LABEL: Record<ToothState, string> = {
   PRESENT: 'на месте',
+  CROWN: 'коронка',
   MISSING: 'отсутствует',
   IMPLANT: 'имплантат',
   PONTIC: 'промежуточная часть моста',
@@ -134,7 +135,7 @@ export function BrushMapStart({ previousDate, disabled, onStart }: { previousDat
           <li>
             <span className={s.stepNum}>2</span>
             <span>
-              <b>Размер ёршика</b>: клавиши 1–9 и 0 или выбор в карточке промежутка. Если ёршик не проходит, отметьте зубную нить (F) или «не требуется» (N).
+              <b>Размер ёршика</b>: клавиши 1–9 и 0 или выбор в карточке промежутка. Сначала выберите производителя: цвет метки зависит от него. Если ёршик не проходит, отметьте зубную нить (F).
             </span>
           </li>
           <li>

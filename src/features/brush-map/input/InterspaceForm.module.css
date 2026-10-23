@@ -22,6 +22,35 @@
   gap: var(--space-2);
 }
 
+/* производитель: обязательная часть выбора размера, цвет размера зависит от производителя */
+.brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.brand {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.brand[aria-checked='true'] {
+  background: var(--color-text);
+  color: var(--color-surface);
+}
+
 .compactSizes {
   display: flex;
   flex-wrap: wrap;

@@ -29,7 +29,7 @@ export function CaptureScene({ snapshot, view: initialView }: { snapshot: IssueS
       data-capture
       style={{ position: 'relative', width: 1200, height: 1000, background: 'radial-gradient(120% 90% at 50% 45%, #f6f6f8 0%, #ececf0 100%)' }}
     >
-      <ThreeView content={map.content} elements={elements} visual={visual} view={view} readOnly capture />
+      <ThreeView mirrored content={map.content} elements={elements} visual={visual} view={view} readOnly capture />
     </div>
   );
 }

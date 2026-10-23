@@ -1,4 +1,5 @@
 import { countLabel } from '@/content/plural';
+import { brushBrand } from '@/domain/brushes';
 import { ui } from '@/content/ui.ru';
 import { listElements, summarizeSizes } from '@/domain/brushMap';
 import type { IssueSnapshot } from '@/schemas/snapshot';
@@ -27,7 +28,7 @@ export function brushRows(snapshot: IssueSnapshot): BrushRow[] {
     return {
       ref: u.ref,
       label: c ? c.label : (u.freeText ?? '—'),
-      meta: c ? `проход ${c.passageMm.replace('.', ',')} мм` : ui.map.freeText,
+      meta: c ? brushBrand(c) : ui.map.freeText,
       color: c?.colorHex ?? u.color ?? null,
       count: u.count,
       where: u.keys.map((k) => labels.get(k) ?? k),
@@ -36,11 +37,10 @@ export function brushRows(snapshot: IssueSnapshot): BrushRow[] {
 }
 
 export function alternatives(snapshot: IssueSnapshot) {
-  if (!snapshot.brushMap) return { floss: [] as string[], none: [] as string[] };
+  if (!snapshot.brushMap) return { floss: [] as string[] };
   const els = listElements(snapshot.brushMap.content).filter((e) => e.active);
   return {
     floss: els.filter((e) => e.data.alternative === 'FLOSS').map((e) => e.label),
-    none: els.filter((e) => e.data.alternative === 'NONE').map((e) => e.label),
   };
 }
 
@@ -107,7 +107,6 @@ export function AlternativesNote({ snapshot, compact }: { snapshot: IssueSnapsho
   const alt = alternatives(snapshot);
   const rows = [
     { kind: 'floss' as const, label: ui.patient.floss, list: alt.floss },
-    { kind: 'none' as const, label: ui.patient.notNeeded, list: alt.none },
   ].filter((r) => r.list.length > 0);
   if (!rows.length) return null;
   return (

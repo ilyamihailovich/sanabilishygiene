@@ -34,12 +34,14 @@ export interface SchemeViewProps {
   onElement?: (key: string, target: Element) => void;
   onTooth?: (tooth: number, target: Element) => void;
   onHover?: (key: string | null, target: Element | null) => void;
+  /** Как в зеркале: правая сторона пациента справа. Для пациента; врач видит схему со стороны пациента напротив. */
+  mirrored?: boolean;
 }
 
 const FULL: Box = { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
 
 function toothClass(state: ToothState) {
-  return state === 'MISSING' ? s.missing : state === 'PONTIC' ? s.pontic : undefined;
+  return state === 'MISSING' ? s.missing : state === 'PONTIC' ? s.pontic : state === 'CROWN' || state === 'IMPLANT' ? s.crown : undefined;
 }
 
 function SchemeViewImpl({
@@ -58,8 +60,13 @@ function SchemeViewImpl({
   onElement,
   onTooth,
   onHover,
+  mirrored,
 }: SchemeViewProps) {
-  const vb = box ?? FULL;
+  const area = box ?? FULL;
+  // зеркалится рисунок, а не текст: группа отражается целиком, подписи отражаются обратно на месте
+  const vb = mirrored ? { ...area, x: VIEW_W - area.x - area.w } : area;
+  const flip = mirrored ? `matrix(-1 0 0 1 ${VIEW_W} 0)` : undefined;
+  const readable = (x: number) => (mirrored ? `matrix(-1 0 0 1 ${2 * x} 0)` : undefined);
   const shown = (readOnly ? elements.filter((e) => e.active) : elements).filter((e) => !arch || e.arch === arch);
   const teeth = arch ? TEETH.filter((g) => archOf(g.tooth) === arch) : TEETH;
   const activate = (e: KeyboardEvent<SVGGElement>, fn: () => void) => {
@@ -87,13 +94,14 @@ function SchemeViewImpl({
             <path d="M0 0V6" stroke="#cfcfd4" strokeWidth="1.5" />
           </pattern>
         </defs>
+        <g transform={flip}>
 
         {!box && (
           <>
-            <text className={s.caption} x={18} y={VIEW_H / 2 + 6}>
+            <text className={s.caption} x={18} y={VIEW_H / 2 + 6} textAnchor={mirrored ? 'end' : 'start'} transform={readable(18)}>
               {ui.map.quadrantRight}
             </text>
-            <text className={s.caption} x={VIEW_W - 18} y={VIEW_H / 2 + 6} textAnchor="end">
+            <text className={s.caption} x={VIEW_W - 18} y={VIEW_H / 2 + 6} textAnchor={mirrored ? 'start' : 'end'} transform={readable(VIEW_W - 18)}>
               {ui.map.quadrantLeft}
             </text>
           </>
@@ -110,7 +118,11 @@ function SchemeViewImpl({
           const body = (
             <>
               <path className={s.toothShape} d={toothOutline(g.tooth, g.w * 0.94, g.d)} transform={transform} />
-              {fissure && <path className={s.fissure} d={fissure} transform={transform} />}
+              {fissure && t.state !== 'CROWN' && t.state !== 'IMPLANT' && <path className={s.fissure} d={fissure} transform={transform} />}
+              {(t.state === 'CROWN' || t.state === 'IMPLANT') && (
+                // коронка: второй контур внутри зуба, как колпачок
+                <path className={s.crownCap} d={toothOutline(g.tooth, g.w * 0.94 * 0.72, g.d * 0.72)} transform={transform} />
+              )}
               {t.state === 'IMPLANT' && (
                 <g transform={`translate(${g.x} ${g.y})`} pointerEvents="none">
                   <circle r={Math.min(g.w, g.d) * 0.24} fill="none" stroke="var(--color-text)" strokeWidth={1.6} />
@@ -132,6 +144,7 @@ function SchemeViewImpl({
                 x={g.x + g.nx * labelR}
                 y={g.y + g.ny * labelR + 6}
                 textAnchor="middle"
+                transform={readable(g.x + g.nx * labelR)}
               >
                 {g.tooth}
               </text>
@@ -144,7 +157,7 @@ function SchemeViewImpl({
               className={cx(s.tooth, toothClass(t.state), selectedTooth === g.tooth && s.toothSelected)}
               role="button"
               tabIndex={-1}
-              aria-label={`${label}, ${t.state === 'PRESENT' ? 'присутствует' : t.state === 'MISSING' ? 'отсутствует' : t.state === 'IMPLANT' ? 'имплантат' : 'промежуточная часть'}`}
+              aria-label={`${label}, ${t.state === 'PRESENT' ? 'присутствует' : t.state === 'MISSING' ? 'отсутствует' : t.state === 'IMPLANT' ? 'имплантат' : t.state === 'CROWN' ? 'коронка' : 'промежуточная часть'}`}
               onClick={(e) => onTooth(g.tooth, e.currentTarget)}
               onKeyDown={(e) => activate(e, () => onTooth(g.tooth, e.currentTarget))}
             >
@@ -175,6 +188,7 @@ function SchemeViewImpl({
                 x={a.x + a.nx * (markerRadius + 16)}
                 y={a.y + a.ny * (markerRadius + 16) + 5}
                 textAnchor="middle"
+                transform={readable(a.x + a.nx * (markerRadius + 16))}
               >
                 {v.label ?? (el.data.alternative === 'FLOSS' ? 'нить' : '—')}
               </text>
@@ -206,6 +220,7 @@ function SchemeViewImpl({
             </g>
           );
         })}
+        </g>
       </motion.svg>
     </div>
   );

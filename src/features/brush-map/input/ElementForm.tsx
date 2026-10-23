@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import type { MapElement } from '@/domain/brushMap';
+import { brushBrand, formatMm } from '@/domain/brushes';
 import type { ElementData } from '@/schemas/brushMap';
 import type { CatalogItem } from '@/server/services/catalog';
 import { BrushSizeButton } from '@/ui/brush/BrushSizeButton';
@@ -18,6 +19,9 @@ interface ElementFormProps {
   catalog: CatalogItem[];
   hotkeys: Map<string, string>;
   density: 'compact' | 'touch';
+  /** Выбранный производитель: запоминается между промежутками, у каждого промежутка его можно сменить. */
+  brand: string | null;
+  onBrand: (brand: string) => void;
   onPatch: (patch: Partial<ElementData>) => void;
   onRemoveExtra?: () => void;
 }
@@ -28,22 +32,32 @@ const t = ui.interspace;
 const FREE_COLORS = ['#e7a1c4', '#8e63c2', '#3fa9a6', '#9fc54a', '#c98a3c', '#8b8b90', '#2f2f33'];
 
 export function sizeMeta(c: CatalogItem) {
-  return `${c.brand} · проход ${c.passageMm.replace('.', ',')} мм${c.verified ? '' : ' · не проверен'}`;
+  return `${brushBrand(c)} · ${formatMm(c.passageMm)}${c.verified ? '' : ' · не проверен'}`;
+}
+
+/** Производители в порядке каталога. */
+export function catalogBrands(catalog: CatalogItem[]) {
+  return [...new Set(catalog.map(brushBrand))];
 }
 
 /** Ввод данных промежутка: одинаковый для схемы и 3D, поповер на десктопе и лист на смартфоне. */
-export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRemoveExtra }: ElementFormProps) {
+export function ElementForm({ element, catalog: all, hotkeys, density, brand, onBrand, onPatch, onRemoveExtra }: ElementFormProps) {
   const d = element.data;
   const free = d.size && 'freeText' in d.size ? d.size : null;
   const freeText = free?.freeText ?? '';
   const [showFree, setShowFree] = useState(Boolean(free));
   const [draftColor, setDraftColor] = useState<string | undefined>(free?.color);
   const catalogId = d.size && 'catalogId' in d.size ? d.size.catalogId : null;
+  const brands = catalogBrands(all);
+  const assigned = catalogId ? all.find((c) => c.id === catalogId) : undefined;
+  const [shownBrand, setShownBrand] = useState(assigned ? brushBrand(assigned) : (brand && brands.includes(brand) ? brand : brands[0]));
+  const catalog = all.filter((c) => brushBrand(c) === shownBrand);
   const isEdge = element.kind === 'edge';
   const enabled = !isEdge || d.enabled === true;
 
   const pickSize = (id: string) => {
     setShowFree(false);
+    if (shownBrand) onBrand(shownBrand);
     onPatch(catalogId === id ? { size: null } : { size: { catalogId: id }, alternative: null });
   };
 
@@ -56,12 +70,31 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
         <>
           <div className={s.group} role="group" aria-label={t.size}>
             <span className={s.groupLabel}>{t.size}</span>
+            {brands.length > 1 && (
+              <div className={s.brands} role="radiogroup" aria-label="Производитель">
+                {brands.map((b) => (
+                  <button
+                    key={b}
+                    type="button"
+                    role="radio"
+                    aria-checked={shownBrand === b}
+                    className={s.brand}
+                    onClick={() => {
+                      setShownBrand(b);
+                      onBrand(b);
+                    }}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            )}
             {density === 'touch' ? (
               <div className={s.sizes}>
                 {catalog.map((c) => (
                   <BrushSizeButton
                     key={c.id}
-                    label={c.label}
+                    label={formatMm(c.passageMm)}
                     title={sizeMeta(c)}
                     color={c.colorHex}
                     pressed={catalogId === c.id}
@@ -87,7 +120,7 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
                     title={`${sizeMeta(c)}${hotkeys.get(c.id) ? `, клавиша ${hotkeys.get(c.id)}` : ''}`}
                   >
                     <span className={s.dot} style={{ background: c.colorHex }} aria-hidden="true" />
-                    {c.label}
+                    {formatMm(c.passageMm)}
                     {hotkeys.get(c.id) && <kbd className={s.kbd}>{hotkeys.get(c.id)}</kbd>}
                   </button>
                 ))}
@@ -173,12 +206,6 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
               <ToggleChip pressed={d.bleeding === true} onPressedChange={(p) => onPatch({ bleeding: p })}>
                 {t.bleeding}
               </ToggleChip>
-              <ToggleChip pressed={d.pain} onPressedChange={(p) => onPatch({ pain: p })}>
-                {t.pain}
-              </ToggleChip>
-              <ToggleChip pressed={d.openContact} onPressedChange={(p) => onPatch({ openContact: p })}>
-                {t.openContact}
-              </ToggleChip>
             </div>
           </div>
 
@@ -190,12 +217,6 @@ export function ElementForm({ element, catalog, hotkeys, density, onPatch, onRem
                 onPressedChange={(p) => onPatch(p ? { alternative: 'FLOSS', size: null } : { alternative: null })}
               >
                 {t.floss}
-              </ToggleChip>
-              <ToggleChip
-                pressed={d.alternative === 'NONE'}
-                onPressedChange={(p) => onPatch(p ? { alternative: 'NONE', size: null } : { alternative: null })}
-              >
-                {t.notNeeded}
               </ToggleChip>
             </div>
           </div>

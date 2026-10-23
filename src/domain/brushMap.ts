@@ -31,8 +31,6 @@ export const DEFAULT_ELEMENT: ElementData = {
   approach: 'VESTIBULAR',
   method: 'THROUGH',
   bleeding: null,
-  pain: false,
-  openContact: false,
   alternative: null,
 };
 

@@ -79,7 +79,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
               ))}
             </div>
           )}
-          <p className={s.legendNote}>Правая сторона на рисунке слева. Размер ёршика подписан у каждого промежутка.</p>
+          <p className={s.legendNote}>Рисунок как в зеркале: правая сторона справа. Размер ёршика подписан у каждого промежутка.</p>
         </section>
       )}
 

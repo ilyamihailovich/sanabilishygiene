@@ -1,4 +1,5 @@
 import type { MapElement } from '@/domain/brushMap';
+import { brushBrand } from '@/domain/brushes';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import s from './card.module.css';
 
@@ -25,7 +26,7 @@ export function ElementInfo({ element, snapshot }: { element: MapElement; snapsh
           <span className={s.infoDot} style={dot ? { background: dot } : undefined} data-free={dot ? undefined : 'true'} aria-hidden="true" />
           <span>
             <span className={s.infoLabel}>{c ? c.label : 'freeText' in size ? size.freeText : '—'}</span>
-            {c && <span className={s.infoMeta}>проход {c.passageMm.replace('.', ',')} мм</span>}
+            {c && <span className={s.infoMeta}>{brushBrand(c)}</span>}
           </span>
         </span>
       ) : d.alternative === 'FLOSS' ? (

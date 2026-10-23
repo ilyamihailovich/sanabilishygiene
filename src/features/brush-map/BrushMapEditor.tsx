@@ -22,6 +22,9 @@ import {
 import { navigate } from '@/domain/navigation';
 import type { ToothState } from '@/domain/teeth';
 import type { BrushMapContent, ElementData } from '@/schemas/brushMap';
+import { brushBrand, formatMm } from '@/domain/brushes';
+import { parseDictation } from '@/domain/dictation';
+import { toothStateLabels } from '@/domain/teeth';
 import type { CatalogItem } from '@/server/services/catalog';
 import { api } from '@/ui/api';
 import { ConfirmDialog } from '@/ui/Dialog';
@@ -31,6 +34,7 @@ import { useTouchLayout } from '@/ui/hooks/useMediaQuery';
 import { IconButton } from '@/ui/IconButton';
 import {
   IconKeyboard,
+  IconMic,
   IconMinus,
   IconMirror,
   IconPlus,
@@ -53,8 +57,9 @@ import { useToast } from '@/ui/Toast';
 import { SaveIndicator } from '../visit/SaveIndicator';
 import { useAutosave } from '../visit/useAutosave';
 import { VIEW_H, VIEW_W, archBox, elementAnchor, toothGeom } from './geometry';
+import { DictationBar, type PhraseOutcome } from './DictationBar';
 import { HoverCard } from './HoverCard';
-import { ElementForm } from './input/ElementForm';
+import { catalogBrands, ElementForm } from './input/ElementForm';
 import { ToothForm } from './input/ToothForm';
 import { BoibCard, NeedCard, legendFromUsage } from './MapSummary';
 import { MirrorDialog } from './MirrorDialog';
@@ -120,9 +125,12 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   const [panel, setPanel] = useState<'element' | 'tooth' | null>(null);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [brush, setBrush] = useState<string | null>(null);
+  // производитель последнего выбранного размера: следующий промежуток открывается с ним же
+  const [brandPick, setBrandPick] = useState<string | null>(null);
   const [hover, setHover] = useState<{ key: string; target: Element } | null>(null);
   const [help, setHelp] = useState(false);
   const [mirror, setMirror] = useState(false);
+  const [dictating, setDictating] = useState(false);
   const [pendingTooth, setPendingTooth] = useState<{ tooth: number; state: ToothState; lost: string[] } | null>(null);
   const anchor = useRef<Element | null>(null);
   const anchorRef = useMemo(() => ({ get current() { return anchor.current as HTMLElement | null; } }), []);
@@ -133,11 +141,14 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   // на компьютере кнопка «+» приближает к выбранному промежутку, без выбора — к началу осмотра
   const deskTarget = useMemo(() => (selectedEl ? elementAnchor(selectedEl) : jawStart('upper')), [selectedEl]);
   const catalogById = useMemo(() => new Map(catalog.map((c) => [c.id, c])), [catalog]);
+  // клавиши 1–9 и 0 — размеры текущего производителя
+  const activeBrand = brandPick ?? catalogBrands(catalog)[0] ?? null;
   const hotkeyIds = useMemo(() => {
-    const ordered = hotkeyOrder.filter((id) => catalogById.has(id));
-    const rest = catalog.map((c) => c.id).filter((id) => !ordered.includes(id));
+    const own = catalog.filter((c) => brushBrand(c) === activeBrand).map((c) => c.id);
+    const ordered = hotkeyOrder.filter((id) => own.includes(id));
+    const rest = own.filter((id) => !ordered.includes(id));
     return [...ordered, ...rest].slice(0, 10);
-  }, [hotkeyOrder, catalog, catalogById]);
+  }, [hotkeyOrder, catalog, activeBrand]);
   const hotkeys = useMemo(() => new Map(hotkeyIds.map((id, i) => [id, i === 9 ? '0' : String(i + 1)])), [hotkeyIds]);
   const unverified = catalog.some((c) => !c.verified);
 
@@ -157,8 +168,8 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     () =>
       legendFromUsage(summarizeSizes(content), (id) => {
         const c = catalogById.get(id);
-        // бренд и вид ёршика очевидны из контекста; врачу важен проход
-        return c ? { label: c.label, meta: `проход ${c.passageMm.replace('.', ',')} мм`, color: c.colorHex } : null;
+        // размер в миллиметрах, под ним производитель
+        return c ? { label: c.label, meta: brushBrand(c), color: c.colorHex } : null;
       }),
     [content, catalogById],
   );
@@ -220,6 +231,63 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     setPanel('tooth');
   };
 
+  // голосовой ввод: фраза целиком — одно изменение карты и один шаг отмены
+  const live = useRef({ content, selectedKey });
+  live.current = { content, selectedKey };
+  const applyPhrase = (text: string): PhraseOutcome => {
+    const sizes = catalog.map((c) => ({ id: c.id, brand: brushBrand(c), passageMm: c.passageMm }));
+    let next = live.current.content;
+    let key = live.current.selectedKey;
+    let brand = activeBrand;
+    const { actions, unknown } = parseDictation(text, { elements: listElements(next), catalog: sizes, brand });
+    if (actions.some((a) => a.kind === 'undo')) {
+      history.undo();
+      return { applied: ['последнее изменение отменено'], unknown };
+    }
+    const applied: string[] = [];
+    const current = () => (key ? listElements(next).find((e) => e.key === key) : undefined);
+    const patch = (p: Partial<ElementData>, label: string) => {
+      const el = current();
+      if (!el) return unknown.push(`${label}: сначала назовите промежуток`);
+      next = updateElement(next, el.key, el.kind === 'edge' ? { ...p, enabled: true } : p);
+      applied.push(label);
+    };
+    for (const a of actions) {
+      if (a.kind === 'select') {
+        key = a.key;
+        applied.push(a.label);
+      } else if (a.kind === 'brand') {
+        brand = a.brand;
+        applied.push(a.brand);
+      } else if (a.kind === 'size') {
+        brand = a.brand;
+        patch({ size: { catalogId: a.catalogId }, alternative: null }, `${a.brand} ${formatMm(a.mm)}`);
+      } else if (a.kind === 'bleeding') patch({ bleeding: a.value }, a.value ? 'кровоточивость' : 'без кровоточивости');
+      else if (a.kind === 'floss') patch({ alternative: 'FLOSS', size: null }, 'зубная нить');
+      else if (a.kind === 'clear') patch({ size: null, alternative: null }, 'размер снят');
+      else if (a.kind === 'tooth') {
+        next = setToothState(next, a.tooth, a.state);
+        applied.push(`${a.tooth}: ${toothStateLabels[a.state].toLowerCase()}`);
+      } else if (a.kind === 'next') {
+        const list = listElements(next).filter((e) => e.active || e.kind === 'edge');
+        const i = list.findIndex((e) => e.key === key);
+        const to = list[i + 1] ?? list[0];
+        if (to) {
+          key = to.key;
+          applied.push(`дальше: ${to.label}`);
+        }
+      }
+    }
+    if (next !== live.current.content) history.apply(() => next);
+    live.current = { content: next, selectedKey: key };
+    if (key !== selectedKey) {
+      setSelectedKey(key);
+      setSelectedTooth(null);
+    }
+    if (brand !== activeBrand) setBrandPick(brand);
+    return { applied, unknown };
+  };
+
   const changeTooth = (tooth: number, state: ToothState) => {
     const next = setToothState(content, tooth, state);
     const lost = keysLostByChange(content, next);
@@ -263,10 +331,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
       if (!el) return;
       const d = el.data;
       if (field === 'bleeding') patchElement(el.key, { bleeding: d.bleeding === true ? false : true });
-      if (field === 'pain') patchElement(el.key, { pain: !d.pain });
-      if (field === 'openContact') patchElement(el.key, { openContact: !d.openContact });
       if (field === 'floss') patchElement(el.key, d.alternative === 'FLOSS' ? { alternative: null } : { alternative: 'FLOSS', size: null });
-      if (field === 'none') patchElement(el.key, d.alternative === 'NONE' ? { alternative: null } : { alternative: 'NONE', size: null });
     },
     cycle: (field) => {
       const el = selectedKey ? byKey.get(selectedKey) : null;
@@ -301,6 +366,8 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
       catalog={catalog}
       hotkeys={hotkeys}
       density={touch ? 'touch' : 'compact'}
+      brand={brandPick}
+      onBrand={setBrandPick}
       onPatch={(p) => patchElement(selected.key, p)}
       {...(selected.kind === 'extra'
         ? {
@@ -504,10 +571,19 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           )}
         </AnimatePresence>
 
+        {dictating && <DictationBar onPhrase={applyPhrase} onClose={() => setDictating(false)} />}
         <GlassPanel orientation="vertical" className={s.side} aria-label="Инструменты">
           <IconButton label={ui.common.undo} icon={<IconUndo size={20} />} variant="ghost" size={40} disabled={!history.canUndo} onClick={history.undo} />
           <IconButton label={ui.common.redo} icon={<IconRedo size={20} />} variant="ghost" size={40} disabled={!history.canRedo} onClick={history.redo} />
           <IconButton label={ui.map.mirror} icon={<IconMirror size={20} />} variant="ghost" size={40} onClick={() => setMirror(true)} />
+          <IconButton
+            label="Голосовой ввод"
+            icon={<IconMic size={20} />}
+            variant="ghost"
+            size={40}
+            aria-pressed={dictating}
+            onClick={() => setDictating((v) => !v)}
+          />
           {!touch && mode === 'scheme' && (
             <>
               <IconButton label="Приблизить (Ctrl + колесо)" icon={<IconPlus size={20} />} variant="ghost" size={40} onClick={() => zoom.current?.zoomBy(1.5)} />

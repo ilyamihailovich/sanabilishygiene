@@ -55,7 +55,27 @@ export function createMaterials(tier: QualityTier) {
     side: THREE.DoubleSide,
   });
   const titanium = new THREE.MeshStandardMaterial({ color: '#8f9297', metalness: 0.82, roughness: 0.4 });
-  return { enamel, root, gum, bone, titanium };
+  // искусственные коронки: керамика белее эмали и без тёплого оттенка, чтобы отличались от своих зубов;
+  // коронка на имплантате — самая белая, с холодным отливом
+  const restoration = (color: string, glow: string, intensity: number) =>
+    physical
+      ? new THREE.MeshPhysicalMaterial({
+          color,
+          emissive: new THREE.Color(glow),
+          emissiveIntensity: intensity,
+          roughness: 0.14,
+          metalness: 0,
+          ior: 1.7,
+          specularIntensity: 2,
+          envMapIntensity: 2.2,
+          clearcoat: 1,
+          clearcoatRoughness: 0.05,
+        })
+      : new THREE.MeshStandardMaterial({ color, emissive: new THREE.Color(glow), emissiveIntensity: intensity, roughness: 0.18, envMapIntensity: 2.2 });
+  // эмаль под тонмаппингом почти белая: коронки выделяются светимостью, а не только цветом
+  const crown = restoration('#ffffff', '#ffffff', 0.3);
+  const implantCrown = restoration('#ffffff', '#f2f7ff', 0.45);
+  return { enamel, root, gum, bone, titanium, crown, implantCrown };
 }
 
 export type JawMaterials = ReturnType<typeof createMaterials>;

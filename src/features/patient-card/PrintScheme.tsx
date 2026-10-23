@@ -14,5 +14,5 @@ export function PrintScheme({ snapshot, arch }: { snapshot: IssueSnapshot; arch:
   const map = snapshot.brushMap;
   const elements = useMemo(() => (map ? listElements(map.content).filter((e) => e.active && e.arch === arch) : []), [map, arch]);
   if (!map) return null;
-  return <SchemeView content={map.content} elements={elements} visual={visual} box={archBox(arch)} readOnly print markerRadius={15} />;
+  return <SchemeView mirrored content={map.content} elements={elements} visual={visual} box={archBox(arch)} readOnly print markerRadius={15} />;
 }

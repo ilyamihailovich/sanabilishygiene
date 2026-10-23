@@ -20,7 +20,7 @@ export function fillFromTemplate(templateId: string, version: number, title: str
 /** Новая карта на основе прошлой: формула и размеры сохраняются, отметки осмотра сбрасываются. */
 export function carryOverBrushMap(previous: BrushMapContent): BrushMapContent {
   const elements = Object.fromEntries(
-    Object.entries(previous.elements).map(([key, data]) => [key, { ...data, bleeding: null, pain: false }]),
+    Object.entries(previous.elements).map(([key, data]) => [key, { ...data, bleeding: null }]),
   );
   return { ...previous, elements };
 }

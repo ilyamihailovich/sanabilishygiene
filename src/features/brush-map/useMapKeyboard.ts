@@ -10,7 +10,7 @@ export interface MapKeyHandlers {
   navigate: (move: NavKey) => void;
   sizeByIndex: (index: number) => void;
   clearSize: () => void;
-  toggle: (field: 'bleeding' | 'pain' | 'openContact' | 'floss' | 'none') => void;
+  toggle: (field: 'bleeding' | 'floss') => void;
   cycle: (field: 'approach' | 'method') => void;
   open: () => void;
   close: () => void;
@@ -74,10 +74,7 @@ export function useMapKeyboard(enabled: boolean, handlers: MapKeyHandlers) {
         Backspace: h.clearSize,
         Delete: h.clearSize,
         KeyB: () => h.toggle('bleeding'),
-        KeyP: () => h.toggle('pain'),
-        KeyO: () => h.toggle('openContact'),
         KeyF: () => h.toggle('floss'),
-        KeyN: () => h.toggle('none'),
         KeyV: () => h.cycle('approach'),
         KeyM: () => h.cycle('method'),
         Enter: h.open,

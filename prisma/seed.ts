@@ -103,7 +103,7 @@ async function seedDemo() {
   const sample = JSON.parse(readFileSync(new URL('./sample-content.json', import.meta.url), 'utf8')) as {
     doctor: { displayName: string; title: string };
     patient: { cardNumber: string; displayName: string; fullName: string };
-    brushes: { brand: string; line: string; sizes: Array<[string, number, string]> };
+    brushes: Array<{ brand: string; line: string; sizes: Array<[number, string]> }>;
     psr: Record<string, { staff: string; patient: string }>;
     brushSteps: string[];
   };
@@ -118,14 +118,19 @@ async function seedDemo() {
   }
   const doctor = await db.user.findUniqueOrThrow({ where: { email: 'doctor@sanabilis.local' } });
 
-  const { line } = sample.brushes;
-  const brand = await db.brushBrand.upsert({ where: { name: sample.brushes.brand }, create: { name: sample.brushes.brand }, update: {} });
-  for (const [i, [label, passageMm, colorHex]] of sample.brushes.sizes.entries()) {
-    await db.brushSize.upsert({
-      where: { brandId_line_label: { brandId: brand.id, line, label } },
-      create: { brandId: brand.id, line, label, passageMm, colorHex, verified: true, sortOrder: i + 1 },
-      update: {},
-    });
+  // производители и размеры в миллиметрах прохода; обозначение размера — «0,6 мм»
+  const brandIds: string[] = [];
+  for (const [k, { brand: name, line, sizes }] of sample.brushes.entries()) {
+    const brand = await db.brushBrand.upsert({ where: { name }, create: { name }, update: {} });
+    brandIds.push(brand.id);
+    for (const [i, [passageMm, colorHex]] of sizes.entries()) {
+      const label = `${String(passageMm).replace('.', ',')} мм`;
+      await db.brushSize.upsert({
+        where: { brandId_line_label: { brandId: brand.id, line, label } },
+        create: { brandId: brand.id, line, label, passageMm, colorHex, verified: true, sortOrder: k * 100 + i + 1 },
+        update: { passageMm, colorHex, sortOrder: k * 100 + i + 1, archived: false },
+      });
+    }
   }
 
   for (const [code, text] of Object.entries(sample.psr)) {
@@ -144,9 +149,13 @@ async function seedDemo() {
   }
 
   if (!(await db.patient.findUnique({ where: { cardNumber: sample.patient.cardNumber } }))) {
-    const ids = (await db.brushSize.findMany({ where: { brandId: brand.id }, orderBy: { sortOrder: 'asc' } })).map((x) => x.id);
+    // в образце верхняя челюсть — первым производителем, нижняя — последним
+    const idsOf = async (brandId: string) => (await db.brushSize.findMany({ where: { brandId }, orderBy: { sortOrder: 'asc' } })).map((x) => x.id);
+    const upper = await idsOf(brandIds[0]!);
+    const lower = await idsOf(brandIds[brandIds.length - 1]!);
     const pick = (a: number, b: number) => {
       const i = Math.min(a % 10, b % 10);
+      const ids = a > 30 ? lower : upper;
       return ids[i <= 2 ? 0 : i <= 4 ? 1 : i === 5 ? 2 : 3]!;
     };
     const order = [

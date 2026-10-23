@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ALL_TEETH } from '@/domain/teeth';
 
-export const toothStateSchema = z.enum(['PRESENT', 'MISSING', 'IMPLANT', 'PONTIC']);
+export const toothStateSchema = z.enum(['PRESENT', 'CROWN', 'MISSING', 'IMPLANT', 'PONTIC']);
 
 export const toothSchema = z.object({
   state: toothStateSchema,
@@ -19,7 +19,7 @@ export const sizeRefSchema = z.union([
 
 export const approachSchema = z.enum(['VESTIBULAR', 'ORAL']);
 export const methodSchema = z.enum(['THROUGH', 'ANGLED', 'BOTH']);
-export const alternativeSchema = z.enum(['FLOSS', 'NONE']);
+export const alternativeSchema = z.enum(['FLOSS']);
 
 export const elementDataSchema = z.object({
   /** Для свободных поверхностей: включена ли в карту. */
@@ -29,9 +29,8 @@ export const elementDataSchema = z.object({
   method: methodSchema.default('THROUGH'),
   /** null — не отмечено: с назначенным размером считается «нет», без размера промежуток не обследован. */
   bleeding: z.boolean().nullable().default(null),
-  pain: z.boolean().default(false),
-  openContact: z.boolean().default(false),
-  alternative: alternativeSchema.nullable().default(null),
+  /** Болезненность, открытый контакт и «не требуется» больше не отмечаются: в старых картах такие поля отбрасываются. */
+  alternative: z.preprocess((v) => (v === 'NONE' ? null : v), alternativeSchema.nullable().default(null)),
 });
 
 export const extraSchema = z.object({

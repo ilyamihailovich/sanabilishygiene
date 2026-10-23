@@ -22,8 +22,8 @@ import { SchemeView } from '../brush-map/scheme/SchemeView';
 import { SchemeZoom } from '../brush-map/scheme/SchemeZoom';
 import type { MarkerVisual } from '../brush-map/scheme/SvgMarker';
 import { webgl2Available } from '../brush-map/three/types';
-import { VIEW_ORDER, type ViewKey } from '../brush-map/useMapKeyboard';
-import { viewIconsPublic } from './viewIcons';
+import type { ViewKey } from '../brush-map/useMapKeyboard';
+import { VIEW_ORDER_PUBLIC, viewIconsPublic } from './viewIcons';
 import { AlternativesNote, Bleeding, BrushList, Contacts, DocumentBody, HowTo, NextVisit, Screening, brushRows } from './blocks';
 import { ElementInfo } from './ElementInfo';
 import { dateLong, greeting } from './format';
@@ -154,6 +154,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
               {mode === 'three' ? (
                 <>
                   <ThreeView
+                    mirrored
                     content={map.content}
                     elements={elements}
                     visual={visual}
@@ -175,16 +176,17 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
                           setInfo(null);
                           if (v) setView(v);
                         }}
-                        options={VIEW_ORDER.map((v) => ({ value: v, label: ui.views[v], content: viewIconsPublic[v] }))}
+                        options={VIEW_ORDER_PUBLIC.map((v) => ({ value: v, label: ui.views[v], content: viewIconsPublic[v] }))}
                       />
                     </GlassPanel>
                   </div>
                 </>
               ) : (
                 <>
-                  <SchemeZoom bounds={jawBounds} target={zoomTarget}>
+                  <SchemeZoom bounds={jawBounds} target={zoomTarget} mirrored>
                     {(box) => (
                       <SchemeView
+                        mirrored
                         content={map.content}
                         elements={elements}
                         visual={visual}
