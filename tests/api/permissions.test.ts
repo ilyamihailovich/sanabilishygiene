@@ -53,3 +53,15 @@ describe('права доступа по ролям', () => {
     expect(r.status).toBe(403);
   });
 });
+
+describe('диктовка', () => {
+  it('без настроенного распознавания сервер отвечает, что движка нет, и не принимает звук', async () => {
+    expect((await anonymous('/api/v1/dictation')).status).toBe(401);
+    const cfg = await doctor.json<{ engine: string | null }>('GET', '/api/v1/dictation');
+    if (cfg.engine !== null) return; // на стенде с STT_URL проверка ниже неприменима
+    const form = new FormData();
+    form.set('audio', new Blob([new Uint8Array(16)], { type: 'audio/webm' }), 'a.webm');
+    const res = await doctor.call('POST', '/api/v1/dictation', form);
+    expect(res.status).toBe(404);
+  });
+});

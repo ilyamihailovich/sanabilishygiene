@@ -11,8 +11,9 @@ export async function login(email: string, password = 'demo-password'): Promise<
   const call = async (method: string, url: string, body?: unknown) => {
     const res = await fetch(`${BASE}${url}`, {
       method,
-      headers: { 'content-type': 'application/json', origin: BASE, ...(cookie ? { cookie } : {}) },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      // FormData уходит как multipart (загрузка файлов, звук диктовки), остальное — JSON
+      headers: { ...(body instanceof FormData ? {} : { 'content-type': 'application/json' }), origin: BASE, ...(cookie ? { cookie } : {}) },
+      body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
       redirect: 'manual',
     });
     const set = res.headers.get('set-cookie');

@@ -147,6 +147,7 @@ function Scene({
   readOnly,
   capture,
   mirrored,
+  focusKey,
   tier,
   skip,
   onElement,
@@ -171,6 +172,14 @@ function Scene({
     const point = obj.getWorldPosition(new THREE.Vector3());
     setFocus((f) => ({ point, n: (f?.n ?? 0) + 1 }));
   };
+
+  // курсор диктовки: камера облетает модель к промежутку, который сейчас диктуют
+  useEffect(() => {
+    if (!focusKey) return;
+    const el = elements.find((e) => e.key === focusKey);
+    if (el) focusOn(anchorFor(nodes, el));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusKey]);
 
   useEffect(() => {
     assignMaterials(nodes.maxilla, upperMats);
@@ -486,7 +495,8 @@ function CameraRig({
     const dir = outward.multiplyScalar(0.8).add(camDir.clone().multiplyScalar(0.2));
     dir.y = camDir.y;
     dir.normalize();
-    const dist = THREE.MathUtils.clamp(camera.position.distanceTo(c.target) * 0.78, 0.09, 0.3);
+    // приближение не накапливается от касания к касанию: не ближе 0,13
+    const dist = THREE.MathUtils.clamp(camera.position.distanceTo(c.target) * 0.78, 0.13, 0.3);
     const from = { position: camera.position.clone(), target: c.target.clone() };
     const to = { position: p.clone().addScaledVector(dir, dist), target: p.clone() };
     tween.current = { from, to, t: 0, ms: 900 };

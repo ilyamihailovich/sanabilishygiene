@@ -57,7 +57,7 @@ import { useToast } from '@/ui/Toast';
 import { SaveIndicator } from '../visit/SaveIndicator';
 import { useAutosave } from '../visit/useAutosave';
 import { VIEW_H, VIEW_W, archBox, elementAnchor, toothGeom } from './geometry';
-import { DictationBar, type PhraseOutcome } from './DictationBar';
+import { DictationPanel, type DictationEntry, type DictationRow, type PhraseOutcome } from './DictationPanel';
 import { HoverCard } from './HoverCard';
 import { catalogBrands, ElementForm } from './input/ElementForm';
 import { ToothForm } from './input/ToothForm';
@@ -108,6 +108,17 @@ interface Props {
   headSlot?: HTMLElement | null;
 }
 
+/** Прототип: сценарий диктовки для показа без микрофона. */
+const DEMO_PHRASES = [
+  'семнадцать шестнадцать тепе ноль восемь',
+  'ноль шесть кровоточивость',
+  'ноль шесть',
+  'нить',
+  'курасепт ноль семь',
+  'кровоточивость',
+  'сорок шесть сорок пять тепе одна целая одна',
+];
+
 export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder, initialMode, previousBoib, headSlot }: Props) {
   const touch = useTouchLayout();
   const toast = useToast();
@@ -131,6 +142,11 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   const [help, setHelp] = useState(false);
   const [mirror, setMirror] = useState(false);
   const [dictating, setDictating] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  // на телефоне панель диктовки занимает низ экрана: сцена прокручивается наверх, чтобы модель была видна над панелью
+  useEffect(() => {
+    if (dictating && touch) stageRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [dictating, touch]);
   const [pendingTooth, setPendingTooth] = useState<{ tooth: number; state: ToothState; lost: string[] } | null>(null);
   const anchor = useRef<Element | null>(null);
   const anchorRef = useMemo(() => ({ get current() { return anchor.current as HTMLElement | null; } }), []);
@@ -231,61 +247,106 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
     setPanel('tooth');
   };
 
-  // голосовой ввод: фраза целиком — одно изменение карты и один шаг отмены
-  const live = useRef({ content, selectedKey });
-  live.current = { content, selectedKey };
+  // Диктовка: фраза целиком — одно изменение карты и один шаг отмены.
+  // Курсор — выбранный промежуток; после размера или нити курсор переходит к следующему промежутку по порядку осмотра.
+  // Фраза только с отметкой («кровоточивость») относится к последнему продиктованному промежутку.
+  const live = useRef({ content, selectedKey, brand: activeBrand, last: null as string | null });
+  live.current = { ...live.current, content, selectedKey, brand: activeBrand };
+  const [dictLog, setDictLog] = useState<DictationEntry[]>([]);
+  const valueOf = (el: MapElement) => {
+    const size = el.data.size;
+    if (el.data.alternative === 'FLOSS') return 'зубная нить';
+    if (!size) return null;
+    if ('freeText' in size) return size.freeText;
+    const c = catalogById.get(size.catalogId);
+    return c ? `${c.label} ${c.brand}` : null;
+  };
+  const dictRows: DictationRow[] = dictLog.map((e) => {
+    const el = e.key ? byKey.get(e.key) : undefined;
+    if (!el) return e;
+    const size = el.data.size;
+    const c = size && 'catalogId' in size ? catalogById.get(size.catalogId) : undefined;
+    return {
+      ...e,
+      label: el.label,
+      color: c?.colorHex ?? (size && 'freeText' in size ? (size.color ?? null) : null),
+      size: c ? c.label : size && 'freeText' in size ? size.freeText : null,
+      brand: c ? brushBrand(c) : null,
+      bleeding: el.data.bleeding === true,
+      floss: el.data.alternative === 'FLOSS',
+    };
+  });
+  const nextAfter = (c: BrushMapContent, key: string | null) => {
+    const list = listElements(c).filter((e) => e.kind !== 'edge' || e.data.enabled === true);
+    const i = key ? list.findIndex((e) => e.key === key) : -1;
+    return list[i + 1] ?? null;
+  };
   const applyPhrase = (text: string): PhraseOutcome => {
     const sizes = catalog.map((c) => ({ id: c.id, brand: brushBrand(c), passageMm: c.passageMm, variant: !/мм$/.test(c.label) }));
     let next = live.current.content;
-    let key = live.current.selectedKey;
-    let brand = activeBrand;
+    let key = live.current.selectedKey ?? listElements(next)[0]?.key ?? null;
+    let last = live.current.last;
+    let brand = live.current.brand;
     const { actions, unknown } = parseDictation(text, { elements: listElements(next), catalog: sizes, brand });
+    const stop = actions.some((a) => a.kind === 'stop');
     if (actions.some((a) => a.kind === 'undo')) {
       history.undo();
-      return { applied: ['последнее изменение отменено'], unknown };
+      setDictLog((l) => [{ id: Date.now(), key: null, text, note: 'Последнее изменение отменено', unknown }, ...l].slice(0, 60));
+      return { stop, unknown };
     }
-    const applied: string[] = [];
-    const current = () => (key ? listElements(next).find((e) => e.key === key) : undefined);
+    const marksOnly = actions.every((a) => a.kind === 'bleeding' || a.kind === 'brand' || a.kind === 'stop');
+    const touched: string[] = [];
+    let advance = false;
+    const target = () => (marksOnly && last ? last : key);
     const patch = (p: Partial<ElementData>, label: string) => {
-      const el = current();
-      if (!el) return unknown.push(`${label}: сначала назовите промежуток`);
+      const k = target();
+      const el = k ? listElements(next).find((e) => e.key === k) : undefined;
+      if (!el) return unknown.push(`${label}: назовите промежуток`);
       next = updateElement(next, el.key, el.kind === 'edge' ? { ...p, enabled: true } : p);
-      applied.push(label);
+      if (!touched.includes(el.key)) touched.push(el.key);
+      last = el.key;
     };
+    const notes: string[] = [];
     for (const a of actions) {
       if (a.kind === 'select') {
         key = a.key;
-        applied.push(a.label);
-      } else if (a.kind === 'brand') {
+        advance = false;
+      } else if (a.kind === 'brand') brand = a.brand;
+      else if (a.kind === 'size') {
         brand = a.brand;
-        applied.push(a.brand);
-      } else if (a.kind === 'size') {
-        brand = a.brand;
-        patch({ size: { catalogId: a.catalogId }, alternative: null }, `${a.brand} ${formatMm(a.mm)}`);
+        patch({ size: { catalogId: a.catalogId }, alternative: null }, formatMm(a.mm));
+        advance = !marksOnly;
       } else if (a.kind === 'bleeding') patch({ bleeding: a.value }, a.value ? 'кровоточивость' : 'без кровоточивости');
-      else if (a.kind === 'floss') patch({ alternative: 'FLOSS', size: null }, 'зубная нить');
-      else if (a.kind === 'clear') patch({ size: null, alternative: null }, 'размер снят');
+      else if (a.kind === 'floss') {
+        patch({ alternative: 'FLOSS', size: null }, 'нить');
+        advance = true;
+      } else if (a.kind === 'clear') patch({ size: null, alternative: null, bleeding: null }, 'очистка');
       else if (a.kind === 'tooth') {
         next = setToothState(next, a.tooth, a.state);
-        applied.push(`${a.tooth}: ${toothStateLabels[a.state].toLowerCase()}`);
+        notes.push(`Зуб ${a.tooth}: ${toothStateLabels[a.state].toLowerCase()}`);
       } else if (a.kind === 'next') {
-        const list = listElements(next).filter((e) => e.active || e.kind === 'edge');
-        const i = list.findIndex((e) => e.key === key);
-        const to = list[i + 1] ?? list[0];
-        if (to) {
-          key = to.key;
-          applied.push(`дальше: ${to.label}`);
-        }
+        key = nextAfter(next, key)?.key ?? key;
+        advance = false;
       }
     }
+    // промежуток назван, но размер ещё не сказан — курсор остаётся на нём
+    if (advance && key) key = nextAfter(next, key)?.key ?? key;
     if (next !== live.current.content) history.apply(() => next);
-    live.current = { content: next, selectedKey: key };
+    live.current = { content: next, selectedKey: key, brand, last };
     if (key !== selectedKey) {
       setSelectedKey(key);
       setSelectedTooth(null);
+      const el = key ? listElements(next).find((e) => e.key === key) : undefined;
+      if (el) {
+        setZoomTarget(elementAnchor(el));
+        if (touch) setJaw(el.arch);
+      }
     }
     if (brand !== activeBrand) setBrandPick(brand);
-    return { applied, unknown };
+    const entries: DictationEntry[] = touched.map((k, i) => ({ id: Date.now() + i, key: k, text, unknown: i === touched.length - 1 ? unknown : [] }));
+    if (!entries.length && (unknown.length || notes.length)) entries.push({ id: Date.now(), key: null, text, note: notes.join(', ') || undefined, unknown });
+    if (entries.length) setDictLog((l) => [...entries.reverse(), ...l.filter((e) => !e.key || !touched.includes(e.key))].slice(0, 60));
+    return { stop, unknown };
   };
 
   const changeTooth = (tooth: number, state: ToothState) => {
@@ -407,15 +468,21 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   const hoverEl = hover ? (byKey.get(hover.key) ?? null) : null;
 
   const modeToggle = (
-    <Segmented
-      label={ui.mapMode.label}
-      value={mode}
-      onChange={setMode}
-      options={[
-        { value: 'three', label: ui.mapMode.three },
-        { value: 'scheme', label: ui.mapMode.scheme },
-      ]}
-    />
+    <div className={s.headTools}>
+      <Segmented
+        label={ui.mapMode.label}
+        value={mode}
+        onChange={setMode}
+        options={[
+          { value: 'three', label: ui.mapMode.three },
+          { value: 'scheme', label: ui.mapMode.scheme },
+        ]}
+      />
+      <button type="button" className={s.dictate} aria-pressed={dictating} onClick={() => setDictating((v) => !v)}>
+        <IconMic size={18} />
+        Диктовка
+      </button>
+    </div>
   );
 
   // На телефоне пульт поверх сцены, на компьютере под ней
@@ -482,7 +549,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
         {headSlot ? createPortal(modeToggle, headSlot) : modeToggle}
       </div>
 
-      <div className={`${s.stage} ${mode === 'three' || touch ? s.stageThree : ''}`}>
+      <div ref={stageRef} className={`${s.stage} ${mode === 'three' || touch ? s.stageThree : ''}`}>
         {mode === 'scheme' && touch && (
           <div className={s.quadrants}>
             <div className={glassClass} style={{ borderRadius: 999, padding: 3, display: 'inline-block' }}>
@@ -553,6 +620,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           ) : (
             <motion.div key="three" style={{ position: 'absolute', inset: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
               <ThreeView
+                focusKey={dictating ? selectedKey : null}
                 content={content}
                 elements={elements}
                 visual={visual}
@@ -571,19 +639,30 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           )}
         </AnimatePresence>
 
-        {dictating && <DictationBar onPhrase={applyPhrase} onClose={() => setDictating(false)} />}
+        {dictating && (
+          <DictationPanel
+            rows={dictRows}
+            current={selectedEl ? { label: selectedEl.label, value: valueOf(selectedEl) } : null}
+            brands={catalogBrands(catalog)}
+            brand={activeBrand}
+            onBrand={setBrandPick}
+            paused={panel !== null}
+            onPhrase={applyPhrase}
+            onEdit={(key) => {
+              setSelectedKey(key);
+              setSelectedTooth(null);
+              focusMarker(key);
+              setTimeout(() => setPanel('element'), 50);
+            }}
+            onClear={(key) => patchElement(key, { size: null, alternative: null, bleeding: null })}
+            onClose={() => setDictating(false)}
+            {...(process.env.NEXT_PUBLIC_DEMO === '1' ? { demo: DEMO_PHRASES } : {})}
+          />
+        )}
         <GlassPanel orientation="vertical" className={s.side} aria-label="Инструменты">
           <IconButton label={ui.common.undo} icon={<IconUndo size={20} />} variant="ghost" size={40} disabled={!history.canUndo} onClick={history.undo} />
           <IconButton label={ui.common.redo} icon={<IconRedo size={20} />} variant="ghost" size={40} disabled={!history.canRedo} onClick={history.redo} />
           <IconButton label={ui.map.mirror} icon={<IconMirror size={20} />} variant="ghost" size={40} onClick={() => setMirror(true)} />
-          <IconButton
-            label="Голосовой ввод"
-            icon={<IconMic size={20} />}
-            variant="ghost"
-            size={40}
-            aria-pressed={dictating}
-            onClick={() => setDictating((v) => !v)}
-          />
           {!touch && mode === 'scheme' && (
             <>
               <IconButton label="Приблизить (Ctrl + колесо)" icon={<IconPlus size={20} />} variant="ghost" size={40} onClick={() => zoom.current?.zoomBy(1.5)} />

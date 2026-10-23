@@ -25,7 +25,8 @@ export type DictationAction =
   | { kind: 'clear' }
   | { kind: 'tooth'; tooth: number; state: ToothState }
   | { kind: 'next' }
-  | { kind: 'undo' };
+  | { kind: 'undo' }
+  | { kind: 'stop' };
 
 export interface DictationResult {
   actions: DictationAction[];
@@ -66,8 +67,8 @@ function tokenize(text: string): Token[] {
     .toLowerCase()
     .replace(/ё/g, 'е')
     .replace(/(\d)[.,](\d)/g, '$1#$2')
-    .replace(/[^a-zа-я0-9#\s/-]/g, ' ')
-    .replace(/(\d)\s*[/-]\s*(\d)/g, '$1 $2')
+    .replace(/(\d)(мм|mm)/g, '$1 мм')
+    .replace(/[^a-zа-я0-9#\s]/g, ' ')
     .replace(/на месте/g, 'наместе')
     .split(/\s+/)
     .filter(Boolean);
@@ -212,7 +213,11 @@ export function parseDictation(text: string, ctx: { elements: MapElement[]; cata
       actions.push({ kind: 'floss' });
       continue;
     }
-    if (/^(дальше|следующ|далее)/.test(w)) {
+    if (/^(стоп|хватит|закончи)/.test(w)) {
+      actions.push({ kind: 'stop' });
+      continue;
+    }
+    if (/^(дальше|следующ|далее|пропус)/.test(w)) {
       actions.push({ kind: 'next' });
       continue;
     }

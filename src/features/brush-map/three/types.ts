@@ -18,6 +18,8 @@ export interface ThreeViewProps {
   capture?: boolean;
   /** Как в зеркале: правая сторона пациента справа. Для пациента и его документов. */
   mirrored?: boolean;
+  /** Камера поворачивается к этому элементу при каждой его смене (курсор диктовки). */
+  focusKey?: string | null;
   onElement?: (key: string, target: Element) => void;
   onTooth?: (tooth: number, target: Element) => void;
   onHover?: (key: string | null, target: Element | null) => void;

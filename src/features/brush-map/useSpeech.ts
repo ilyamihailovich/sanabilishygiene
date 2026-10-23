@@ -1,10 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { api } from '@/ui/api';
 
-/* Распознавание речи средствами браузера (Web Speech API).
-   Звук обрабатывает поставщик браузера: Chrome отправляет его на серверы Google, Safari — Apple или распознаёт на устройстве.
-   Для рабочего режима без внешних сервисов движок заменяется своим сервером распознавания с тем же интерфейсом. */
+/*
+  Распознавание речи для диктовки карты. Два движка:
+  server — звук с микрофона режется на фразы по паузам и отправляется на сервер клиники (/api/v1/dictation),
+           сервер передаёт его в настроенный сервис распознавания (свой Whisper, Groq или OpenAI);
+  browser — распознавание браузера (Web Speech API): Chrome отправляет звук в Google, Safari — в Apple.
+  Если нет ни того ни другого, остаётся ввод текстом (на iPhone — диктовка клавиатуры).
+*/
+
+export type EngineMode = 'server' | 'browser' | 'none';
 
 interface RecognitionResult {
   isFinal: boolean;
@@ -26,13 +33,13 @@ interface Recognition {
 }
 type RecognitionCtor = new () => Recognition;
 
-function ctor(): RecognitionCtor | null {
+function browserCtor(): RecognitionCtor | null {
   if (typeof window === 'undefined') return null;
   const w = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-// страница внутри чужой рамки (например, прототип в просмотре): рамка может запрещать микрофон независимо от настроек браузера
+// страница внутри чужой рамки (прототип в просмотре): рамка может запрещать микрофон независимо от настроек браузера
 const framed = () => {
   try {
     return window.self !== window.top;
@@ -41,37 +48,160 @@ const framed = () => {
   }
 };
 
-const ERRORS: Record<string, string> = {
-  'not-allowed': 'Нет доступа к микрофону. Разрешите его в настройках браузера.',
-  'service-not-allowed': 'Браузер не разрешает распознавание речи на этой странице.',
-  'audio-capture': 'Микрофон не найден.',
-  network: 'Распознавание речи недоступно без сети.',
-};
+function micError(code: string) {
+  if (code === 'not-allowed' || code === 'NotAllowedError' || code === 'service-not-allowed' || code === 'SecurityError') {
+    return framed()
+      ? 'Здесь микрофон закрыт рамкой страницы. Нажмите на поле ниже и диктуйте кнопкой микрофона на клавиатуре.'
+      : 'Нет доступа к микрофону. Разрешите его для этого сайта в настройках браузера.';
+  }
+  if (code === 'audio-capture' || code === 'NotFoundError') return 'Микрофон не найден.';
+  if (code === 'network') return 'Распознавание речи недоступно без сети.';
+  return 'Распознавание речи остановилось. Нажмите на микрофон ещё раз.';
+}
+
+const RECORDER_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+/** Пауза, после которой фраза считается законченной. */
+const PHRASE_GAP_MS = 800;
+/** Фраза длиннее режется принудительно. */
+const MAX_PHRASE_MS = 12_000;
+/** Пока тишина, запись перезапускается: в начало фразы попадает не больше этого времени тишины. */
+const IDLE_RESTART_MS = 2_500;
 
 export function useSpeech(onPhrase: (text: string) => void) {
-  const [supported, setSupported] = useState(false);
+  const [mode, setMode] = useState<EngineMode>('none');
+  const [external, setExternal] = useState(true);
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState('');
+  const [pending, setPending] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const rec = useRef<Recognition | null>(null);
-  const wanted = useRef(false);
+  const level = useRef(0);
   const phrase = useRef(onPhrase);
   phrase.current = onPhrase;
+  const stopRef = useRef<() => void>(() => undefined);
 
-  useEffect(() => setSupported(ctor() !== null), []);
-
-  const stop = useCallback(() => {
-    wanted.current = false;
-    rec.current?.stop();
-    setListening(false);
-    setInterim('');
+  useEffect(() => {
+    let alive = true;
+    api
+      .get<{ engine: 'server' | null; private: boolean }>('/api/v1/dictation')
+      .then((c) => {
+        if (!alive) return;
+        const recorder = typeof MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia);
+        if (c.engine === 'server' && recorder) {
+          setMode('server');
+          setExternal(!c.private);
+        } else setMode(browserCtor() ? 'browser' : 'none');
+      })
+      .catch(() => alive && setMode(browserCtor() ? 'browser' : 'none'));
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const start = useCallback(() => {
-    const Ctor = ctor();
+  const stop = useCallback(() => stopRef.current(), []);
+
+  const startServer = useCallback(async () => {
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    } catch (e) {
+      setError(micError((e as Error).name));
+      return;
+    }
+    const type = RECORDER_TYPES.find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+    const audio = new AudioContext();
+    const analyser = audio.createAnalyser();
+    analyser.fftSize = 1024;
+    audio.createMediaStreamSource(stream).connect(analyser);
+    const buf = new Float32Array(analyser.fftSize);
+
+    let rec: MediaRecorder | null = null;
+    let chunks: Blob[] = [];
+    let startedAt = 0;
+    let voiced = false;
+    let voiceStart = 0;
+    let lastVoice = 0;
+    let floor = 0.01;
+    let running = true;
+
+    const send = async (blob: Blob) => {
+      setPending((n) => n + 1);
+      try {
+        const form = new FormData();
+        form.set('audio', blob);
+        const res = await fetch('/api/v1/dictation', { method: 'POST', body: form, credentials: 'same-origin' });
+        if (!res.ok) throw new Error(String(res.status));
+        const { text } = (await res.json()) as { text: string };
+        if (text) phrase.current(text);
+      } catch {
+        setError('Сервис распознавания не ответил. Фраза не записана, повторите её.');
+      } finally {
+        setPending((n) => n - 1);
+      }
+    };
+
+    const begin = () => {
+      chunks = [];
+      rec = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+      rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      rec.start();
+      startedAt = performance.now();
+    };
+    const cut = (keep: boolean) => {
+      const r = rec;
+      if (!r) return;
+      const mine = chunks;
+      r.onstop = () => {
+        if (keep && mine.length) void send(new Blob(mine, { type: r.mimeType || type }));
+      };
+      r.stop();
+      rec = null;
+      if (running) begin();
+    };
+
+    begin();
+    const timer = window.setInterval(() => {
+      analyser.getFloatTimeDomainData(buf);
+      let sum = 0;
+      for (const v of buf) sum += v * v;
+      const rms = Math.sqrt(sum / buf.length);
+      // уровень шума подстраивается медленно вверх и быстро вниз; речь — заметно громче шума
+      floor = rms < floor ? rms : floor * 1.002;
+      const threshold = Math.max(0.012, floor * 3.2);
+      level.current = Math.min(1, rms / (threshold * 2.5));
+      const now = performance.now();
+      if (rms > threshold) {
+        if (!voiced) {
+          voiced = true;
+          voiceStart = now;
+        }
+        lastVoice = now;
+      }
+      if (voiced && (now - lastVoice > PHRASE_GAP_MS || now - startedAt > MAX_PHRASE_MS)) {
+        // слишком короткий звук (щелчок, кашель) не отправляется
+        cut(lastVoice - voiceStart > 250);
+        voiced = false;
+      } else if (!voiced && now - startedAt > IDLE_RESTART_MS) cut(false);
+    }, 40);
+
+    stopRef.current = () => {
+      running = false;
+      window.clearInterval(timer);
+      if (voiced) cut(lastVoice - voiceStart > 250);
+      else cut(false);
+      stream.getTracks().forEach((t) => t.stop());
+      void audio.close();
+      level.current = 0;
+      setListening(false);
+      stopRef.current = () => undefined;
+    };
+    setListening(true);
+  }, []);
+
+  const startBrowser = useCallback(() => {
+    const Ctor = browserCtor();
     if (!Ctor) return;
-    setError(null);
     const r = new Ctor();
+    let wanted = true;
     r.lang = 'ru-RU';
     r.continuous = true;
     r.interimResults = true;
@@ -88,30 +218,31 @@ export function useSpeech(onPhrase: (text: string) => void) {
     };
     r.onerror = (e) => {
       if (e.error === 'no-speech' || e.error === 'aborted') return;
-      wanted.current = false;
+      wanted = false;
       setListening(false);
       setInterim('');
-      setError(
-        (e.error === 'not-allowed' || e.error === 'service-not-allowed') && framed()
-          ? 'Здесь микрофон закрыт рамкой страницы, разрешение браузера не помогает. Нажмите на поле ниже и диктуйте кнопкой микрофона на клавиатуре.'
-          : (ERRORS[e.error] ?? 'Распознавание речи остановилось. Попробуйте ещё раз.'),
-      );
+      setError(micError(e.error));
     };
-    // Safari и Chrome останавливают распознавание после паузы: пока врач не выключил микрофон, оно перезапускается
+    // браузер останавливает распознавание после паузы: пока врач не выключил микрофон, оно перезапускается
     r.onend = () => {
-      if (wanted.current) {
+      if (wanted) {
         try {
           r.start();
           return;
         } catch {
-          /* перезапуск не удался — выключаемся */
+          /* перезапуск не удался */
         }
       }
       setListening(false);
       setInterim('');
     };
-    rec.current = r;
-    wanted.current = true;
+    stopRef.current = () => {
+      wanted = false;
+      r.stop();
+      setListening(false);
+      setInterim('');
+      stopRef.current = () => undefined;
+    };
     try {
       r.start();
       setListening(true);
@@ -120,7 +251,13 @@ export function useSpeech(onPhrase: (text: string) => void) {
     }
   }, []);
 
-  useEffect(() => () => stop(), [stop]);
+  const start = useCallback(() => {
+    setError(null);
+    if (mode === 'server') void startServer();
+    else if (mode === 'browser') startBrowser();
+  }, [mode, startServer, startBrowser]);
 
-  return { supported, listening, interim, error, start, stop };
+  useEffect(() => () => stopRef.current(), []);
+
+  return { mode, external, listening, interim, pending, error, level, start, stop };
 }

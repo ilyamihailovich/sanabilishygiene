@@ -58,6 +58,12 @@ describe('голосовой ввод', () => {
     expect(parse('нить дальше без кровоточивости отмена').actions.map((a) => a.kind)).toEqual(['floss', 'next', 'bleeding', 'undo']);
   });
 
+  it('вывод распознавания: «16-15, TePe 0,6мм.», «шестнадцать-пятнадцать», стоп и пропуск', () => {
+    expect(parse('16-15, TePe 0,6мм.').actions.map((a) => a.kind)).toEqual(['select', 'brand', 'size']);
+    expect(parse('шестнадцать-пятнадцать').actions[0]).toMatchObject({ kind: 'select', label: '16/15' });
+    expect(parse('пропусти. Стоп.').actions.map((a) => a.kind)).toEqual(['next', 'stop']);
+  });
+
   it('несуществующий промежуток и непонятные слова уходят в unknown', () => {
     const map = setToothState(emptyBrushMap(), 15, 'MISSING');
     const r = parseDictation('шестнадцать пятнадцать абракадабра', { elements: listElements(map), catalog, brand: null });

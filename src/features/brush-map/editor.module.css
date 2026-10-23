@@ -358,3 +358,43 @@ button.need[aria-pressed='true'] {
   justify-content: space-between;
   gap: var(--space-3);
 }
+
+/* шапка шага: переключатель 3D/Схема и кнопка диктовки — основного способа заполнения карты */
+.headTools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.dictate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px 0 12px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.dictate:active {
+  transform: scale(0.97);
+}
+
+.dictate[aria-pressed='true'] {
+  background: #d23c5a;
+}
+
+/* прокрутка к сцене (диктовка) оставляет место под липкой шапкой и вкладками */
+.stage {
+  scroll-margin-top: 112px;
+}

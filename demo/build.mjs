@@ -26,7 +26,8 @@ const result = await build({
   minifySyntax: true,
   legalComments: 'none',
   loader: { '.module.css': 'local-css', '.svg': 'text', '.jpg': 'dataurl' },
-  define: { 'process.env.NODE_ENV': '"production"' },
+  // NEXT_PUBLIC_DEMO: в прототипе есть сценарий диктовки для показа без микрофона
+  define: { 'process.env.NODE_ENV': '"production"', 'process.env.NEXT_PUBLIC_DEMO': '"1"' },
   tsconfig: resolve(root, 'tsconfig.json'),
   alias: {
     'next/navigation': shim('next-navigation.ts'),

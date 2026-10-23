@@ -44,6 +44,8 @@ export function installMockApi(patientUrl: string, patients: Array<{ id: string;
     if (path.endsWith('/draft')) return json({ lint: [] });
     if (path.endsWith('/publish')) return json({ version: 2 });
     if (path.startsWith('/api/v1/me')) return json({ ok: true });
+    // в прототипе нет сервера распознавания: диктовка через браузер или пример
+    if (path.startsWith('/api/v1/dictation')) return json({ engine: null, private: false });
     return json({ ok: true });
   };
 }
