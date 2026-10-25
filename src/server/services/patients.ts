@@ -27,11 +27,25 @@ export const patientInputSchema = z.object({
     .default(null),
 });
 
+/**
+ * Поиск пациента по номеру медкарты (начало номера) или по фамилии и имени:
+ * каждое слово запроса должно встретиться в ФИО или в имени для обращения, без учёта регистра.
+ */
 export async function searchPatients(query: string, take = 20) {
-  const q = cardNumberSchema.safeParse(query);
-  if (!q.success) return [];
+  const text = query.trim().replace(/\s+/g, ' ');
+  if (!text) return [];
+  const words = text.split(' ').slice(0, 4);
   return db().patient.findMany({
-    where: { cardNumber: { startsWith: q.data } },
+    where: {
+      OR: [
+        { cardNumber: { startsWith: text.toUpperCase() } },
+        {
+          AND: words.map((w) => ({
+            OR: [{ fullName: { contains: w, mode: 'insensitive' as const } }, { displayName: { contains: w, mode: 'insensitive' as const } }],
+          })),
+        },
+      ],
+    },
     orderBy: { updatedAt: 'desc' },
     take,
   });

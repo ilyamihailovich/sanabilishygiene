@@ -58,8 +58,9 @@ export const ui = {
   },
   home: {
     startTitle: 'Начать визит',
-    startRest: 'по номеру медицинской карты',
+    startRest: 'по фамилии и имени пациента',
     cardPlaceholder: 'Номер медкарты',
+    patientPlaceholder: 'Фамилия и имя или номер медкарты',
     find: 'Найти или создать',
     recent: 'Последние пациенты',
     drafts: 'Черновики',

@@ -32,7 +32,7 @@ export function PatientSearch({ initial }: { initial: Row[] }) {
     }
     const t = setTimeout(async () => {
       const list = await api.get<Array<{ id: string; cardNumber: string; displayName: string | null; fullName: string | null }>>(
-        `/api/v1/patients?card=${encodeURIComponent(q)}`,
+        `/api/v1/patients?q=${encodeURIComponent(q)}`,
       );
       setRows(list.map((p) => ({ ...p, lastVisit: null, visits: -1 })));
     }, 200);

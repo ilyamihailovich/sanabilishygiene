@@ -97,3 +97,16 @@ describe('отчёт по пациенту', () => {
     expect(Buffer.from(await res.arrayBuffer()).subarray(0, 4).toString()).toBe('%PDF');
   }, 300_000);
 });
+
+describe('поиск пациента', () => {
+  it('по фамилии и имени в любом порядке, без учёта регистра, и по началу номера медкарты', async () => {
+    const card = `NAME-${Date.now()}`;
+    await doctor.json('POST', '/api/v1/patients', { cardNumber: card, displayName: 'Тамара', fullName: 'Скворцова Тамара Ильинична' });
+    const byName = await doctor.json<Array<{ cardNumber: string }>>('GET', `/api/v1/patients?q=${encodeURIComponent('тамара скворцова')}`);
+    expect(byName.map((p) => p.cardNumber)).toContain(card);
+    const byCard = await doctor.json<Array<{ cardNumber: string }>>('GET', `/api/v1/patients?q=${encodeURIComponent(card.slice(0, 8).toLowerCase())}`);
+    expect(byCard.map((p) => p.cardNumber)).toContain(card);
+    const none = await doctor.json<unknown[]>('GET', `/api/v1/patients?q=${encodeURIComponent('Скворцова Ольга')}`);
+    expect(none).toHaveLength(0);
+  });
+});
