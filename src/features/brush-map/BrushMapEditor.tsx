@@ -250,8 +250,9 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
   // Диктовка: фраза целиком — одно изменение карты и один шаг отмены.
   // Курсор — выбранный промежуток; после размера или нити курсор переходит к следующему промежутку по порядку осмотра.
   // Фраза только с отметкой («кровоточивость») относится к последнему продиктованному промежутку.
-  const live = useRef({ content, selectedKey, brand: activeBrand, last: null as string | null });
-  live.current = { ...live.current, content, selectedKey, brand: activeBrand };
+  // марка в диктовке — только названная или выбранная врачом, без подстановки первой из каталога
+  const live = useRef({ content, selectedKey, brand: brandPick, last: null as string | null });
+  live.current = { ...live.current, content, selectedKey, brand: brandPick };
   const [dictLog, setDictLog] = useState<DictationEntry[]>([]);
   const valueOf = (el: MapElement) => {
     const size = el.data.size;
@@ -342,7 +343,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
         if (touch) setJaw(el.arch);
       }
     }
-    if (brand !== activeBrand) setBrandPick(brand);
+    if (brand !== brandPick) setBrandPick(brand);
     const entries: DictationEntry[] = touched.map((k, i) => ({ id: Date.now() + i, key: k, text, unknown: i === touched.length - 1 ? unknown : [] }));
     if (!entries.length && (unknown.length || notes.length)) entries.push({ id: Date.now(), key: null, text, note: notes.join(', ') || undefined, unknown });
     if (entries.length) setDictLog((l) => [...entries.reverse(), ...l.filter((e) => !e.key || !touched.includes(e.key))].slice(0, 60));
@@ -643,9 +644,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
           <DictationPanel
             rows={dictRows}
             current={selectedEl ? { label: selectedEl.label, value: valueOf(selectedEl) } : null}
-            brands={catalogBrands(catalog)}
-            brand={activeBrand}
-            onBrand={setBrandPick}
+            brand={brandPick}
             paused={panel !== null}
             onPhrase={applyPhrase}
             onEdit={(key) => {

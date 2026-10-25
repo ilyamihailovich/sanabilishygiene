@@ -45,9 +45,9 @@ const TENS: Record<string, number> = { двадцать: 20, тридцать: 3
 
 /** Производители: как их произносят и как их пишет распознавание. Ключ — начало названия в каталоге. */
 const BRAND_WORDS: Array<[RegExp, string]> = [
-  [/^(тепе|тепэ|тэпэ|тепей|tepe)/, 'tepe'],
-  [/^(курапрокс|кюрапрокс|curaprox)/, 'curaprox'],
-  [/^(курасепт|курасэпт|кюрасепт|curasept)/, 'curasept'],
+  [/^(тепе|тепэ|тэпэ|тепей|tepe|тп$|tp$|теп$)/, 'tepe'],
+  [/^(курапрокс|кюрапрокс|куропрокс|курапрок|curaprox)/, 'curaprox'],
+  [/^(курасепт|курасэпт|кюрасепт|куросепт|курасеп|curasept)/, 'curasept'],
 ];
 
 const STATE_WORDS: Array<[RegExp, ToothState]> = [
@@ -70,6 +70,9 @@ function tokenize(text: string): Token[] {
     .replace(/(\d)(мм|mm)/g, '$1 мм')
     .replace(/[^a-zа-я0-9#\s]/g, ' ')
     .replace(/на месте/g, 'наместе')
+    // производители, распознанные двумя словами: «кура септ», «ти пи», «те пе»
+    .replace(/(^|\s)(кура|кюра|куро)\s+(септ|прокс)(?=\s|$)/g, '$1$2$3')
+    .replace(/(^|\s)(ти\s+пи|те\s+пе|тэ\s+пэ)(?=\s|$)/g, '$1tepe')
     .split(/\s+/)
     .filter(Boolean);
   const out: Token[] = [];

@@ -50,7 +50,7 @@
   background: var(--accent);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 0 0 calc(var(--lvl) * 12px) rgba(110, 72, 170, 0.22);
+  box-shadow: 0 0 0 calc(var(--lvl) * 12px) rgba(210, 60, 90, 0.22);
   transition:
     box-shadow 80ms linear,
     transform var(--dur-fast) var(--ease-out),
@@ -69,6 +69,19 @@
 
 .live {
   background: #d23c5a;
+  color: #fff;
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+/* лёгкое «дыхание» кнопки, пока идёт запись */
+@keyframes breathe {
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.live > svg {
+  color: #fff;
 }
 
 .headText {
@@ -108,33 +121,6 @@
   background: rgba(0, 0, 0, 0.05);
   color: var(--color-text-secondary);
   cursor: pointer;
-}
-
-.brands {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.brand {
-  flex: none;
-  min-height: 28px;
-  padding: 0 11px;
-  font-size: 13px;
-  border: 0;
-  border-radius: var(--radius-capsule);
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--color-text);
-  font: inherit;
-  font-weight: var(--fw-medium);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.brand[aria-checked='true'] {
-  background: var(--color-text);
-  color: var(--color-surface);
 }
 
 .interim {
@@ -297,15 +283,67 @@
   font-size: 16px;
 }
 
-.demo {
+.add {
   flex: none;
   min-height: 38px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 0;
   border-radius: var(--radius-capsule);
-  background: var(--color-text);
-  color: var(--color-surface);
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
   font: inherit;
   font-weight: var(--fw-medium);
   cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.add:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+
+/* микрофон слушает: две волны расходятся от кнопки, кольцо вокруг повторяет громкость голоса */
+.wave {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #d23c5a;
+  opacity: 0;
+  pointer-events: none;
+  animation: wave 1.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+.wave2 {
+  animation-delay: 0.9s;
+}
+
+@keyframes wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.28;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.mic svg {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave {
+    animation: none;
+  }
 }

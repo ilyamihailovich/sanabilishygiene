@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '@/ui/cx';
@@ -37,9 +38,8 @@ interface Props {
   rows: DictationRow[];
   /** Промежуток под курсором: ему достанется следующий названный размер. */
   current: { label: string; value: string | null } | null;
-  brands: string[];
+  /** Производитель последнего продиктованного размера: следующий размер без названия производителя берётся у него. */
   brand: string | null;
-  onBrand: (brand: string) => void;
   /** Открыта карточка промежутка: микрофон на паузе, панель скрыта. */
   paused: boolean;
   onPhrase: (text: string) => PhraseOutcome;
@@ -54,9 +54,10 @@ interface Props {
  * Диктовка карты: врач называет промежуток, производителя и размер, карта заполняется по ходу речи,
  * курсор переходит к следующему промежутку. Каждая продиктованная запись — строка ленты: нажатие открывает её для правки.
  */
-export function DictationPanel({ rows, current, brands, brand, onBrand, paused, onPhrase, onEdit, onClear, onClose, demo }: Props) {
+export function DictationPanel({ rows, current, brand, paused, onPhrase, onEdit, onClear, onClose, demo }: Props) {
   const [typed, setTyped] = useState('');
   const [sim, setSim] = useState<string | null>(null);
+  const [demoRunning, setDemoRunning] = useState(false);
   const simRun = useRef(0);
   const [noticed, setNoticed] = useState(() => {
     try {
@@ -73,6 +74,7 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
   const speech = useSpeech(handle);
   speechRef.current = speech;
   const ring = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const needsNotice = speech.external && speech.mode !== 'none' && !noticed;
 
   // уровень звука — кольцо вокруг кнопки микрофона
@@ -102,6 +104,8 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
 
   const toggle = () => {
     if (speech.listening) return speech.stop();
+    // микрофон закрыт страницей: кнопка открывает поле, где работает диктовка клавиатуры
+    if (speech.blocked || speech.mode === 'none') return input.current?.focus();
     if (needsNotice) {
       try {
         localStorage.setItem(NOTICE_KEY, '1');
@@ -116,31 +120,26 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
   const playDemo = async () => {
     if (!demo) return;
     const run = ++simRun.current;
+    setDemoRunning(true);
     for (const phrase of demo) {
       const words = phrase.split(' ');
       for (let i = 1; i <= words.length; i++) {
-        if (simRun.current !== run) return setSim(null);
+        if (simRun.current !== run) return (setSim(null), setDemoRunning(false));
         setSim(words.slice(0, i).join(' '));
         await new Promise((r) => setTimeout(r, 260));
       }
       await new Promise((r) => setTimeout(r, 350));
-      if (simRun.current !== run) return setSim(null);
+      if (simRun.current !== run) return (setSim(null), setDemoRunning(false));
       setSim(null);
       handle(phrase);
       await new Promise((r) => setTimeout(r, 900));
     }
+    if (simRun.current === run) setDemoRunning(false);
   };
-  const simulating = sim !== null;
+  const simulating = demoRunning;
 
-  const status = speech.listening
-    ? speech.pending
-      ? 'Распознаю…'
-      : 'Слушаю'
-    : simulating
-      ? 'Пример диктовки'
-      : speech.mode === 'none'
-        ? 'Микрофон недоступен'
-        : 'Нажмите и говорите';
+  const live = speech.listening || simulating;
+  const status = speech.pending ? 'Заполняю…' : live ? 'Слушаю…' : 'Нажмите и говорите';
 
   const panel = (
     <div className={cx(glassClass, s.panel)} role="region" aria-label="Диктовка" hidden={paused}>
@@ -148,23 +147,39 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
         <button
           ref={ring}
           type="button"
-          className={cx(s.mic, (speech.listening || simulating) && s.live)}
+          className={cx(s.mic, live && s.live)}
           aria-pressed={speech.listening}
           aria-label={speech.listening ? 'Остановить диктовку' : 'Начать диктовку'}
-          disabled={speech.mode === 'none'}
           onClick={toggle}
         >
+          {live && (
+            <>
+              <span className={s.wave} aria-hidden="true" />
+              <span className={cx(s.wave, s.wave2)} aria-hidden="true" />
+            </>
+          )}
           <IconMic size={24} />
         </button>
         <div className={s.headText}>
-          <span className={s.status}>{status}</span>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={status}
+              className={s.status}
+              initial={{ opacity: 0, y: 6, filter: 'blur(3px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -6, filter: 'blur(3px)' }}
+              transition={{ duration: 0.22 }}
+            >
+              {status}
+            </motion.span>
+          </AnimatePresence>
           {current ? (
             <span className={s.current}>
               Сейчас <b>{current.label}</b>
-              {current.value ? ` · ${current.value}` : ' · назовите размер'}
+              {current.value ? ` · ${current.value}` : brand ? ` · ${brand}, назовите размер` : ' · назовите марку и размер'}
             </span>
           ) : (
-            <span className={s.current}>Назовите промежуток, например «16 15»</span>
+            <span className={s.current}>Например: «Curasept 16 15 0,6»</span>
           )}
         </div>
         <button type="button" className={s.close} aria-label="Закрыть диктовку" onClick={onClose}>
@@ -174,15 +189,6 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
         </button>
       </div>
 
-      {brands.length > 1 && (
-        <div className={s.brands} role="radiogroup" aria-label="Производитель">
-          {brands.map((b) => (
-            <button key={b} type="button" role="radio" aria-checked={brand === b} className={s.brand} onClick={() => onBrand(b)}>
-              {b}
-            </button>
-          ))}
-        </div>
-      )}
 
       {(speech.interim || sim) && <p className={s.interim}>{speech.interim || sim}</p>}
       {needsNotice && !speech.listening && (
@@ -198,8 +204,16 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
       <ul className={s.feed} aria-label="Продиктовано" aria-live="polite">
         {rows.length === 0 && (
           <li className={s.empty}>
-            Говорите подряд: «16 15 TePe 0,6», затем только размеры — курсор сам идёт дальше. «Кровоточивость» — к последнему промежутку, «нить»,
-            «дальше», «отмена», «стоп».
+            Называйте подряд марку, промежуток и размер: «Curasept 16 15 0,6». Дальше можно только размеры — курсор сам идёт к следующему промежутку, марка
+            запоминается. «Кровоточивость» — к последнему промежутку; «нить», «дальше», «отмена», «стоп».
+            {demo && (
+              <>
+                {' '}
+                <button type="button" className={s.link} onClick={playDemo}>
+                  Показать пример
+                </button>
+              </>
+            )}
           </li>
         )}
         {rows.map((r) =>
@@ -254,17 +268,22 @@ export function DictationPanel({ rows, current, brands, brand, onBrand, paused, 
         }}
       >
         <input
+          ref={input}
           className={s.input}
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
           onKeyDown={(e) => e.stopPropagation()}
-          placeholder="Или введите: 16 15 TePe 0,6"
+          placeholder="Curasept 16 15 0,6"
           aria-label="Фраза для диктовки"
-          enterKeyHint="send"
+          enterKeyHint="done"
         />
-        {demo && !speech.listening && (
-          <button type="button" className={s.demo} onClick={simulating ? () => (simRun.current++, setSim(null)) : playDemo}>
-            {simulating ? 'Стоп' : 'Пример'}
+        {simulating ? (
+          <button type="button" className={s.add} onClick={() => (simRun.current++, setSim(null), setDemoRunning(false))}>
+            Стоп
+          </button>
+        ) : (
+          <button type="submit" className={s.add} disabled={!typed.trim()}>
+            Добавить
           </button>
         )}
       </form>

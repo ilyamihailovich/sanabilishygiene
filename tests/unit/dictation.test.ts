@@ -64,6 +64,17 @@ describe('голосовой ввод', () => {
     expect(parse('пропусти. Стоп.').actions.map((a) => a.kind)).toEqual(['next', 'stop']);
   });
 
+  it('производитель в любом месте фразы и в разных написаниях: «Кура септ», «ТП», «ти пи»', () => {
+    expect(parse('кура септ 16 15 0,6').actions).toEqual([
+      { kind: 'brand', brand: 'Curasept Proxi' },
+      { kind: 'select', key: expect.any(String), label: '16/15' },
+      { kind: 'size', catalogId: 'cs6', brand: 'Curasept Proxi', mm: '0.6' },
+    ]);
+    expect(parse('16 15 ТП 0,8').actions[2]).toMatchObject({ catalogId: 'tp8' });
+    expect(parse('16 15 ти пи ноль шесть').actions[2]).toMatchObject({ catalogId: 'tp6' });
+    expect(parse('курапрокс ноль шесть').actions[1]).toMatchObject({ catalogId: 'cp6' });
+  });
+
   it('несуществующий промежуток и непонятные слова уходят в unknown', () => {
     const map = setToothState(emptyBrushMap(), 15, 'MISSING');
     const r = parseDictation('шестнадцать пятнадцать абракадабра', { elements: listElements(map), catalog, brand: null });

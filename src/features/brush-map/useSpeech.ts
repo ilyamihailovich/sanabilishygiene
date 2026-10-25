@@ -51,7 +51,7 @@ const framed = () => {
 function micError(code: string) {
   if (code === 'not-allowed' || code === 'NotAllowedError' || code === 'service-not-allowed' || code === 'SecurityError') {
     return framed()
-      ? 'Здесь микрофон закрыт рамкой страницы. Нажмите на поле ниже и диктуйте кнопкой микрофона на клавиатуре.'
+      ? 'В этом окне микрофон закрыт. Нажмите на поле ниже и диктуйте микрофоном клавиатуры.'
       : 'Нет доступа к микрофону. Разрешите его для этого сайта в настройках браузера.';
   }
   if (code === 'audio-capture' || code === 'NotFoundError') return 'Микрофон не найден.';
@@ -74,6 +74,8 @@ export function useSpeech(onPhrase: (text: string) => void) {
   const [interim, setInterim] = useState('');
   const [pending, setPending] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  /** Микрофон недоступен на этой странице: остаётся ввод в поле (диктовка клавиатуры). */
+  const [blocked, setBlocked] = useState(false);
   const level = useRef(0);
   const phrase = useRef(onPhrase);
   phrase.current = onPhrase;
@@ -104,7 +106,9 @@ export function useSpeech(onPhrase: (text: string) => void) {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     } catch (e) {
-      setError(micError((e as Error).name));
+      const name = (e as Error).name;
+      if (name === 'NotAllowedError' || name === 'SecurityError') setBlocked(framed());
+      setError(micError(name));
       return;
     }
     const type = RECORDER_TYPES.find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
@@ -221,6 +225,7 @@ export function useSpeech(onPhrase: (text: string) => void) {
       wanted = false;
       setListening(false);
       setInterim('');
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') setBlocked(framed());
       setError(micError(e.error));
     };
     // браузер останавливает распознавание после паузы: пока врач не выключил микрофон, оно перезапускается
@@ -259,5 +264,5 @@ export function useSpeech(onPhrase: (text: string) => void) {
 
   useEffect(() => () => stopRef.current(), []);
 
-  return { mode, external, listening, interim, pending, error, level, start, stop };
+  return { mode, external, listening, interim, pending, error, blocked, level, start, stop };
 }
