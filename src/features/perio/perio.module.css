@@ -15,7 +15,8 @@
 .stat {
   --pad: var(--space-5);
   --pad-sm: var(--space-4);
-  gap: var(--space-2);
+  gap: var(--space-3);
+  min-height: 128px;
 }
 
 .statLabel {
@@ -23,16 +24,22 @@
   color: var(--color-text-secondary);
 }
 
+/* цифра прижата к нижнему краю плашки: у всех плашек ряда на одной линии, единица — по базовой линии */
 .statValue {
-  font-size: 28px;
-  font-weight: var(--fw-semibold);
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: auto;
+  color: var(--color-figure);
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: proportional-nums;
 }
 
 .statValue small {
-  font-size: 15px;
-  font-weight: var(--fw-medium);
+  font-size: 17px;
+  letter-spacing: 0;
   color: var(--color-text-secondary);
 }
 
@@ -64,8 +71,8 @@
   padding: 0 14px 0 10px;
   border: 0;
   border-radius: var(--radius-capsule);
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--color-text);
+  background: rgba(17, 17, 17, 0.05);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
@@ -77,28 +84,32 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--chip, #999);
+  background: var(--chip, rgba(17, 17, 17, 0.42));
+  box-shadow: var(--chip-ring, none);
 }
 
 .chip[aria-pressed='true'] {
   background: var(--color-surface);
-  box-shadow: inset 0 0 0 1.5px var(--color-text);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.06), 0 2px 8px rgba(70, 44, 108, 0.08);
 }
 
 .chip_bop {
-  --chip: #d93a4a;
+  --chip: var(--accent);
 }
 
 .chip_plaque {
-  --chip: #e2b33c;
+  --chip: var(--lavender);
 }
 
 .chip_pd5 {
-  --chip: #f08a2c;
+  --chip: transparent;
+  --chip-ring: inset 0 0 0 2px var(--lavender);
 }
 
 .chip_pd6 {
-  --chip: #b3123b;
+  --chip: transparent;
+  --chip-ring: inset 0 0 0 2px var(--accent);
 }
 
 .tools {
@@ -109,14 +120,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-4) 0 var(--space-4) var(--space-4);
+  padding: var(--space-5) 0 var(--space-5) var(--space-5);
   border-radius: var(--radius-card);
+  /* таблица на сплошном белом: закреплённые подписи рядов совпадают с фоном */
   background: var(--color-surface);
+  box-shadow: var(--card-shadow);
 }
 
 .blockTitle {
+  margin-bottom: var(--space-2);
   font-size: var(--fs-callout);
-  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-title);
 }
 
 /* таблица шире экрана: горизонтальная прокрутка, подписи рядов остаются на месте */
@@ -152,11 +166,11 @@
   display: flex;
   align-items: center;
   width: var(--label, 128px);
-  padding-right: 8px;
+  padding-right: 10px;
   background: var(--color-surface);
   font-size: 12px;
   line-height: 1.15;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
 }
 
 .mid {
@@ -173,20 +187,22 @@
   align-items: center;
   justify-items: center;
   width: calc(var(--site) * 3);
-  min-height: 26px;
-  border-left: 1px solid var(--color-separator);
+  min-height: 28px;
+  border-left: 1px solid rgba(17, 17, 17, 0.05);
 }
 
-.row + .row .cell {
-  border-top: 1px solid var(--color-separator);
+/* ряды разделены светлыми полосами, без сетки */
+.row:nth-child(even) .cell {
+  background: rgba(237, 237, 237, 0.45);
 }
 
 .rowNum .cell {
   min-height: 30px;
 }
 
+.row .off,
 .off {
-  background: repeating-linear-gradient(45deg, transparent 0 5px, rgba(0, 0, 0, 0.035) 5px 10px);
+  background: rgba(237, 237, 237, 0.8);
 }
 
 .single,
@@ -202,7 +218,7 @@
   color: var(--color-text);
   font: inherit;
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
   cursor: pointer;
 }
 
@@ -212,13 +228,13 @@
 }
 
 .number {
-  min-height: 32px;
-  font-weight: var(--fw-semibold);
-  font-size: 14px;
+  min-height: 34px;
+  font-size: 15px;
+  color: var(--color-text);
 }
 
 .numberOff {
-  color: var(--color-text-tertiary, #aaa);
+  color: var(--color-text-tertiary, rgba(17, 17, 17, 0.42));
   text-decoration: line-through;
 }
 
@@ -228,8 +244,8 @@
 }
 
 .implantOn {
-  background: #eef3fb;
-  color: #4f6385;
+  background: #ffffff;
+  color: rgba(17, 17, 17, 0.55);
   font-weight: var(--fw-semibold);
 }
 
@@ -241,12 +257,12 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #b06a1e;
+  color: var(--accent);
   cursor: pointer;
 }
 
 .furc[data-grade='0'] {
-  color: #c4c4c9;
+  color: rgba(17, 17, 17, 0.22);
 }
 
 .furcLeft {
@@ -265,7 +281,7 @@
   width: min(14px, calc(var(--site) - 4px));
   height: min(14px, calc(var(--site) - 4px));
   padding: 0;
-  border: 1.5px solid #cdcdd2;
+  border: 1.5px solid rgba(17, 17, 17, 0.12);
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
@@ -276,13 +292,13 @@
 }
 
 .dotBop[aria-pressed='true'] {
-  border-color: #d93a4a;
-  background: #d93a4a;
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .dotPlaque[aria-pressed='true'] {
-  border-color: #d9a52c;
-  background: #e2b33c;
+  border-color: var(--lavender);
+  background: var(--lavender);
 }
 
 .num,
@@ -290,16 +306,16 @@
   display: grid;
   place-items: center;
   width: var(--site);
-  height: 26px;
+  height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   background: transparent;
   color: var(--color-text);
   font: inherit;
   font-size: 13px;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  font-variant-numeric: proportional-nums;
   cursor: text;
   -webkit-tap-highlight-color: transparent;
 }
@@ -312,24 +328,26 @@
   outline: none;
 }
 
-.numActive {
-  background: var(--accent);
+.numActive,
+.numActive.deep6 {
+  background: var(--color-text);
   color: #fff;
 }
 
-.computed .numStatic {
+.computed .numStatic:not(.deep4):not(.deep6) {
   color: var(--color-text-secondary);
   font-size: 13px;
 }
 
+/* глубокие карманы: 4–5 мм — индиго, от 6 мм — индиго на лавандовой подложке */
 .deep4 {
-  color: #d9761c;
-  font-weight: var(--fw-semibold);
+  color: var(--accent);
 }
 
-.deep6 {
-  color: #c01236;
-  font-weight: var(--fw-semibold);
+.deep6,
+.computed .deep6 {
+  background: rgba(167, 140, 213, 0.32);
+  color: var(--accent);
 }
 
 .numActive.deep4,
@@ -338,7 +356,7 @@
 }
 
 .recession {
-  color: #3c6fb4;
+  color: var(--lavender);
 }
 
 .noteCell {
@@ -350,7 +368,7 @@
   border-right: 0;
   border-bottom: 0;
   background: transparent;
-  color: var(--color-text-tertiary, #aaa);
+  color: var(--color-text-tertiary, rgba(17, 17, 17, 0.42));
   font: inherit;
   cursor: pointer;
 }
@@ -378,24 +396,32 @@
 }
 
 .grid {
-  stroke: rgba(0, 0, 0, 0.06);
+  stroke: rgba(17, 17, 17, 0.045);
   stroke-width: 1;
 }
 
+/* зуб: корень — светло-серый, коронка — белая эмаль с мягкой тенью к шейке */
 .tooth path {
-  fill: #fbfaf7;
-  stroke: #9a9aa0;
-  stroke-width: 1.1;
+  fill: url(#perio-root);
+  stroke: rgba(17, 17, 17, 0.2);
+  stroke-width: 1;
+  stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
 .tooth .crown {
-  fill: #ffffff;
+  fill: url(#perio-crown);
+  stroke: rgba(17, 17, 17, 0.26);
+}
+
+.tooth .gloss {
+  fill: rgba(255, 255, 255, 0.85);
+  stroke: none;
 }
 
 .implant path {
-  fill: #eef1f5;
-  stroke: #7d8698;
+  fill: url(#perio-metal);
+  stroke: rgba(17, 17, 17, 0.4);
 }
 
 .implant .threads {
@@ -403,45 +429,48 @@
 }
 
 .pocket {
-  fill: rgba(60, 111, 180, 0.12);
+  fill: rgba(167, 140, 213, 0.28);
 }
 
+/* край десны — лаванда, дно кармана — индиго */
 .lineGm {
   fill: none;
-  stroke: #d93a4a;
+  stroke: var(--lavender);
   stroke-width: 2;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .lineAl {
   fill: none;
-  stroke: #2f6fbf;
+  stroke: var(--accent);
   stroke-width: 2;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .markBop {
-  fill: #d93a4a;
+  fill: var(--accent);
   stroke: #fff;
-  stroke-width: 1.2;
+  stroke-width: 1.5;
 }
 
 .markPlaque {
-  fill: #e2b33c;
+  fill: var(--lavender);
   stroke: #fff;
-  stroke-width: 1.2;
+  stroke-width: 1.5;
 }
 
 .mark5 {
-  fill: #f08a2c;
-  stroke: #fff;
-  stroke-width: 1.2;
+  fill: #fff;
+  stroke: var(--lavender);
+  stroke-width: 2;
 }
 
 .mark6 {
-  fill: #b3123b;
-  stroke: #fff;
-  stroke-width: 1.2;
+  fill: #fff;
+  stroke: var(--accent);
+  stroke-width: 2;
 }
 
 .markActive {
@@ -469,10 +498,10 @@
   gap: 8px;
   padding: 10px;
   border-radius: var(--radius-card);
-  background: rgba(250, 250, 252, 0.94);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(24px) saturate(1.6);
   -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85), 0 18px 50px rgba(70, 44, 108, 0.18);
 }
 
 .keypadInfo {
@@ -496,14 +525,13 @@
   color: var(--color-text);
   font: inherit;
   font-size: 20px;
-  font-weight: var(--fw-medium);
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  font-variant-numeric: proportional-nums;
+  box-shadow: 0 1px 0 rgba(17, 17, 17, 0.08);
 }
 
 .key:active,
 .keyWide:active {
-  background: #e9e9ee;
+  background: #ededed;
 }
 
 .key:disabled {
@@ -532,7 +560,7 @@
   }
 
   .statValue {
-    font-size: 24px;
+    font-size: 32px;
   }
 
   .wrap {

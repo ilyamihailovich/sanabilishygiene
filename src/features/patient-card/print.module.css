@@ -10,8 +10,8 @@
 
 .doc {
   --print-text: #111111;
-  --print-muted: #5f5f64;
-  --print-line: #d9d9de;
+  --print-muted: rgba(17, 17, 17, 0.6);
+  --print-line: #ededed;
   display: flex;
   flex-direction: column;
   gap: 5mm;

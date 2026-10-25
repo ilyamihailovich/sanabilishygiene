@@ -48,7 +48,7 @@
   background: var(--color-surface-sunken);
   font: inherit;
   font-size: var(--fs-caption);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .dot {

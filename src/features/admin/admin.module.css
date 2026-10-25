@@ -22,7 +22,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--fs-caption);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .table th {

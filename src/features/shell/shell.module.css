@@ -16,18 +16,19 @@
   margin: 0 auto;
   padding: 0 var(--space-6);
   border-radius: var(--radius-card);
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 0 0 1px var(--glass-hairline);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  /* почти прозрачное стекло с лёгким размытием: под ним читается фон и содержимое */
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 0 1px rgba(17, 17, 17, 0.04);
+  -webkit-backdrop-filter: blur(8px) saturate(1.8);
+  backdrop-filter: blur(8px) saturate(1.8);
   transition:
     background-color var(--dur) var(--ease-out),
     box-shadow var(--dur) var(--ease-out);
 }
 
 .scrolled .headerInner {
-  background: var(--glass-bg);
-  box-shadow: inset 0 0 0 1px var(--glass-hairline), var(--glass-shadow);
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 0 1px rgba(17, 17, 17, 0.05), 0 8px 24px rgba(70, 44, 108, 0.06);
 }
 
 :global(.reduce-glass) .headerInner {
@@ -45,11 +46,13 @@
   border-radius: 8px;
 }
 
-/* Разделы — текстовые ссылки; выбранный подчёркнут чёрной линией */
 .nav {
   position: relative;
   display: flex;
-  gap: var(--space-6);
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-capsule);
+  background: rgba(17, 17, 17, 0.05);
 }
 
 .navLink {
@@ -57,7 +60,8 @@
   display: inline-flex;
   align-items: center;
   min-height: 36px;
-  padding: 0;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-capsule);
   color: var(--color-text-secondary);
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
@@ -72,11 +76,12 @@
 
 .navThumb {
   position: absolute;
-  right: 0;
-  bottom: 4px;
-  left: 0;
-  height: 1.5px;
-  background: var(--color-text);
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-surface);
+  box-shadow:
+    0 1px 2px rgba(17, 17, 17, 0.06),
+    0 2px 8px rgba(70, 44, 108, 0.08);
 }
 
 .navText {
@@ -114,8 +119,8 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-capsule);
-  background: var(--accent-fill);
+  border-radius: 50%;
+  background: var(--accent);
   color: #fff;
   font-size: 13px;
   font-weight: var(--fw-medium);
@@ -220,7 +225,7 @@
     display: flex;
     gap: 4px;
     padding: 6px;
-    border-radius: var(--radius-card);
+    border-radius: var(--radius-capsule);
     transform: translateX(-50%);
   }
   .tab {
@@ -234,7 +239,7 @@
     min-width: 96px;
     height: 54px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-inner);
+    border-radius: 27px;
     color: var(--color-text-secondary);
     font-size: 12px;
     font-weight: var(--fw-medium);
@@ -249,8 +254,8 @@
     top: 6px;
     bottom: 6px;
     left: 0;
-    border-radius: var(--radius-inner);
-    background: rgba(85, 41, 149, 0.1);
+    border-radius: 27px;
+    background: rgba(167, 140, 213, 0.2);
   }
   .tab > :not(.tabThumb) {
     position: relative;

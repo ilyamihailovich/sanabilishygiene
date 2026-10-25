@@ -39,8 +39,8 @@
   white-space: nowrap;
   font-size: var(--fs-title3);
   font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-title);
-  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  font-variant-numeric: proportional-nums;
 }
 
 .codes {
@@ -61,7 +61,7 @@
 .code {
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .lead {
@@ -162,10 +162,11 @@
 
 .resultValue {
   font-size: var(--fs-display);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-display);
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
+  /* цифры показателей — индиго, плотнее по трекингу */
+  color: var(--color-figure);
+  letter-spacing: -0.03em;
 }
 
 .muted {
@@ -174,6 +175,7 @@
 }
 
 .text {
+  max-width: 820px;
   margin-top: var(--space-4);
   font-size: var(--fs-caption);
   line-height: var(--lh-body);
@@ -183,7 +185,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  max-width: 720px;
+  /* итог на ту же ширину, что и ряд из трёх секстантов */
+  width: 100%;
 }
 
 @media (max-width: 1100px) {

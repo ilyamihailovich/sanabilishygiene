@@ -23,8 +23,10 @@
   padding: var(--space-2);
   list-style: none;
   border-radius: var(--radius-card);
-  background: var(--color-surface);
-  box-shadow: var(--color-surface-line);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  -webkit-backdrop-filter: var(--card-blur);
+  backdrop-filter: var(--card-blur);
 }
 
 .row {
@@ -56,13 +58,13 @@
 
 .card {
   font-weight: var(--fw-medium);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .sub {
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .empty {
@@ -153,14 +155,14 @@
 .axis {
   font-size: 13px;
   fill: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .direct {
   font-size: 14px;
   font-weight: var(--fw-medium);
   fill: var(--color-text);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .tip {
@@ -173,7 +175,7 @@
   background: var(--color-text);
   color: var(--color-surface);
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -219,5 +221,5 @@
   font-size: var(--fs-caption);
   color: var(--color-text);
   opacity: 0.45;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }

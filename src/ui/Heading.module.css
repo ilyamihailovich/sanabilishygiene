@@ -6,8 +6,7 @@
 }
 
 .display,
-.title1,
-.title2 {
+.title1 {
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
 }
@@ -46,7 +45,7 @@
   gap: 6px;
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
   color: var(--color-text-secondary);
 }
 

@@ -40,12 +40,13 @@
 
 .startTitle {
   margin-top: var(--space-2);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
-  font-size: 40px;
+  /* заголовок и поле прижаты к нижнему краю карточки, дата — к верхнему */
+  margin-top: auto;
+  padding-top: var(--space-8);
+  font-size: 44px;
   font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-display);
-  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  line-height: 1.05;
 }
 
 .startRest {
@@ -75,7 +76,7 @@
   -webkit-backdrop-filter: blur(var(--glass-control-blur)) saturate(1.5);
   backdrop-filter: blur(var(--glass-control-blur)) saturate(1.5);
   color: #fff;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .searchInput::placeholder {
@@ -128,21 +129,22 @@
 
 .card {
   font-weight: var(--fw-medium);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .sub {
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .big {
   font-size: var(--fs-title1);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-display);
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
+  /* цифры показателей — индиго, плотнее по трекингу */
+  color: var(--color-figure);
+  letter-spacing: -0.03em;
 }
 
 @media (max-width: 1100px) {
@@ -218,13 +220,13 @@
   font-size: var(--fs-caption);
   color: var(--color-text);
   opacity: 0.45;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .count {
   font-size: var(--fs-body);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 /* поиск пациента по фамилии и имени: подсказки строками под полем, внутри акцентной карточки */
@@ -275,7 +277,7 @@
 .hitCard {
   flex: none;
   color: rgba(255, 255, 255, 0.6);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .hitNew {

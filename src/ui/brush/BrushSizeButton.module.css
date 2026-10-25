@@ -72,7 +72,7 @@
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .check {

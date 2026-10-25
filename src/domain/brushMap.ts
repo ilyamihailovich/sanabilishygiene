@@ -238,7 +238,7 @@ export interface SizeUsage {
   keys: string[];
 }
 
-/** Сводка «Что понадобится»: размеры и число промежутков для каждого. */
+/** Сводка «Набор ёршиков»: размеры и число промежутков для каждого. */
 export function summarizeSizes(content: BrushMapContent): SizeUsage[] {
   const map = new Map<string, SizeUsage>();
   for (const el of listElements(content)) {

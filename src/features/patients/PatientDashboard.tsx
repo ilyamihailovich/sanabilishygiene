@@ -233,7 +233,8 @@ function MetricDetail({ metric, history, onClose }: { metric: Metric | null; his
   );
 }
 
-const PSR_TONE = ['#e6f4ea', '#fdf2d0', '#fde3c4', '#f9cdb8', '#f2b2b2'];
+// шкала кодов в палитре клиники: от светло-серого через лаванду к индиго
+const PSR_TONE = ['#ededed', 'rgba(167, 140, 213, 0.22)', 'rgba(167, 140, 213, 0.45)', 'rgba(167, 140, 213, 0.75)', '#462c6c'];
 
 /** Коды PSR по секстантам за визиты: строка — секстант, столбец — визит. */
 export function PsrStrip({ history }: { history: VisitMetrics[] }) {
@@ -262,7 +263,7 @@ function PsrRow({ label, codes }: { label: string; codes: Array<number | 'X' | n
     <>
       <span className={s.psrLabel}>{label}</span>
       {codes.map((c, i) => (
-        <span key={i} className={s.psrCell} style={{ background: typeof c === 'number' ? PSR_TONE[c] : 'var(--color-surface-muted)' }}>
+        <span key={i} className={s.psrCell} style={{ background: typeof c === 'number' ? PSR_TONE[c] : 'var(--color-surface-muted)', color: c === 4 ? '#fff' : undefined }}>
           {c ?? '—'}
         </span>
       ))}

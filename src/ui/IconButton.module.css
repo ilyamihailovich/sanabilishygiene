@@ -7,7 +7,7 @@
   height: var(--size);
   padding: 0;
   border: 0;
-  border-radius: var(--radius-capsule);
+  border-radius: 50%;
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-out),

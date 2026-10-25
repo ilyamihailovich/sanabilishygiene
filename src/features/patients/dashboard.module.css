@@ -11,9 +11,11 @@
 }
 
 .heroValue {
-  font-size: 32px;
-  font-weight: var(--fw-semibold);
-  letter-spacing: -0.02em;
+  font-size: 40px;
+  font-variant-numeric: proportional-nums;
+  /* цифры показателей — индиго, плотнее по трекингу */
+  color: var(--color-figure);
+  letter-spacing: -0.03em;
 }
 
 .heroMeta {
@@ -44,13 +46,15 @@
 .tile {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   min-height: 150px;
   padding: var(--space-5);
   border: 0;
   border-radius: var(--radius-card);
-  background: var(--color-surface);
-  box-shadow: var(--color-surface-line);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  -webkit-backdrop-filter: var(--card-blur);
+  backdrop-filter: var(--card-blur);
   color: var(--color-text);
   font: inherit;
   text-align: left;
@@ -61,7 +65,7 @@
 }
 
 .tile:hover {
-  box-shadow: inset 0 0 0 1px var(--color-text);
+  box-shadow: var(--shadow-raised);
 }
 
 .tile:active {
@@ -75,15 +79,22 @@
 }
 
 .tileValue {
-  font-size: 30px;
-  font-weight: var(--fw-semibold);
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
+  /* значение прижато к низу плашки: у соседних плашек цифры на одной линии */
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: auto;
+  line-height: 1;
+  font-size: 40px;
+  font-variant-numeric: proportional-nums;
+  /* цифры показателей — индиго, плотнее по трекингу */
+  color: var(--color-figure);
+  letter-spacing: -0.03em;
 }
 
 .tileValue small {
-  font-size: 15px;
-  font-weight: var(--fw-medium);
+  font-size: 17px;
+  letter-spacing: 0;
   color: var(--color-text-secondary);
 }
 
@@ -92,7 +103,6 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-2);
-  margin-top: auto;
 }
 
 .delta,
@@ -103,15 +113,16 @@
 }
 
 .deltaNone {
-  color: var(--color-text-tertiary, #9a9aa0);
+  color: var(--color-text-tertiary);
 }
 
+/* улучшение — индиго, ухудшение — тёмно-серый: без светофора, только палитра клиники */
 .good {
-  color: #1f8a4c;
+  color: var(--accent);
 }
 
 .bad {
-  color: #c0562a;
+  color: var(--color-text);
 }
 
 .spark {
@@ -160,7 +171,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--fs-caption);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .table th {
@@ -184,7 +195,7 @@
   display: grid;
   gap: 4px;
   margin-top: var(--space-3);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .psrHead {
@@ -237,8 +248,7 @@
 
 .barTotal {
   font-size: 13px;
-  font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .barDate {
@@ -247,15 +257,15 @@
 }
 
 .b4 {
-  background: #f6c88f;
+  background: rgba(167, 140, 213, 0.45);
 }
 
 .b5 {
-  background: #ef9a5a;
+  background: var(--lavender);
 }
 
 .b6 {
-  background: #c9425a;
+  background: var(--accent);
 }
 
 .legend {
@@ -323,7 +333,7 @@
 }
 
 .brushCount {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
   color: var(--color-text-secondary);
 }
 
@@ -372,7 +382,7 @@
 
 .visitDate {
   font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .visitMeta {
@@ -441,7 +451,7 @@
   }
 
   .tileValue {
-    font-size: 26px;
+    font-size: 32px;
   }
 
   .spark {

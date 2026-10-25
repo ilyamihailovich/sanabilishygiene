@@ -68,7 +68,7 @@
 }
 
 .live {
-  background: #d23c5a;
+  background: #462c6c;
   color: #fff;
   animation: breathe 1.6s ease-in-out infinite;
 }
@@ -204,7 +204,7 @@
   flex: none;
   min-width: 46px;
   font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .rowValue {
@@ -317,7 +317,7 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: #d23c5a;
+  background: #462c6c;
   opacity: 0;
   pointer-events: none;
   animation: wave 1.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;

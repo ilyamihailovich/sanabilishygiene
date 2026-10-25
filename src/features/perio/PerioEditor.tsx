@@ -567,7 +567,7 @@ function FurcIcon({ grade }: { grade: number }) {
   );
 }
 
-/** График стороны челюсти: силуэты зубов, сетка через 1 мм, красная линия — край десны, синяя — дно кармана. */
+/** График стороны челюсти: силуэты зубов, сетка через 1 мм, лавандовая линия — край десны, индиго — дно кармана. */
 function Chart({
   arch,
   side,
@@ -620,6 +620,23 @@ function Chart({
 
   return (
     <svg className={s.chart} width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`График: ${SIDE_LABEL[arch][side]}`}>
+      <defs>
+        {/* эмаль светлеет к режущему краю, корень — к середине: объём без лишних линий */}
+        <linearGradient id="perio-crown" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ededed" />
+          <stop offset="0.45" stopColor="#ffffff" />
+        </linearGradient>
+        <linearGradient id="perio-root" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#ededed" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#ededed" />
+        </linearGradient>
+        <linearGradient id="perio-metal" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#ededed" />
+          <stop offset="0.4" stopColor="#ffffff" />
+          <stop offset="1" stopColor="#ededed" />
+        </linearGradient>
+      </defs>
       {grid.map((y, i) => (
         <line key={i} x1={0} x2={width} y1={y} y2={y} className={s.grid} />
       ))}
@@ -635,6 +652,7 @@ function Chart({
             ))}
             {shape.threads && <path d={shape.threads} className={s.threads} />}
             <path d={shape.crown} className={s.crown} />
+            <ellipse className={s.gloss} cx={-shape.dims.crownW * 0.2} cy={shape.dims.crownH * 0.6} rx={shape.dims.crownW * 0.08} ry={shape.dims.crownH * 0.2} />
           </g>
         );
       })}

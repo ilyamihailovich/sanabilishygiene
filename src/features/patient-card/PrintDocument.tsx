@@ -14,7 +14,7 @@ interface Props {
   renders: Partial<Record<'upper' | 'lower' | 'front', string>>;
 }
 
-const BENTO_BASE = '#f6f4fa';
+const BENTO_BASE = '#ffffff';
 
 /** Печатная версия A4: та же структура блоков, белый фон, размеры подписаны текстом для ч/б печати. */
 export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
@@ -83,6 +83,29 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
         </section>
       )}
 
+      {/* скрининг и кровоточивость компактны: встают сразу под картой и заполняют первую страницу */}
+      <div className={s.cols}>
+        {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
+          <section className={`${s.block} ${s.bento}`} style={toneStyle(psrTone(snapshot.psr.summary.maxCode), BENTO_BASE)}>
+            <h2 className={s.blockTitle}>{ui.patient.screening}</h2>
+            <Screening snapshot={snapshot} />
+          </section>
+        )}
+        {map && map.boib.pct !== null && (
+          <section className={`${s.block} ${s.bento}`} style={toneStyle(boibTone(map.boib.pct), BENTO_BASE)}>
+            <h2 className={s.blockTitle}>{ui.patient.bleeding}</h2>
+            <Bleeding snapshot={snapshot} />
+          </section>
+        )}
+      </div>
+
+      {(snapshot.nextVisit.date || snapshot.nextVisit.months) && (
+        <section className={s.block}>
+          <h2 className={s.blockTitle}>{ui.patient.nextVisit}</h2>
+          <NextVisit snapshot={snapshot} />
+        </section>
+      )}
+
       {rows.length > 0 && (
         <section className={s.block}>
           <h2 className={s.blockTitle}>{ui.patient.yourBrushes}</h2>
@@ -112,27 +135,7 @@ export function PrintDocument({ snapshot, qrSvg, renders }: Props) {
         </section>
       ))}
 
-      <div className={s.cols}>
-        {snapshot.psr && snapshot.psr.summary.maxCode !== null && (
-          <section className={`${s.block} ${s.bento}`} style={toneStyle(psrTone(snapshot.psr.summary.maxCode), BENTO_BASE)}>
-            <h2 className={s.blockTitle}>{ui.patient.screening}</h2>
-            <Screening snapshot={snapshot} />
-          </section>
-        )}
-        {map && map.boib.pct !== null && (
-          <section className={`${s.block} ${s.bento}`} style={toneStyle(boibTone(map.boib.pct), BENTO_BASE)}>
-            <h2 className={s.blockTitle}>{ui.patient.bleeding}</h2>
-            <Bleeding snapshot={snapshot} />
-          </section>
-        )}
-      </div>
 
-      {(snapshot.nextVisit.date || snapshot.nextVisit.months) && (
-        <section className={s.block}>
-          <h2 className={s.blockTitle}>{ui.patient.nextVisit}</h2>
-          <NextVisit snapshot={snapshot} />
-        </section>
-      )}
     </article>
   );
 }

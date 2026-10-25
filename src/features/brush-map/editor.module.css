@@ -199,7 +199,7 @@ button.need[aria-pressed='true'] {
 .needCount {
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .needCount {
@@ -223,17 +223,18 @@ button.need[aria-pressed='true'] {
 
 .indexValue {
   font-size: var(--fs-display);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-display);
   line-height: 1;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
+  /* цифры показателей — индиго, плотнее по трекингу */
+  color: var(--color-figure);
+  letter-spacing: -0.03em;
 }
 
 .indexMeta {
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .indexNote {
@@ -254,7 +255,7 @@ button.need[aria-pressed='true'] {
   font-size: var(--fs-title3);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-title);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .hover {
@@ -273,7 +274,7 @@ button.need[aria-pressed='true'] {
 
 .hoverTitle {
   font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .shortcuts {
@@ -284,7 +285,7 @@ button.need[aria-pressed='true'] {
 }
 
 .shortcuts dt {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .shortcuts kbd {
@@ -375,7 +376,7 @@ button.need[aria-pressed='true'] {
   padding: 0 16px 0 12px;
   border: 0;
   border-radius: var(--radius-capsule);
-  background: var(--accent-fill);
+  background: var(--accent);
   color: #fff;
   font: inherit;
   font-size: var(--fs-caption);
@@ -391,7 +392,7 @@ button.need[aria-pressed='true'] {
 }
 
 .dictate[aria-pressed='true'] {
-  background: #d23c5a;
+  background: #462c6c;
 }
 
 /* прокрутка к сцене (диктовка) оставляет место под липкой шапкой и вкладками */

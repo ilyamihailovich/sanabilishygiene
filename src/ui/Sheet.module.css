@@ -52,8 +52,6 @@
 .title {
   font-size: var(--fs-callout);
   font-weight: var(--fw-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
   letter-spacing: var(--tracking-title);
 }
 
