@@ -44,7 +44,7 @@
   --color-border-strong: rgba(17, 17, 17, 0.16);
   --stroke: 1.5px;
 
-  /* Акцент — индиго: главные кнопки, выбранное, цифры показателей. Лаванда — мягкие подложки и графики. */
+  /* Акцент — индиго: выбранное, ссылки, данные графиков. Лаванда — заливка кнопок и мягкие подложки. */
   --accent: var(--palette-indigo);
   --accent-hover: rgba(70, 44, 108, 0.9);
   --accent-pressed: var(--palette-indigo);
@@ -54,8 +54,8 @@
   --accent-fill-hover: rgba(167, 140, 213, 0.88);
   --accent-fill-pressed: rgba(167, 140, 213, 0.8);
   --lavender: var(--palette-lavender);
-  /* Цифры показателей */
-  --color-figure: var(--palette-indigo);
+  /* Цифры показателей: тёмно-серый с прозрачностью 60 % */
+  --color-figure: rgba(17, 17, 17, 0.6);
 
   --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--palette-indigo);
 

@@ -214,7 +214,7 @@
   letter-spacing: 0;
   color: var(--color-text);
   opacity: 0.45;
-  vertical-align: 0.25em;
+  vertical-align: baseline;
 }
 
 .number {

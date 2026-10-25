@@ -13,7 +13,7 @@
 .heroValue {
   font-size: 40px;
   font-variant-numeric: proportional-nums;
-  /* цифры показателей — индиго, плотнее по трекингу */
+  /* цифры показателей — тёмно-серые с прозрачностью, плотнее по трекингу */
   color: var(--color-figure);
   letter-spacing: -0.03em;
 }
@@ -83,11 +83,10 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin-top: auto;
   line-height: 1;
   font-size: 40px;
   font-variant-numeric: proportional-nums;
-  /* цифры показателей — индиго, плотнее по трекингу */
+  /* цифры показателей — тёмно-серые с прозрачностью, плотнее по трекингу */
   color: var(--color-figure);
   letter-spacing: -0.03em;
 }
@@ -103,6 +102,14 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-2);
+  margin-top: auto;
+}
+
+.tileMain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .delta,
@@ -471,4 +478,16 @@
   .hero {
     grid-column: 1 / -1;
   }
+}
+
+/* Нижние карточки: следующий визит и быстрый доступ к документам */
+.bottomCard {
+  gap: var(--space-3);
+}
+
+.bottomMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: auto;
 }

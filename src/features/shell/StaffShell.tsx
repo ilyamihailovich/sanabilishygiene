@@ -13,6 +13,7 @@ import { Logo } from '@/ui/Logo';
 import { spring } from '@/ui/motion';
 import { Popover } from '@/ui/Popover';
 import { ToastProvider } from '@/ui/Toast';
+import { AVATAR_EVENT } from '../account/ProfileCard';
 import { IdleWatcher } from './IdleWatcher';
 import { StaffProvider, type StaffInfo } from './StaffContext';
 import s from './shell.module.css';
@@ -73,6 +74,15 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
     setThumb(tab ? { x: tab.offsetLeft, width: tab.offsetWidth } : null);
   }, [activeTab, items.length]);
 
+  // фото из профиля сменилось: шапка показывает его сразу, без перезагрузки
+  const [avatar, setAvatar] = useState(staff.avatarUrl ?? null);
+  useEffect(() => setAvatar(staff.avatarUrl ?? null), [staff.avatarUrl]);
+  useEffect(() => {
+    const on = (e: Event) => setAvatar((e as CustomEvent<string | null>).detail);
+    window.addEventListener(AVATAR_EVENT, on);
+    return () => window.removeEventListener(AVATAR_EVENT, on);
+  }, []);
+
   const initials = staff.displayName
     .split(' ')
     .slice(0, 2)
@@ -104,7 +114,7 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
               </span>
               <span className={s.avatar} aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {staff.avatarUrl ? <img src={staff.avatarUrl} alt="" className={s.avatarImg} /> : initials}
+                {avatar ? <img src={avatar} alt="" className={s.avatarImg} /> : initials}
               </span>
             </button>
           </div>

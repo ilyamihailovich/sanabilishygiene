@@ -23,3 +23,24 @@ export function byBrandOrder<T extends { brand: string; line: string }>(items: T
     .sort((a, b) => brandRank(brushBrand(a.c)) - brandRank(brushBrand(b.c)) || a.i - b.i)
     .map(({ c }) => c);
 }
+
+export interface BrandSummary {
+  /** Производитель с линейкой: «Curaprox Prime». */
+  name: string;
+  count: number;
+  /** Цвета размеров по порядку каталога. */
+  colors: string[];
+}
+
+/** Марки каталога для главной: число размеров и их цвета, архивные позиции не учитываются. */
+export function summarizeBrands(items: Array<{ brand: string; line: string; colorHex: string; archived?: boolean }>): BrandSummary[] {
+  const map = new Map<string, BrandSummary>();
+  for (const c of byBrandOrder(items.filter((i) => !i.archived))) {
+    const name = brushBrand(c);
+    const b = map.get(name) ?? { name, count: 0, colors: [] };
+    b.count += 1;
+    b.colors.push(c.colorHex);
+    map.set(name, b);
+  }
+  return [...map.values()];
+}

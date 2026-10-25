@@ -38,5 +38,11 @@ export function staffInfo(session: CurrentSession): StaffInfo {
     permissions: ALL.filter((p) => can(session.user.role, p)),
     prefs: prefsSchema.parse(session.user.prefs ?? {}),
     idleTimeoutMin: session.idleTimeoutMin,
+    avatarUrl: avatarUrl(session.user.id, prefsSchema.parse(session.user.prefs ?? {})),
   };
+}
+
+/** Адрес фото профиля или null, если фото не загружено. */
+export function avatarUrl(userId: string, prefs: { avatar: string | null; avatarRev: number }): string | null {
+  return prefs.avatar ? `/api/v1/files/avatar/${userId}?v=${prefs.avatarRev}` : null;
 }

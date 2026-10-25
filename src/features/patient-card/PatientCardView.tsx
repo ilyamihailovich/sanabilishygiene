@@ -9,6 +9,7 @@ import type { IssueSnapshot } from '@/schemas/snapshot';
 import { Button } from '@/ui/Button';
 import { CounterChip } from '@/ui/Chip';
 import { GlassPanel, glassClass } from '@/ui/Glass';
+import { JawFade } from '../brush-map/scheme/JawFade';
 import { Heading } from '@/ui/Heading';
 import { IconDownload, IconShare } from '@/ui/icons';
 import { Logo } from '@/ui/Logo';
@@ -106,7 +107,7 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
 
   return (
     <div className={s.page}>
-      <header className={cx(s.header, scrolled && glassClass, scrolled && s.headerScrolled)}>
+      <header className={cx(s.header, scrolled && s.headerScrolled)}>
         <div className={s.headerInner}>
           <span className={s.brand}>
             <Logo height={14} />
@@ -132,8 +133,9 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
         </div>
 
         {map && (
-          <section className={cx(s.block, s.mapBlock)} aria-labelledby="pc-map">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          // заголовок карты и сцена — две отдельные плашки
+          <section className={s.mapGroup} aria-labelledby="pc-map">
+            <div className={cx(s.block, s.mapHead)}>
               <h2 id="pc-map" className={s.blockTitle}>
                 {ui.patient.brushMap}
               </h2>
@@ -183,28 +185,30 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
                 </>
               ) : (
                 <>
-                  <SchemeZoom bounds={jawBounds} target={zoomTarget} mirrored>
-                    {(box) => (
-                      <SchemeView
-                        mirrored
-                        content={map.content}
-                        elements={elements}
-                        visual={visual}
-                        highlight={highlight}
-                        selectedKey={info}
-                        box={box}
-                        live
-                        arch={jaw}
-                        readOnly
-                        markerRadius={15}
-                        onElement={(key, target) => {
-                          const el = elements.find((e) => e.key === key);
-                          if (el) setZoomTarget(elementAnchor(el));
-                          showInfo(key, target);
-                        }}
-                      />
-                    )}
-                  </SchemeZoom>
+                  <JawFade jaw={jaw}>
+                    <SchemeZoom bounds={jawBounds} target={zoomTarget} mirrored>
+                      {(box) => (
+                        <SchemeView
+                          mirrored
+                          content={map.content}
+                          elements={elements}
+                          visual={visual}
+                          highlight={highlight}
+                          selectedKey={info}
+                          box={box}
+                          live
+                          arch={jaw}
+                          readOnly
+                          markerRadius={15}
+                          onElement={(key, target) => {
+                            const el = elements.find((e) => e.key === key);
+                            if (el) setZoomTarget(elementAnchor(el));
+                            showInfo(key, target);
+                          }}
+                        />
+                      )}
+                    </SchemeZoom>
+                  </JawFade>
                   <div className={s.stageViews}>
                     <GlassPanel aria-label="Челюсть">
                       <Segmented

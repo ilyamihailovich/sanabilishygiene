@@ -60,6 +60,7 @@ import { VIEW_H, VIEW_W, archBox, elementAnchor, toothGeom } from './geometry';
 import { DictationPanel, type DictationEntry, type DictationRow, type PhraseOutcome } from './DictationPanel';
 import { HoverCard } from './HoverCard';
 import { catalogBrands, ElementForm } from './input/ElementForm';
+import { JawFade } from './scheme/JawFade';
 import { ToothForm } from './input/ToothForm';
 import { BoibCard, NeedCard, legendFromUsage } from './MapSummary';
 import { MirrorDialog } from './MirrorDialog';
@@ -581,23 +582,25 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
               transition={{ duration: 0.2 }}
             >
               {touch ? (
-                <SchemeZoom bounds={jawBounds} target={zoomTarget}>
-                  {(box) => (
-                    <SchemeView
-                      content={content}
-                      elements={elements}
-                      visual={visual}
-                      selectedKey={selectedKey}
-                      selectedTooth={selectedTooth}
-                      box={box}
-                      live
-                      arch={jaw}
-                      markerRadius={15}
-                      onElement={onElement}
-                      onTooth={onTooth}
-                    />
-                  )}
-                </SchemeZoom>
+                <JawFade jaw={jaw}>
+                  <SchemeZoom bounds={jawBounds} target={zoomTarget}>
+                    {(box) => (
+                      <SchemeView
+                        content={content}
+                        elements={elements}
+                        visual={visual}
+                        selectedKey={selectedKey}
+                        selectedTooth={selectedTooth}
+                        box={box}
+                        live
+                        arch={jaw}
+                        markerRadius={15}
+                        onElement={onElement}
+                        onTooth={onTooth}
+                      />
+                    )}
+                  </SchemeZoom>
+                </JawFade>
               ) : (
                 <SchemeZoom ref={zoom} bounds={FULL_BOX} intro={false} target={deskTarget}>
                   {(box) => (

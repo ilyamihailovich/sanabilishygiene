@@ -2,11 +2,13 @@ import { patientTitle } from '@/domain/patient';
 import { HomeBento } from '@/features/home/HomeBento';
 import { requireStaff } from '@/server/auth/guard';
 import { db } from '@/server/db';
+import { summarizeBrands } from '@/domain/brushes';
+import { listCatalog } from '@/server/services/catalog';
 import { recentPatients } from '@/server/services/patients';
 
 export default async function HomePage() {
   const session = await requireStaff();
-  const [recent, drafts, templates, personal, unverified] = await Promise.all([
+  const [recent, drafts, templates, personal, unverified, catalog] = await Promise.all([
     recentPatients(session.user.id),
     db().visit.findMany({
       where: { status: 'DRAFT', OR: [{ createdById: session.user.id }, { documents: { some: { authorId: session.user.id } } }] },
@@ -17,6 +19,7 @@ export default async function HomePage() {
     db().template.count({ where: { status: 'ACTIVE', OR: [{ ownerId: null }, { ownerId: session.user.id }] } }),
     db().template.count({ where: { status: 'ACTIVE', ownerId: session.user.id } }),
     db().brushSize.count({ where: { archived: false, verified: false } }),
+    listCatalog(),
   ]);
   return (
     <HomeBento
@@ -38,6 +41,7 @@ export default async function HomePage() {
       templates={templates}
       personalTemplates={personal}
       catalogUnverified={unverified}
+      catalogBrands={summarizeBrands(catalog)}
     />
   );
 }

@@ -91,7 +91,7 @@ export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl
       </div>
 
       {history.length ? (
-        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} />
+        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} reportUrl={reportUrl} />
       ) : (
         <p className={s.sub}>{ui.patients.noVisits}</p>
       )}

@@ -1,6 +1,7 @@
 import { TemplateLibrary } from '@/features/templates/TemplateLibrary';
 import { requireStaff } from '@/server/auth/guard';
 import { listTemplates } from '@/server/services/templates';
+import { templateStructureSchema } from '@/schemas/template';
 
 export default async function TemplatesPage() {
   const session = await requireStaff();
@@ -16,6 +17,8 @@ export default async function TemplatesPage() {
         version: t.versions[0]?.version ?? null,
         updatedAt: t.updatedAt.toISOString(),
         hasDraft: t.draft !== null,
+        // опубликованная версия: её видит врач, который не может править шаблон клиники
+        structure: t.versions[0] ? templateStructureSchema.parse(t.versions[0].structure) : null,
       }))}
     />
   );

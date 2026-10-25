@@ -104,6 +104,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  border-radius: var(--radius-card-sm);
 }
 
 .brushRow > [role='group'] {
@@ -250,8 +251,8 @@ button.need[aria-pressed='true'] {
 }
 
 .indexValue {
-  font-size: clamp(88px, 8.4vw, 124px);
-  line-height: 0.82;
+  font-size: clamp(52px, 4.4vw, 64px);
+  line-height: 0.9;
   white-space: nowrap;
   font-variant-numeric: proportional-nums;
   color: var(--color-figure);

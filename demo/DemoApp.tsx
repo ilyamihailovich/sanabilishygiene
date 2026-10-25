@@ -3,6 +3,7 @@ import s0 from '@/features/account/account.module.css';
 import { ChangePasswordForm } from '@/features/account/ChangePasswordForm';
 import { HotkeyOrder } from '@/features/account/HotkeyOrder';
 import { LogoutAllCard } from '@/features/account/LogoutAllCard';
+import { ProfileCard } from '@/features/account/ProfileCard';
 import { LoginForm } from '@/features/auth/LoginForm';
 import { HomeBento } from '@/features/home/HomeBento';
 import { PatientCardView } from '@/features/patient-card/PatientCardView';
@@ -18,9 +19,10 @@ import { emptyBrushMap } from '@/domain/brushMap';
 import { patientTitle } from '@/domain/patient';
 import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 import { emptyPsr } from '@/domain/psr';
+import { CatalogAdmin } from '@/features/admin/CatalogAdmin';
 import { ALL_TEETH, emptyPerio, summarizePerio } from '@/domain/perio';
 import { visitMetrics, type VisitMetrics } from '@/domain/history';
-import { brushBrand } from '@/domain/brushes';
+import { brushBrand, byBrandOrder, summarizeBrands } from '@/domain/brushes';
 import { PatientReport } from '@/features/patients/PatientReport';
 import type { PerioContent } from '@/schemas/perio';
 import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
@@ -71,8 +73,9 @@ const staff: StaffInfo = {
   displayName: sample.doctor.displayName,
   role: 'DOCTOR',
   roleLabel: 'Врач',
-  permissions: ['patient.write', 'visit.write', 'visit.delete', 'document.write', 'issue.create', 'link.manage', 'template.personal', 'texts.approve'],
-  prefs: { mapMode: 'three', sizeHotkeys: [] },
+  // каталог в прототипе можно править, чтобы показать его целиком; в приложении это право выдаёт администратор
+  permissions: ['patient.write', 'visit.write', 'visit.delete', 'document.write', 'issue.create', 'link.manage', 'template.personal', 'texts.approve', 'catalog.manage'],
+  prefs: { mapMode: 'three', sizeHotkeys: [], avatar: null, avatarRev: 0 },
   idleTimeoutMin: 240,
   avatarUrl: avatar,
 };
@@ -148,6 +151,35 @@ function demoPerio(): PerioContent {
   c.teeth['16']!.note = 'Обнажение фуркации, контроль через 3 месяца';
   return c;
 }
+
+/**
+ * Документы прошлых визитов прототипа: открываются из ленты визитов заполненными, как их оставил врач.
+ * Карта — образец визита, коды скрининга — из истории, пародонтограмма — образец, тексты — из шаблонов.
+ */
+function historyDocs(v: DemoVisit): VisitDoc[] {
+  return v.documents.map((type, i) => {
+    let content: unknown;
+    let templateVersionId: string | null = null;
+    if (type === 'BRUSH_MAP') content = mainMap;
+    else if (type === 'PSR') {
+      const c = emptyPsr();
+      const code = v.psr ?? 0;
+      const codes = { S1: code, S2: Math.max(0, code - 1), S3: code, S4: code, S5: Math.max(0, code - 2), S6: Math.max(0, code - 1) };
+      for (const [k, value] of Object.entries(codes)) c.sextants[k as keyof typeof c.sextants] = { code: value as never, asterisk: v.psrStar && k === 'S1' };
+      content = c;
+    } else if (type === 'PERIO_CHART') content = demoPerio();
+    else {
+      const t = templates.find((x) => x.kind === (type === 'HYGIENE_PLAN' ? 'HYGIENE_PLAN' : 'AFTERCARE'))!;
+      content = fillFromTemplate(t.id, t.version, t.title, t.structure);
+      templateVersionId = `${t.id}-v${t.version}`;
+    }
+    return { id: `d-${v.id}-${i}`, type, rev: 1, content, templateVersionId };
+  });
+}
+
+for (const v of visits) if (v.id !== MAIN_VISIT) seedDocs(v.id, historyDocs(v));
+// у визита образца в ленте есть пародонтограмма: она же открывается из визита
+if (!documents.some((d) => d.type === 'PERIO_CHART')) addDoc(MAIN_VISIT, { id: 'd-main-perio', type: 'PERIO_CHART', rev: 1, content: demoPerio(), templateVersionId: null });
 
 const catalogRef = (id: string) => {
   const c = catalog.find((x) => x.id === id);
@@ -231,7 +263,7 @@ const furcationTeeth = (() => {
     .map(([k]) => Number(k));
 })();
 
-function Visit({ id }: { id: string }) {
+function Visit({ id, step }: { id: string; step: string | null }) {
   const main = id === MAIN_VISIT;
   const v = visits.find((x) => x.id === id);
   // Новый визит из карточки пациента: id вида v-new-<patientId>
@@ -243,7 +275,7 @@ function Visit({ id }: { id: string }) {
   return (
     <VisitWorkspace
       key={id}
-      step="map"
+      step={step}
       staff={staff}
       visit={{
         id,
@@ -269,9 +301,10 @@ function Visit({ id }: { id: string }) {
   );
 }
 
-function StaffRoutes({ path }: { path: string }) {
+function StaffRoutes({ path: full }: { path: string }) {
+  const [path = '/', query = ''] = full.split('?');
   const [, section, id] = path.split('/');
-  if (section === 'visits' && id) return <Visit id={id} />;
+  if (section === 'visits' && id) return <Visit id={id} step={new URLSearchParams(query).get('step')} />;
   if (section === 'patients' && id) {
     const p = patients.find((x) => x.id === id) ?? patients[0]!;
     return (
@@ -314,17 +347,40 @@ function StaffRoutes({ path }: { path: string }) {
   }
   if (section === 'templates') return <TemplateLibrary templates={templates} />;
   if (section === 'account') {
+    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const recentVisits = visits.filter((v) => v.date >= since);
     return (
-      <div className={s0.stack}>
-        <Heading as="h1" level="title1" rest={staff.displayName}>
+      <div className={s0.page}>
+        <Heading as="h1" level="title1">
           {ui.nav.account}
         </Heading>
-        <ChangePasswordForm />
-        <HotkeyOrder items={catalog.map((c) => ({ id: c.id, label: c.label, colorHex: c.colorHex }))} initial={[]} />
-        <LogoutAllCard />
+        <ProfileCard
+          name={staff.displayName}
+          title={sample.doctor.title}
+          email="voronova@sanabilis.ru"
+          roleLabel={staff.roleLabel}
+          avatarUrl={staff.avatarUrl ?? null}
+          stats={{
+            visits30: recentVisits.length,
+            issued30: recentVisits.filter((v) => v.status === 'ISSUED').length,
+            patients: new Set(visits.map((v) => v.patientId)).size,
+            personalTemplates: templates.filter((t) => t.personal).length,
+          }}
+        />
+        <div className={s0.columns}>
+          <section className={s0.section}>
+            <HotkeyOrder items={byBrandOrder(catalog).map((c) => ({ id: c.id, label: c.label, colorHex: c.colorHex, brand: brushBrand(c) }))} initial={[]} />
+          </section>
+          <section className={s0.section}>
+            <h2 className={s0.sectionTitle}>Безопасность</h2>
+            <ChangePasswordForm />
+            <LogoutAllCard />
+          </section>
+        </div>
       </div>
     );
   }
+  if (section === 'admin' && id === 'catalog') return <CatalogAdmin items={catalog} brand={new URLSearchParams(query).get('brand')} />;
   if (section === 'admin') {
     return (
       <Card className={s.placeholder}>
@@ -352,6 +408,7 @@ function StaffRoutes({ path }: { path: string }) {
       templates={templates.length}
       personalTemplates={0}
       catalogUnverified={0}
+      catalogBrands={summarizeBrands(catalog)}
     />
   );
 }

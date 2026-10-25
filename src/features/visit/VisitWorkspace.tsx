@@ -71,7 +71,10 @@ interface Props {
 }
 
 export function VisitWorkspace(props: Props) {
-  const { visit, documents, staff } = props;
+  const { documents, staff } = props;
+  // правки шапки визита видны сразу, не дожидаясь ответа сервера и обновления страницы
+  const [edits, setEdits] = useState<Partial<Props['visit']>>({});
+  const visit = { ...props.visit, ...edits };
   const router = useRouter();
   const toast = useToast();
   const [step, setStepState] = useState<StepKey>(STEPS.includes(props.step as StepKey) ? (props.step as StepKey) : 'map');
@@ -99,7 +102,8 @@ export function VisitWorkspace(props: Props) {
   const docOf = (type: VisitDoc['type']) => documents.find((d) => d.type === type) ?? null;
 
 
-  const patchVisit = async (patch: Record<string, unknown>) => {
+  const patchVisit = async (patch: Partial<Props['visit']>) => {
+    setEdits((e) => ({ ...e, ...patch }));
     try {
       await api.patch(`/api/v1/visits/${visit.id}`, patch);
       router.refresh();

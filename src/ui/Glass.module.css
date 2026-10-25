@@ -26,7 +26,13 @@
   align-items: center;
   gap: var(--space-1);
   padding: 6px;
-  border-radius: var(--radius-capsule);
+  /* плавающие панели над сценой — округлые капсулы */
+  border-radius: 999px;
+}
+
+/* в округлой панели кнопки тоже круглые */
+.panel button {
+  border-radius: 50%;
 }
 
 .vertical {

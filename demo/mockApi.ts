@@ -46,6 +46,7 @@ export function installMockApi(patientUrl: string, patients: Array<{ id: string;
     }
     const newVisit = /^\/api\/v1\/patients\/([^/]+)\/visits$/.exec(path);
     if (newVisit && method === 'POST') return json({ id: `v-new-${newVisit[1]}` });
+    if (path === '/api/v1/admin/brushes' && method === 'POST') return json({ id: `b-${Math.random().toString(36).slice(2, 10)}` }, 201);
     const copy = /^\/api\/v1\/templates\/([^/]+)\/copy$/.exec(path);
     if (copy) return json({ id: copy[1] });
     if (path.endsWith('/draft')) return json({ lint: [] });

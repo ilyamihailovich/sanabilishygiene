@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ui } from '@/content/ui.ru';
+import { fillFromTemplate } from '@/domain/documents';
+import type { TemplateStructure } from '@/schemas/template';
+import { DocumentBody } from '../patient-card/blocks';
 import { ApiError, api } from '@/ui/api';
 import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
@@ -25,6 +28,8 @@ interface Row {
   version: number | null;
   updatedAt: string;
   hasDraft: boolean;
+  /** Опубликованный текст для просмотра; null — шаблон ещё не опубликован. */
+  structure?: TemplateStructure | null;
 }
 
 type Tab = 'library' | 'personal' | 'archived';
@@ -46,6 +51,10 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
     box.scrollTo({ left: box.scrollLeft + r.left - b.left - (b.width - r.width) / 2, behavior: 'smooth' });
   }, [tab]);
   const [create, setCreate] = useState(false);
+  const [preview, setPreview] = useState<Row | null>(null);
+  const editable = (t: Row) => t.personal || canLibrary;
+  // карточка открывает редактор, если шаблон можно править, иначе — просмотр текста
+  const open = (t: Row) => (editable(t) ? router.push(`/templates/${t.id}`) : setPreview(t));
   const [title, setTitle] = useState('');
   const [kind, setKind] = useState<'HYGIENE_PLAN' | 'AFTERCARE'>('AFTERCARE');
 
@@ -95,7 +104,20 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
       {rows.length ? (
         <div className={s.picker}>
           {rows.map((t) => (
-            <div key={t.id} className={s.pickCard} style={{ cursor: 'default' }}>
+            <div
+              key={t.id}
+              className={s.pickCard}
+              role="button"
+              tabIndex={0}
+              aria-label={`${editable(t) ? ui.templates.edit : 'Открыть'}: ${t.title}`}
+              onClick={() => open(t)}
+              onKeyDown={(e) => {
+                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  open(t);
+                }
+              }}
+            >
               <div>
                 <span className={s.kindChip}>{ui.templates.kinds[t.kind]}</span>
                 <p className={s.pickTitle} style={{ marginTop: 'var(--space-3)' }}>
@@ -107,7 +129,7 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
                   {t.version ? `${ui.templates.version} ${t.version}` : ''} · {formatDate(t.updatedAt)}
                   {t.hasDraft ? ' · черновик' : ''}
                 </span>
-                <span className={s.docActions}>
+                <span className={s.docActions} onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="sm" onClick={() => copy(t.id)}>
                     {ui.templates.copy}
                   </Button>
@@ -126,6 +148,32 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
       ) : (
         <p className={s.kind}>{ui.templates.empty}</p>
       )}
+      <Dialog
+        open={preview !== null}
+        onClose={() => setPreview(null)}
+        title={preview?.title ?? ''}
+        actions={
+          preview && canPersonal ? (
+            <Button
+              onClick={() => {
+                const id = preview.id;
+                setPreview(null);
+                void copy(id);
+              }}
+            >
+              {ui.templates.copy}
+            </Button>
+          ) : undefined
+        }
+      >
+        {preview?.structure ? (
+          <div className={s.preview}>
+            <DocumentBody doc={fillFromTemplate(preview.id, preview.version ?? 0, preview.title, preview.structure)} brushes={[]} />
+          </div>
+        ) : (
+          <p className={s.kind}>Шаблон ещё не опубликован.</p>
+        )}
+      </Dialog>
       <Dialog
         open={create}
         onClose={() => setCreate(false)}

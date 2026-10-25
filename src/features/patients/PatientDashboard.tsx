@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { brushChanges, delta, type VisitMetrics } from '@/domain/history';
+import { brushChanges, delta, type DocType, type VisitMetrics } from '@/domain/history';
 import { SEXTANTS } from '@/schemas/psr';
 import { Card, CardHeader } from '@/ui/Card';
 import { CounterChip } from '@/ui/Chip';
@@ -173,12 +173,15 @@ function MetricTile({ metric, history, onOpen }: { metric: Metric; history: Visi
   return (
     <button type="button" className={s.tile} onClick={onOpen}>
       <span className={s.tileTitle}>{metric.title}</span>
-      <span className={s.tileValue}>
-        {metric.format ? metric.format(last.v).split(' · ')[0] : comma(last.value)}
-        {!metric.format && metric.unit && <small>{metric.unit}</small>}
-      </span>
+      {/* значение и динамика — одной группой у нижнего края, график справа */}
       <span className={s.tileFoot}>
-        <Delta value={delta(values)} metric={metric} />
+        <span className={s.tileMain}>
+          <span className={s.tileValue}>
+            {metric.format ? metric.format(last.v).split(' · ')[0] : comma(last.value)}
+            {!metric.format && metric.unit && <small>{metric.unit}</small>}
+          </span>
+          <Delta value={delta(values)} metric={metric} />
+        </span>
         <Sparkline values={values} />
       </span>
     </button>
@@ -397,7 +400,17 @@ function Timeline({ history, clinicians }: { history: VisitMetrics[]; clinicians
   );
 }
 
-export function PatientDashboard({ history, clinicians, nextVisit }: { history: VisitMetrics[]; clinicians: Record<string, string | null>; nextVisit: string | null }) {
+export function PatientDashboard({
+  history,
+  clinicians,
+  nextVisit,
+  reportUrl,
+}: {
+  history: VisitMetrics[];
+  clinicians: Record<string, string | null>;
+  nextVisit: string | null;
+  reportUrl?: string;
+}) {
   const [openMetric, setOpenMetric] = useState<Metric | null>(null);
   const tiles = METRICS.filter((m) => history.some((v) => m.get(v) !== null));
   const last = history[0];
@@ -439,7 +452,81 @@ export function PatientDashboard({ history, clinicians, nextVisit }: { history: 
       <PsrStrip history={history} />
       <BrushSet history={history} />
       <Timeline history={history} clinicians={clinicians} />
+      <NextVisitCard nextVisit={nextVisit} last={last ?? null} />
+      <QuickDocs history={history} reportUrl={reportUrl} />
       <MetricDetail metric={openMetric} history={history} onClose={() => setOpenMetric(null)} />
     </div>
+  );
+}
+
+const DAY = 24 * 3600 * 1000;
+
+/** Следующий визит: дата и сколько осталось; без даты — подсказка назначить его в визите. */
+function NextVisitCard({ nextVisit, last }: { nextVisit: string | null; last: VisitMetrics | null }) {
+  const days = nextVisit ? Math.ceil((new Date(nextVisit).getTime() - Date.now()) / DAY) : null;
+  return (
+    <Card className={cx(s.wide, s.bottomCard)}>
+      <CardHeader title="Следующий визит" />
+      {nextVisit ? (
+        <div className={s.bottomMain}>
+          <span className={s.heroValue}>{formatDate(nextVisit)}</span>
+          <span className={s.heroMeta}>
+            {days === null ? '' : days > 0 ? `через ${days} ${plural(days, ['день', 'дня', 'дней'])}` : days === 0 ? 'сегодня' : `просрочен на ${-days} ${plural(-days, ['день', 'дня', 'дней'])}`}
+          </span>
+        </div>
+      ) : (
+        <p className={s.about}>Не назначен. Срок повторного визита указывается в шапке визита и попадает в напоминание пациенту.</p>
+      )}
+      {last && (
+        <Link className={s.doc} href={`/visits/${last.id}`}>
+          <span>Открыть последний визит</span>
+          <span className={s.docSum}>{formatDate(last.date)}</span>
+          <IconChevronRight size={16} />
+        </Link>
+      )}
+    </Card>
+  );
+}
+
+/** Быстрый доступ: свежие документы пациента без раскрытия ленты визитов. */
+function QuickDocs({ history, reportUrl }: { history: VisitMetrics[]; reportUrl?: string }) {
+  const latest = (type: DocType) => history.find((v) => v.documents.includes(type));
+  const issued = history.find((v) => v.lastIssueId);
+  const links: Array<{ href: string; label: string; sum: string; external?: boolean }> = [];
+  for (const type of ['BRUSH_MAP', 'PERIO_CHART', 'PSR'] as const) {
+    const v = latest(type);
+    if (v) links.push({ href: `/visits/${v.id}?step=${DOC_STEP[type]!.step}`, label: DOC_STEP[type]!.label, sum: formatDate(v.date) });
+  }
+  if (issued) links.push({ href: `/api/v1/issues/${issued.lastIssueId}/pdf`, label: 'PDF выдачи пациенту', sum: formatDate(issued.date), external: true });
+  // в прототипе отчёт открывается страницей (адрес с #), в приложении — PDF в новой вкладке
+  if (reportUrl)
+    links.push(
+      reportUrl.startsWith('#')
+        ? { href: reportUrl.slice(1), label: 'Отчёт по визитам', sum: 'PDF с графиками' }
+        : { href: reportUrl, label: 'Отчёт по визитам', sum: 'PDF с графиками', external: true },
+    );
+  return (
+    <Card className={cx(s.wide, s.bottomCard)}>
+      <CardHeader title="Последние документы" />
+      <ul className={s.docs}>
+        {links.map((l) => (
+          <li key={l.label}>
+            {l.external ? (
+              <a href={l.href} className={s.doc} target="_blank" rel="noreferrer">
+                <span>{l.label}</span>
+                <span className={s.docSum}>{l.sum}</span>
+                <IconChevronRight size={16} />
+              </a>
+            ) : (
+              <Link href={l.href} className={s.doc}>
+                <span>{l.label}</span>
+                <span className={s.docSum}>{l.sum}</span>
+                <IconChevronRight size={16} />
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

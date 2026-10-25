@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { countLabel } from '@/content/plural';
+import type { BrandSummary } from '@/domain/brushes';
 import { ui } from '@/content/ui.ru';
 import { Card, CardFooter, CardHeader } from '@/ui/Card';
 import { CounterChip } from '@/ui/Chip';
@@ -21,9 +22,11 @@ interface Props {
   templates: number;
   personalTemplates: number;
   catalogUnverified: number;
+  /** Марки каталога: число размеров и их цвета. */
+  catalogBrands: BrandSummary[];
 }
 
-export function HomeBento({ today, recent, drafts, templates, personalTemplates, catalogUnverified }: Props) {
+export function HomeBento({ today, recent, drafts, templates, personalTemplates, catalogUnverified, catalogBrands }: Props) {
   const canCatalog = useCan('catalog.manage');
   return (
     <div className={s.bento}>
@@ -109,12 +112,39 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
           title={ui.home.catalog}
           action={
             canCatalog ? (
-              <Link href="/admin/catalog" aria-label={ui.home.catalog}>
+              <Link href="/admin/catalog" aria-label={ui.home.catalog} style={{ color: 'var(--color-text)', display: 'inline-flex' }}>
                 <IconChevronRight size={20} />
               </Link>
             ) : undefined
           }
         />
+        {/* марки по порядку выбора: цвета размеров и их число; нажатие открывает марку в каталоге */}
+        <ul className={s.brands}>
+          {catalogBrands.map((b) => {
+            const row = (
+              <>
+                <span className={s.brandName}>{b.name}</span>
+                <span className={s.brandDots} aria-hidden="true">
+                  {b.colors.slice(0, 12).map((c, i) => (
+                    <i key={i} style={{ background: c }} />
+                  ))}
+                </span>
+                <span className={s.sub}>{countLabel(b.count, ['размер', 'размера', 'размеров'])}</span>
+              </>
+            );
+            return (
+              <li key={b.name}>
+                {canCatalog ? (
+                  <Link href={`/admin/catalog?brand=${encodeURIComponent(b.name)}`} className={s.brand}>
+                    {row}
+                  </Link>
+                ) : (
+                  <div className={s.brand}>{row}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
         <CardFooter>
           {catalogUnverified > 0 ? <Notice>{ui.catalog.notVerified}</Notice> : <span className={s.sub}>Все позиции проверены</span>}
         </CardFooter>

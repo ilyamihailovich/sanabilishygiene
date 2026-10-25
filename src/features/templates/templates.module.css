@@ -320,3 +320,9 @@
   font-size: 13px;
   line-height: 1.3;
 }
+
+/* просмотр шаблона клиники: текст прокручивается внутри окна */
+.preview {
+  max-height: min(60vh, 560px);
+  overflow-y: auto;
+}

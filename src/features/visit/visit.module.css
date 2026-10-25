@@ -48,6 +48,11 @@
   box-shadow: inset 0 0 0 1.5px var(--color-text);
 }
 
+.metaInput:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 select.metaInput {
   appearance: none;
   padding-right: 32px;
@@ -332,7 +337,8 @@ select.metaInput {
   letter-spacing: 0;
   color: var(--color-text);
   opacity: 0.45;
-  vertical-align: 0.25em;
+  /* номер карты стоит на базовой линии имени */
+  vertical-align: baseline;
 }
 
 .headSlot:empty {

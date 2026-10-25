@@ -100,7 +100,6 @@
   border: 0;
   border-radius: var(--radius-inner);
   background: var(--color-surface-muted);
-  box-shadow: inset 0 0 0 1px var(--color-separator);
   color: inherit;
   font: inherit;
   text-align: left;
@@ -111,8 +110,7 @@
 }
 
 .star[aria-checked='true'] {
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1.5px var(--accent);
+  background: rgba(167, 140, 213, 0.24);
 }
 
 .star:disabled {
@@ -164,7 +162,7 @@
   font-size: var(--fs-display);
   line-height: 1;
   font-variant-numeric: proportional-nums;
-  /* цифры показателей — индиго, плотнее по трекингу */
+  /* цифры показателей — тёмно-серые с прозрачностью, плотнее по трекингу */
   color: var(--color-figure);
   letter-spacing: -0.03em;
 }

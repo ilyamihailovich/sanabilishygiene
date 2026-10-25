@@ -57,10 +57,7 @@
 
 .thumbGlow {
   /* к середине акцент становится полупрозрачным; контраст цифры с белым сохраняется (~4,8:1) */
-  background: radial-gradient(circle at 50% 50%, rgba(167, 140, 213, 0.75) 0%, rgba(167, 140, 213, 0.9) 55%, var(--accent-fill) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    0 4px 14px rgba(167, 140, 213, 0.4);
+  background: var(--accent-fill);
 }
 
 .thumbRing {

@@ -22,7 +22,7 @@ export async function listTemplates(session: CurrentSession, kind?: TemplateKind
   return db().template.findMany({
     where: { ...(kind ? { kind } : {}), OR: [{ ownerId: null }, { ownerId: session.user.id }] },
     orderBy: [{ status: 'asc' }, { sortOrder: 'asc' }, { title: 'asc' }],
-    include: { versions: { orderBy: { version: 'desc' }, take: 1, select: { version: true, createdAt: true } } },
+    include: { versions: { orderBy: { version: 'desc' }, take: 1, select: { version: true, createdAt: true, structure: true } } },
   });
 }
 

@@ -40,12 +40,12 @@
 
 .startTitle {
   margin-top: var(--space-2);
-  /* заголовок и поле прижаты к нижнему краю карточки, дата — к верхнему */
-  margin-top: auto;
-  padding-top: var(--space-8);
-  font-size: 44px;
+  /* заголовок прописными сразу под датой */
+  margin: var(--space-3) 0 var(--space-8);
+  text-transform: uppercase;
+  font-size: 40px;
   font-weight: var(--fw-semibold);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   line-height: 1.05;
 }
 
@@ -59,6 +59,7 @@
 }
 
 .searchRow {
+  margin-top: auto;
   display: flex;
   gap: var(--space-2);
   margin-top: var(--space-8);
@@ -142,7 +143,7 @@
   font-size: var(--fs-title1);
   line-height: 1;
   font-variant-numeric: proportional-nums;
-  /* цифры показателей — индиго, плотнее по трекингу */
+  /* цифры показателей — тёмно-серые с прозрачностью, плотнее по трекингу */
   color: var(--color-figure);
   letter-spacing: -0.03em;
 }
@@ -284,4 +285,50 @@
   background: transparent;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
   color: rgba(255, 255, 255, 0.85);
+}
+
+/* Каталог на главной: строка на марку — название, цвета размеров, число */
+.brands {
+  display: flex;
+  flex-direction: column;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brands li + li {
+  border-top: 1px solid var(--color-separator);
+}
+
+.brand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'name count' 'dots dots';
+  align-items: center;
+  gap: 6px var(--space-3);
+  padding: var(--space-3) 0;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.brandName {
+  grid-area: name;
+}
+
+.brand .sub {
+  grid-area: count;
+}
+
+.brandDots {
+  grid-area: dots;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.brandDots i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.25);
 }
