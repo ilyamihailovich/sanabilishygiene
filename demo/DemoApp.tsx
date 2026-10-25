@@ -18,7 +18,10 @@ import { emptyBrushMap } from '@/domain/brushMap';
 import { patientTitle } from '@/domain/patient';
 import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 import { emptyPsr } from '@/domain/psr';
-import { ALL_TEETH, emptyPerio } from '@/domain/perio';
+import { ALL_TEETH, emptyPerio, summarizePerio } from '@/domain/perio';
+import { visitMetrics, type VisitMetrics } from '@/domain/history';
+import { brushBrand } from '@/domain/brushes';
+import { PatientReport } from '@/features/patients/PatientReport';
 import type { PerioContent } from '@/schemas/perio';
 import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
 import type { IssueSnapshot } from '@/schemas/snapshot';
@@ -30,7 +33,7 @@ import { Segmented } from '@/ui/Segmented';
 import avatar from './assets/avatar-doctor.jpg';
 import sample from '../prisma/sample-content.json';
 import data from './data.json';
-import { addDoc, removeDoc, seedDocs, useDocs } from './docStore';
+import { addDoc, getDocs, removeDoc, seedDocs, useDocs } from './docStore';
 import type { MockDocs } from './mockApi';
 import { navigate, usePath } from './router';
 import s from './demo.module.css';
@@ -102,7 +105,8 @@ const visits: DemoVisit[] = [
   { id: 'v-10215', patientId: 'p-10215', date: '2026-10-16', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'HYGIENE_PLAN'], boib: 9, psr: 1, psrStar: false },
   { id: 'v-10164', patientId: 'p-10164', date: '2026-10-09', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR'], boib: 42, psr: 3, psrStar: false },
   { id: 'v-10102', patientId: 'p-10102', date: '2026-09-30', status: 'ISSUED', documents: ['BRUSH_MAP', 'AFTERCARE'], boib: 22, psr: null, psrStar: false },
-  { id: 'v-10482-apr', patientId: 'p-10482', date: '2026-04-14', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR'], boib: 31, psr: 2, psrStar: false },
+  { id: 'v-10482-apr', patientId: 'p-10482', date: '2026-04-14', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 31, psr: 2, psrStar: false },
+  { id: 'v-10482-oct', patientId: 'p-10482', date: '2025-10-08', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 46, psr: 3, psrStar: true },
 ];
 
 const visitsOf = (patientId: string) => visits.filter((v) => v.patientId === patientId).sort((a, b) => b.date.localeCompare(a.date));
@@ -143,6 +147,55 @@ function demoPerio(): PerioContent {
   c.teeth['31']!.mobility = 1;
   c.teeth['16']!.note = 'Обнажение фуркации, контроль через 3 месяца';
   return c;
+}
+
+const catalogRef = (id: string) => {
+  const c = catalog.find((x) => x.id === id);
+  return c ? { label: c.label, brand: brushBrand(c), color: c.colorHex } : null;
+};
+
+/**
+ * История пациента для карточки в прототипе. Текущий визит считается из его документов,
+ * прошлые — условные значения для показа динамики (воспаление и карманы постепенно уменьшаются).
+ */
+function demoHistory(patientId: string): VisitMetrics[] {
+  return visitsOf(patientId).map((v, i, all) => {
+    const base = { id: v.id, date: v.date, status: v.status, lastIssueId: v.status === 'ISSUED' ? `issue-${v.id}` : null };
+    if (v.id === MAIN_VISIT) {
+      const docs = getDocs(MAIN_VISIT);
+      const m = visitMetrics(base, docs.map((d) => ({ type: d.type, content: d.content })), catalogRef);
+      return { ...m, perio: m.perio ?? summarizePerio(demoPerio()), documents: m.documents.includes('PERIO_CHART') ? m.documents : [...m.documents, 'PERIO_CHART'] };
+    }
+    // чем старше визит, тем хуже показатели: i — сколько визитов новее этого
+    const current = summarizePerio(demoPerio());
+    const k = 1 + 0.16 * i;
+    const age = i;
+    const perio = v.documents.includes('PERIO_CHART')
+      ? {
+          ...current,
+          meanPd: Math.round(current.meanPd * k * 10) / 10,
+          meanAl: Math.round(current.meanAl * (1 + (k - 1) / 3) * 10) / 10,
+          bopPct: Math.min(100, Math.round(current.bopPct * k * 1.6)),
+          plaquePct: Math.min(100, Math.round(current.plaquePct * k * 1.3)),
+          pd4: Math.round(current.pd4 * k * 1.2),
+          pd5: Math.round(current.pd5 * k * 1.4),
+          pd6: Math.round(current.pd6 * k * 1.5),
+        }
+      : null;
+    const mainBrushes = visitMetrics(base, [{ type: 'BRUSH_MAP', content: mainMap }], catalogRef).brushes;
+    return {
+      ...base,
+      documents: v.documents,
+      boib: v.boib === null ? null : { pct: v.boib, bleeding: Math.round((v.boib * 26) / 100), examined: 26 },
+      psr:
+        v.psr === null
+          ? null
+          : { max: v.psr, star: v.psrStar, sextants: { S1: v.psr, S2: Math.max(0, v.psr - 1), S3: v.psr, S4: v.psr, S5: Math.max(0, v.psr - 2), S6: Math.max(0, v.psr - 1) } as never },
+      perio,
+      brushes: v.documents.includes('BRUSH_MAP') ? (mainBrushes ?? []).slice(0, Math.max(1, (mainBrushes?.length ?? 1) - age + 1)) : null,
+      teeth: visitMetrics(base, [{ type: 'BRUSH_MAP', content: mainMap }], catalogRef).teeth,
+    };
+  });
 }
 
 /** Создание и удаление документов в прототипе: те же функции, что на сервере, без базы. */
@@ -225,17 +278,24 @@ function StaffRoutes({ path }: { path: string }) {
       <PatientCard
         key={p.id}
         patient={p}
-        visits={visitsOf(p.id).map((v) => ({
-          id: v.id,
-          date: v.date,
-          status: v.status,
-          documents: v.documents,
-          boib: v.boib,
-          psr: v.psr,
-          psrStar: v.psrStar,
-          lastIssueId: v.status === 'ISSUED' ? `issue-${v.id}` : null,
-        }))}
+        history={demoHistory(p.id)}
+        clinicians={Object.fromEntries(visitsOf(p.id).map((v) => [v.id, staff.displayName]))}
+        nextVisit={p.id === 'p-10482' ? snapshot.nextVisit?.date ?? null : null}
+        reportUrl={`#/report/${p.id}`}
       />
+    );
+  }
+  if (section === 'report' && id) {
+    const p = patients.find((x) => x.id === id) ?? patients[0]!;
+    return (
+      <div style={{ background: '#fff', borderRadius: 24 }}>
+        <PatientReport
+          patient={p}
+          history={demoHistory(p.id)}
+          clinicians={Object.fromEntries(visitsOf(p.id).map((v) => [v.id, staff.displayName]))}
+          generatedAt={new Date().toISOString().slice(0, 10)}
+        />
+      </div>
     );
   }
   if (section === 'patients') {

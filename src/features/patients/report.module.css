@@ -1,0 +1,97 @@
+/* Отчёт по пациенту на A4: белый фон, плотная сетка, без интерактивных теней */
+.page {
+  width: 186mm;
+  margin: 0 auto;
+  padding: 10mm 0;
+  color: #1d1d1f;
+  font-size: 11pt;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8mm;
+  padding-bottom: 5mm;
+  border-bottom: 1px solid #e3e3e7;
+}
+
+.brand {
+  font-size: 10pt;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  margin: 2mm 0 1mm;
+  font-size: 20pt;
+  font-weight: 600;
+}
+
+.meta {
+  margin: 0;
+  color: #6e6e73;
+  font-size: 10pt;
+  text-align: right;
+}
+
+.head .meta:first-of-type {
+  text-align: left;
+}
+
+.block {
+  margin-top: 7mm;
+  break-inside: avoid;
+}
+
+.h2 {
+  margin: 0 0 3mm;
+  font-size: 13pt;
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th {
+  padding: 2mm 1mm;
+  text-align: left;
+  font-weight: 500;
+  color: #6e6e73;
+  border-bottom: 1px solid #e3e3e7;
+}
+
+.table td {
+  padding: 2mm 1mm;
+  border-bottom: 1px solid #f0f0f2;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+  margin-top: 7mm;
+}
+
+.chart {
+  padding: 3mm;
+  border-radius: 4mm;
+  background: #f6f6f8;
+  break-inside: avoid;
+}
+
+/* карточки сводки в отчёте: на всю ширину, по очереди */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  margin-top: 7mm;
+}
+
+.cards > * {
+  background: #f6f6f8 !important;
+  break-inside: avoid;
+}

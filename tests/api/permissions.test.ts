@@ -86,3 +86,14 @@ describe('пародонтограмма', () => {
     expect((await doctor.call('POST', `/api/v1/visits/${visitId}/documents`, { type: 'PERIO_CHART' })).status).toBe(409);
   });
 });
+
+describe('отчёт по пациенту', () => {
+  it('PDF только для сотрудников', async () => {
+    const { patientId } = await issuableVisit(doctor, sizeId);
+    expect((await anonymous(`/api/v1/patients/${patientId}/report`)).status).toBe(401);
+    const res = await doctor.call('GET', `/api/v1/patients/${patientId}/report`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('application/pdf');
+    expect(Buffer.from(await res.arrayBuffer()).subarray(0, 4).toString()).toBe('%PDF');
+  }, 300_000);
+});

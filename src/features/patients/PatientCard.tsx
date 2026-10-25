@@ -1,42 +1,32 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import { patientTitle } from '@/domain/patient';
 import { ApiError, api } from '@/ui/api';
 import { Button } from '@/ui/Button';
-import { Card, CardHeader } from '@/ui/Card';
-import { CounterChip } from '@/ui/Chip';
 import { Dialog } from '@/ui/Dialog';
 import { TextField } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
-import { IconChevronRight, IconPlus } from '@/ui/icons';
-import { formatDate } from '@/ui/format';
-import { Num } from '@/ui/Num';
+import { IconDownload, IconPlus } from '@/ui/icons';
 import { useToast } from '@/ui/Toast';
 import { useCan } from '../shell/StaffContext';
-import { TrendChart } from './TrendChart';
+import type { VisitMetrics } from '@/domain/history';
+import { PatientDashboard } from './PatientDashboard';
 import s from './patients.module.css';
-
-const docLabels = { BRUSH_MAP: 'Карта ёршиков', PSR: 'Скрининг', PERIO_CHART: 'Пародонтограмма', HYGIENE_PLAN: 'Схема гигиены', AFTERCARE: 'Памятка' } as const;
 
 interface Props {
   patient: { id: string; cardNumber: string; displayName: string | null; fullName: string | null };
-  visits: Array<{
-    id: string;
-    date: string;
-    status: 'DRAFT' | 'ISSUED';
-    documents: Array<keyof typeof docLabels>;
-    boib: number | null;
-    psr: number | null;
-    psrStar: boolean;
-    lastIssueId: string | null;
-  }>;
+  /** Визиты с показателями, от новых к старым. */
+  history: VisitMetrics[];
+  clinicians: Record<string, string | null>;
+  nextVisit: string | null;
+  /** PDF-отчёт по пациенту: показатели и графики по визитам. */
+  reportUrl: string;
 }
 
-export function PatientCard({ patient, visits }: Props) {
+export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl }: Props) {
   const router = useRouter();
   const toast = useToast();
   const canVisit = useCan('visit.write');
@@ -68,10 +58,7 @@ export function PatientCard({ patient, visits }: Props) {
     }
   };
 
-  const chrono = [...visits].reverse();
-  const boib = chrono.filter((v) => v.boib !== null).map((v) => ({ date: v.date, value: v.boib!, label: `${v.boib} %` }));
-  const psr = chrono.filter((v) => v.psr !== null).map((v) => ({ date: v.date, value: v.psr!, label: `${v.psr}${v.psrStar ? '*' : ''}` }));
-  const hasMap = visits.some((v) => v.documents.includes('BRUSH_MAP'));
+  const hasMap = history.some((v) => v.documents.includes('BRUSH_MAP'));
 
   return (
     <div className={s.page}>
@@ -80,6 +67,11 @@ export function PatientCard({ patient, visits }: Props) {
           {patientTitle(patient) ?? 'Без имени'} <span className={s.cardNumber}>{patient.cardNumber}</span>
         </Heading>
         <div className={s.actions}>
+          {history.length > 0 && (
+            <Button variant="ghost" leading={<IconDownload size={18} />} onClick={() => (reportUrl.startsWith('#') ? router.push(reportUrl.slice(1)) : window.open(reportUrl, '_blank', 'noopener'))}>
+              Отчёт PDF
+            </Button>
+          )}
           {canEdit && (
             <Button variant="ghost" onClick={() => setEdit(true)}>
               {ui.common.edit}
@@ -98,49 +90,11 @@ export function PatientCard({ patient, visits }: Props) {
         </div>
       </div>
 
-      <div className={s.bento}>
-        <Card className={s.visits}>
-          <CardHeader title={ui.patients.visits} meta={<CounterChip>{visits.length}</CounterChip>} />
-          {visits.length ? (
-            <ul className={s.visitList}>
-              {visits.map((v) => (
-                <li key={v.id}>
-                  <Link href={`/visits/${v.id}`} className={s.visitRow}>
-                    <span className={s.card}>
-                      <Num>{formatDate(v.date)}</Num>
-                    </span>
-                    <span className={s.docs}>
-                      <CounterChip>{v.status === 'ISSUED' ? ui.patients.issued : ui.patients.draft}</CounterChip>
-                      {v.documents.map((d, i) => (
-                        <CounterChip key={d + i} tone="surface">
-                          {docLabels[d]}
-                        </CounterChip>
-                      ))}
-                    </span>
-                    <IconChevronRight size={18} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={s.sub} style={{ marginTop: 'var(--space-3)' }}>
-              {ui.patients.noVisits}
-            </p>
-          )}
-        </Card>
-        <div className={s.charts}>
-          {boib.length > 0 && (
-            <Card>
-              <TrendChart title={ui.patients.boibChart} points={boib} yMax={100} yTicks={[0, 25, 50, 75, 100]} format={(v) => `${v}`} />
-            </Card>
-          )}
-          {psr.length > 0 && (
-            <Card>
-              <TrendChart title={ui.patients.psrChart} points={psr} yMax={4} yTicks={[0, 1, 2, 3, 4]} format={(v) => `${v}`} step />
-            </Card>
-          )}
-        </div>
-      </div>
+      {history.length ? (
+        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} />
+      ) : (
+        <p className={s.sub}>{ui.patients.noVisits}</p>
+      )}
 
       <Dialog
         open={edit}

@@ -36,6 +36,7 @@ export const auditActionLabels: Record<string, string> = {
   'patient.create': 'Создание пациента',
   'patient.update': 'Изменение пациента',
   'visit.create': 'Создание визита',
+  'patient.report': 'Отчёт по пациенту (PDF)',
   'visit.update': 'Изменение визита',
   'visit.delete': 'Удаление визита',
   'document.create': 'Создание документа',

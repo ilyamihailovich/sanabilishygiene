@@ -31,3 +31,7 @@ export function useDocs(visitId: string) {
     () => docs.get(visitId) ?? EMPTY,
   );
 }
+
+export function getDocs(visitId: string): VisitDoc[] {
+  return docs.get(visitId) ?? EMPTY;
+}

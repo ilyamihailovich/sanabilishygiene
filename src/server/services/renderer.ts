@@ -129,3 +129,17 @@ export function pdfResponse(pdf: Buffer, issue: VisitIssue, inline: boolean): Re
     },
   });
 }
+
+/** PDF-отчёт по пациенту: печатная вёрстка с показателями по визитам. Не кешируется — данные меняются с каждым визитом. */
+export async function patientReportPdf(patientId: string): Promise<Buffer> {
+  const { getSettings } = await import('../settings');
+  const c = (await getSettings()).clinic;
+  const footer = `${c.name} · ${c.address} · ${c.phone} · ${c.site}`;
+  try {
+    const res = await callRenderer('/pdf', { url: internalUrl(`/print/patient/${patientId}`, `patient-report:${patientId}`), footer }, 300_000);
+    return Buffer.from(await res.arrayBuffer());
+  } catch (e) {
+    console.error(e);
+    throw new HttpError(503, 'renderer_unavailable', 'Сервис PDF недоступен. Повторите через минуту.');
+  }
+}
