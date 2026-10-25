@@ -87,6 +87,11 @@
   pointer-events: auto;
 }
 
+/* палитра ёршиков в режиме схемы — по ширине сцены; цвета переносятся в несколько рядов */
+.bottom:has(.brushRow) {
+  width: 100%;
+}
+
 .caption {
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
@@ -97,8 +102,28 @@
 .brushRow {
   display: flex;
   align-items: center;
-  overflow-x: auto;
-  scrollbar-width: none;
+  justify-content: center;
+  width: 100%;
+}
+
+.brushRow > [role='group'] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* на телефоне палитра лежит поверх схемы: одна строка с прокруткой, чтобы не закрывать зубы */
+@media (max-width: 720px) {
+  .brushRow {
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .brushRow > [role='group'] {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
 }
 
 .swatch {
@@ -216,22 +241,25 @@ button.need[aria-pressed='true'] {
 .index {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
+  gap: var(--space-1) var(--space-3);
+  /* значение прижато к нижнему краю карточки */
+  margin-top: auto;
+  padding-top: var(--space-6);
 }
 
 .indexValue {
-  font-size: var(--fs-display);
-  line-height: 1;
+  font-size: clamp(88px, 8.4vw, 124px);
+  line-height: 0.82;
   white-space: nowrap;
   font-variant-numeric: proportional-nums;
-  /* цифры показателей — индиго, плотнее по трекингу */
   color: var(--color-figure);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
 }
 
 .indexMeta {
+  white-space: nowrap;
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
   font-variant-numeric: proportional-nums;
@@ -376,7 +404,7 @@ button.need[aria-pressed='true'] {
   padding: 0 16px 0 12px;
   border: 0;
   border-radius: var(--radius-capsule);
-  background: var(--accent);
+  background: var(--accent-fill);
   color: #fff;
   font: inherit;
   font-size: var(--fs-caption);

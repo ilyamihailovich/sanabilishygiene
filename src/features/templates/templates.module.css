@@ -112,7 +112,7 @@
 }
 
 .check[aria-checked='true'] .box {
-  background: var(--accent);
+  background: var(--accent-fill);
   box-shadow: none;
 }
 

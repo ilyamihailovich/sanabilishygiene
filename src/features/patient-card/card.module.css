@@ -381,6 +381,10 @@ button.brushRow[aria-pressed='true'] {
   letter-spacing: -0.03em;
 }
 
+.bigValueSplit .bigMeta {
+  letter-spacing: 0;
+}
+
 .bigMeta {
   font-size: var(--fs-caption);
   font-weight: var(--fw-regular);
@@ -557,7 +561,17 @@ button.brushRow[aria-pressed='true'] {
 
 /* число слева, «3 из 25» у правого края */
 .bigValueSplit {
+  flex-wrap: wrap;
   justify-content: space-between;
+  /* процент кровоточивости — крупно и у нижнего края карточки */
+  margin-top: auto;
+  font-size: clamp(88px, 9vw, 120px);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+}
+
+.screening:has(.bigValueSplit) {
+  flex: 1;
 }
 
 .brushWhere {

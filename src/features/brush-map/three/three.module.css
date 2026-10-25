@@ -85,7 +85,7 @@
 }
 
 .furcation[aria-expanded='true'] {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: #fff;
 }
 

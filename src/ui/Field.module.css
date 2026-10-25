@@ -79,7 +79,7 @@
 }
 
 .switch[aria-checked='true'] {
-  background: var(--accent);
+  background: var(--accent-fill);
 }
 
 .knob {

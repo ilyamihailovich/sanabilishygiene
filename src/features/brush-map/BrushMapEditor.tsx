@@ -22,7 +22,7 @@ import {
 import { navigate } from '@/domain/navigation';
 import type { ToothState } from '@/domain/teeth';
 import type { BrushMapContent, ElementData } from '@/schemas/brushMap';
-import { brushBrand, formatMm } from '@/domain/brushes';
+import { brushBrand, byBrandOrder, formatMm } from '@/domain/brushes';
 import { parseDictation } from '@/domain/dictation';
 import { toothStateLabels } from '@/domain/teeth';
 import type { CatalogItem } from '@/server/services/catalog';
@@ -523,7 +523,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
                   deselectable
                   value={brush}
                   onChange={setBrush}
-                  options={catalog.map((c) => ({
+                  options={byBrandOrder(catalog).map((c) => ({
                     value: c.id,
                     label: `${ui.map.brush}: ${c.label}`,
                     content: <span className={s.swatch} style={{ background: c.colorHex }} />,

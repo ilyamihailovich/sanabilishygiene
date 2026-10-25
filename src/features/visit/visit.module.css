@@ -147,12 +147,20 @@ select.metaInput {
   padding-top: var(--space-4);
 }
 
+/* отступ от текста до кнопки равен отступу от кнопки до края карточки */
 .cta {
+  --pad: var(--space-8);
+  --pad-sm: var(--space-6);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-4);
-  padding: var(--space-10);
+  gap: var(--space-8);
+}
+
+@media (max-width: 720px) {
+  .cta {
+    gap: var(--space-6);
+  }
 }
 
 .ctaText {
@@ -232,7 +240,7 @@ select.metaInput {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: var(--accent);
+    background: var(--accent-fill);
   }
   .mobileStep > span:not(.mobileThumb) {
     position: relative;

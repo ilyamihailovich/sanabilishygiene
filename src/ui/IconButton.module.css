@@ -44,12 +44,12 @@
 }
 
 .accent {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: var(--color-text-on-accent);
 }
 
 .accent:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--accent-fill-hover);
 }
 
 .ghost {
@@ -92,13 +92,13 @@
 }
 
 .active {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: var(--color-text-on-accent);
   box-shadow: none;
 }
 
 .active:hover:not(:disabled) {
-  background: var(--accent);
+  background: var(--accent-fill);
 }
 
 @media (pointer: coarse) {

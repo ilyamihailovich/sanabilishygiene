@@ -49,9 +49,10 @@
   --accent-hover: rgba(70, 44, 108, 0.9);
   --accent-pressed: var(--palette-indigo);
   --accent-soft: rgba(167, 140, 213, 0.16);
-  --accent-fill: var(--palette-indigo);
-  --accent-fill-hover: rgba(70, 44, 108, 0.9);
-  --accent-fill-pressed: var(--palette-indigo);
+  /* заливка главных кнопок — лаванда */
+  --accent-fill: var(--palette-lavender);
+  --accent-fill-hover: rgba(167, 140, 213, 0.88);
+  --accent-fill-pressed: rgba(167, 140, 213, 0.8);
   --lavender: var(--palette-lavender);
   /* Цифры показателей */
   --color-figure: var(--palette-indigo);
@@ -96,8 +97,10 @@
   --radius-inner: 16px;
   --radius-popover: 22px;
   --radius-sheet: 28px;
-  --radius-field: 14px;
-  --radius-capsule: 999px;
+  --radius-field: 12px;
+  /* кнопки, поля, метки и переключатели — скруглённые прямоугольники, как пункты бокового меню */
+  --radius-capsule: 12px;
+  --radius-chip: 10px;
 
   /* Отступы, шаг 4 px */
   --space-1: 4px;

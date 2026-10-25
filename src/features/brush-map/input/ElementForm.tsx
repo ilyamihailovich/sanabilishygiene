@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ui } from '@/content/ui.ru';
 import type { MapElement } from '@/domain/brushMap';
-import { brushBrand } from '@/domain/brushes';
+import { brushBrand, byBrandOrder } from '@/domain/brushes';
 import type { ElementData } from '@/schemas/brushMap';
 import type { CatalogItem } from '@/server/services/catalog';
 import { BrushSizeButton } from '@/ui/brush/BrushSizeButton';
@@ -37,7 +37,7 @@ export function sizeMeta(c: CatalogItem) {
 
 /** Производители в порядке каталога. */
 export function catalogBrands(catalog: CatalogItem[]) {
-  return [...new Set(catalog.map(brushBrand))];
+  return [...new Set(byBrandOrder(catalog).map(brushBrand))];
 }
 
 /** Ввод данных промежутка: одинаковый для схемы и 3D, поповер на десктопе и лист на смартфоне. */

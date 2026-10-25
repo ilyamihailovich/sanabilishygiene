@@ -47,7 +47,7 @@
   height: 52px;
   border: 0;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-fill);
   color: #fff;
   cursor: pointer;
   box-shadow: 0 0 0 calc(var(--lvl) * 12px) rgba(210, 60, 90, 0.22);

@@ -15,7 +15,7 @@
   height: 64px;
   margin: 0 auto;
   padding: 0 var(--space-6);
-  border-radius: var(--radius-card);
+  border-radius: 18px;
   /* почти прозрачное стекло с лёгким размытием: под ним читается фон и содержимое */
   background: rgba(255, 255, 255, 0.18);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 0 1px rgba(17, 17, 17, 0.04);
@@ -239,7 +239,7 @@
     min-width: 96px;
     height: 54px;
     padding: 0 var(--space-4);
-    border-radius: 27px;
+    border-radius: 10px;
     color: var(--color-text-secondary);
     font-size: 12px;
     font-weight: var(--fw-medium);
@@ -254,7 +254,7 @@
     top: 6px;
     bottom: 6px;
     left: 0;
-    border-radius: 27px;
+    border-radius: 10px;
     background: rgba(167, 140, 213, 0.2);
   }
   .tab > :not(.tabThumb) {
