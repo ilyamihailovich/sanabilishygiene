@@ -23,7 +23,7 @@ export default async function PrintPage({ params, searchParams }: { params: Prom
   if (!issue) notFound();
   const token = await activeLinkToken(issue.visitId);
   const qrSvg = token
-    ? await QRCode.toString(patientUrl(token), { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#1d1d1f', light: '#ffffff' } })
+    ? await QRCode.toString(patientUrl(token), { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } })
     : null;
   const renders: Partial<Record<'upper' | 'lower' | 'front', string>> = {};
   const paths = (issue.renders ?? {}) as Partial<Record<'upper' | 'lower' | 'front', string>>;

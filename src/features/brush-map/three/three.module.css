@@ -54,7 +54,7 @@
   padding: 1px 6px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.92);
-  color: #1d1d1f;
+  color: #111111;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -99,7 +99,7 @@
   gap: 4px;
   width: 220px;
   padding: 10px 12px;
-  border-radius: 16px;
+  border-radius: var(--radius-inner);
   color: var(--color-text);
   font-size: 12px;
   line-height: 1.25;

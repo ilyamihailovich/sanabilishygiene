@@ -9,7 +9,7 @@
 }
 
 .doc {
-  --print-text: #1d1d1f;
+  --print-text: #111111;
   --print-muted: #5f5f64;
   --print-line: #d9d9de;
   display: flex;

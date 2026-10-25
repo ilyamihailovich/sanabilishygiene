@@ -1,15 +1,9 @@
+/* Шапка — парящая стеклянная плашка со скруглением 10 px, как HEADER в макетах сайта */
 .header {
   position: sticky;
   top: 0;
   z-index: 30;
-  border-bottom: 1px solid transparent;
-  transition:
-    background-color var(--dur) var(--ease-out),
-    border-color var(--dur) var(--ease-out);
-}
-
-.scrolled {
-  border-bottom-color: var(--color-separator);
+  padding: var(--space-3) var(--gutter) 0;
 }
 
 .headerInner {
@@ -17,10 +11,29 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  max-width: var(--content-max);
+  max-width: calc(var(--content-max) - 2 * var(--gutter) + 2 * var(--space-6));
   height: 64px;
   margin: 0 auto;
-  padding: 0 var(--gutter);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 0 1px var(--glass-hairline);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  transition:
+    background-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+
+.scrolled .headerInner {
+  background: var(--glass-bg);
+  box-shadow: inset 0 0 0 1px var(--glass-hairline), var(--glass-shadow);
+}
+
+:global(.reduce-glass) .headerInner {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--glass-bg-fallback);
 }
 
 .brand {
@@ -32,13 +45,11 @@
   border-radius: 8px;
 }
 
+/* Разделы — текстовые ссылки; выбранный подчёркнут чёрной линией */
 .nav {
   position: relative;
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: var(--radius-capsule);
-  background: var(--color-surface-sunken);
+  gap: var(--space-6);
 }
 
 .navLink {
@@ -46,8 +57,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 36px;
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-capsule);
+  padding: 0;
   color: var(--color-text-secondary);
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
@@ -62,12 +72,11 @@
 
 .navThumb {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--color-surface);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 2px 8px rgba(0, 0, 0, 0.06);
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  height: 1.5px;
+  background: var(--color-text);
 }
 
 .navText {
@@ -105,10 +114,10 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: var(--accent);
+  border-radius: var(--radius-capsule);
+  background: var(--accent-fill);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: var(--fw-medium);
 }
 
@@ -136,7 +145,7 @@
   min-height: 44px;
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-inner);
   background: transparent;
   color: var(--color-text);
   font-size: var(--fs-body);
@@ -192,8 +201,12 @@
   .userText {
     display: none;
   }
+  .header {
+    padding-top: var(--space-2);
+  }
   .headerInner {
-    height: 56px;
+    height: 52px;
+    padding: 0 var(--space-4);
   }
   .main {
     padding-top: var(--space-4);
@@ -207,7 +220,7 @@
     display: flex;
     gap: 4px;
     padding: 6px;
-    border-radius: var(--radius-capsule);
+    border-radius: var(--radius-card);
     transform: translateX(-50%);
   }
   .tab {
@@ -221,7 +234,7 @@
     min-width: 96px;
     height: 54px;
     padding: 0 var(--space-4);
-    border-radius: 27px;
+    border-radius: var(--radius-inner);
     color: var(--color-text-secondary);
     font-size: 12px;
     font-weight: var(--fw-medium);
@@ -236,8 +249,8 @@
     top: 6px;
     bottom: 6px;
     left: 0;
-    border-radius: 27px;
-    background: rgba(74, 45, 107, 0.1);
+    border-radius: var(--radius-inner);
+    background: rgba(85, 41, 149, 0.1);
   }
   .tab > :not(.tabThumb) {
     position: relative;

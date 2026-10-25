@@ -25,6 +25,11 @@
 
 .strip [role='radiogroup'] {
   background: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+}
+
+.strip [role='radiogroup'] [class*='thumb'] {
+  background: #fff;
 }
 
 .strip [role='radio'] {

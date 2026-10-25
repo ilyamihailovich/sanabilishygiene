@@ -145,7 +145,7 @@
   min-height: 52px;
   padding: var(--space-2);
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-inner);
   background: transparent;
   text-align: left;
   font: inherit;
@@ -266,7 +266,7 @@ button.need[aria-pressed='true'] {
   min-width: 160px;
   max-width: 260px;
   padding: var(--space-3) var(--space-4);
-  border-radius: 16px;
+  border-radius: var(--radius-inner);
   font-size: var(--fs-caption);
   pointer-events: none;
 }
@@ -375,7 +375,7 @@ button.need[aria-pressed='true'] {
   padding: 0 16px 0 12px;
   border: 0;
   border-radius: var(--radius-capsule);
-  background: var(--accent);
+  background: var(--accent-fill);
   color: #fff;
   font: inherit;
   font-size: var(--fs-caption);

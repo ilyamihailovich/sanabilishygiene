@@ -34,7 +34,7 @@ const result = await build({
     'next/link': shim('next-link.tsx'),
     'next/dynamic': shim('next-dynamic.tsx'),
   },
-  // Шрифт клиники лицензирован и в прототип не встраивается: только системные шрифты
+  // Шрифт клиники лицензирован и в прототип не встраивается (замена — ниже)
   external: ['/fonts.css'],
 });
 
@@ -54,11 +54,17 @@ const toData = (p) => `data:image/png;base64,${readFileSync(p).toString('base64'
 const pdf = pages.map(toData);
 const pdfPublic = publicPages.map(toData);
 const esc = (s) => s.replace(/<\/script/gi, '<\\/script');
+// Вместо лицензированного Relative Pro прототип набирается свободным Onest (OFL) того же типа: гротеск с одним начертанием
+const onest = (set) =>
+  `@font-face{font-family:'Relative Pro';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,${readFileSync(
+    resolve(root, `node_modules/@fontsource/onest/files/onest-${set}-400-normal.woff2`),
+  ).toString('base64')}) format('woff2')}`;
+const fonts = onest('cyrillic') + onest('latin');
 
 // Каркас документа (doctype, head, body) добавляет хостинг артефактов
 const html = `<title>Прототип SANABILIS Гигиена</title>
 <meta name="robots" content="noindex">
-<style>:root{color-scheme:light}${css}</style>
+<style>${fonts}:root{color-scheme:light}${css}</style>
 <div id="root"></div>
 <script>window.__SANABILIS_MODEL_DATA=${JSON.stringify(glb)};window.__DEMO_PDF_PAGES=${JSON.stringify(pdf)};window.__DEMO_PDF_PAGES_PUBLIC=${JSON.stringify(pdfPublic)};</script>
 <script>${esc(js)}</script>

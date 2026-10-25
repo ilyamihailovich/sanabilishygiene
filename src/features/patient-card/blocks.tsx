@@ -93,9 +93,9 @@ export function BrushList({ rows, active, onPick, compact }: { rows: BrushRow[];
 function AltIcon({ kind }: { kind: 'floss' | 'none' }) {
   return (
     <svg className={s.altIcon} width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-      <circle cx="13" cy="13" r="11.5" fill="#fff" stroke="#1d1d1f" strokeWidth="1.5" />
+      <circle cx="13" cy="13" r="11.5" fill="#fff" stroke="#111111" strokeWidth="1.5" />
       {kind === 'floss' ? (
-        <path d="M7.5 13h11" stroke="#1d1d1f" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M7.5 13h11" stroke="#111111" strokeWidth="2.6" strokeLinecap="round" />
       ) : (
         <path d="M7.5 13h11" stroke="#8a8a8f" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="2.2 2.6" />
       )}

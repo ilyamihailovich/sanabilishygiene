@@ -14,7 +14,7 @@ interface Props {
   renders: Partial<Record<'upper' | 'lower' | 'front', string>>;
 }
 
-const BENTO_BASE = '#f5f5f7';
+const BENTO_BASE = '#f6f4fa';
 
 /** Печатная версия A4: та же структура блоков, белый фон, размеры подписаны текстом для ч/б печати. */
 export function PrintDocument({ snapshot, qrSvg, renders }: Props) {

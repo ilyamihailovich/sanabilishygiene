@@ -82,7 +82,7 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
   return (
     <StaffProvider value={staff}>
       <ToastProvider>
-        <header className={cx(s.header, scrolled && glassClass, scrolled && s.scrolled)}>
+        <header className={cx(s.header, scrolled && s.scrolled)}>
           <div className={s.headerInner}>
             <Link href="/" className={s.brand} aria-label={ui.nav.home}>
               <Logo height={14} />

@@ -16,7 +16,9 @@
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-field);
-  background: var(--color-surface-sunken);
+  background: var(--color-surface);
+  /* поле — белое с тонкой обводкой; при фокусе обводка 2 px чёрная, как в форме записи на сайте */
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.35);
   color: var(--color-text);
   font-size: var(--fs-body);
   font-variant-numeric: tabular-nums;
@@ -30,16 +32,16 @@
 }
 
 .input:hover {
-  background: var(--color-surface-pressed);
+  box-shadow: inset 0 0 0 1px var(--color-text);
 }
 
-.input:focus-visible {
-  background: var(--color-surface);
-  box-shadow: inset 0 0 0 1.5px var(--color-text);
+.input:focus-visible,
+.input:focus {
+  box-shadow: inset 0 0 0 var(--stroke) var(--color-text);
 }
 
 .input[aria-invalid='true'] {
-  box-shadow: inset 0 0 0 1.5px var(--color-notice-text);
+  box-shadow: inset 0 0 0 var(--stroke) var(--color-notice-text);
 }
 
 .hint {
@@ -87,7 +89,7 @@
   left: 2px;
   width: 27px;
   height: 27px;
-  border-radius: 50%;
+  border-radius: 3px;
   background: #fff;
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.12),

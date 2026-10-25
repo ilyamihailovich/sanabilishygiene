@@ -5,95 +5,100 @@
 */
 
 :root {
-  /* Палитра: нейтральная временная схема до получения фирменных HEX */
-  --palette-gray-0: #ffffff;
-  --palette-gray-50: #f5f5f7;
-  --palette-gray-100: #ececef;
-  --palette-gray-200: #e3e3e7;
-  --palette-gray-300: #d2d2d7;
-  --palette-gray-500: #86868b;
-  --palette-gray-600: #6e6e73;
-  --palette-gray-800: #3a3a3c;
-  --palette-gray-900: #1d1d1f;
-  /* Индиго и лаванда: временные акценты по референсу клиники, до фирменных HEX */
-  --palette-indigo-600: #5a3a82;
-  --palette-indigo-700: #4a2d6b;
-  --palette-indigo-800: #3d2459;
-  --palette-indigo-900: #2f1b45;
-  --palette-lavender-50: #f3eff9;
-  --palette-lavender-100: #e9e1f4;
+  /* Палитра SANABILIS по макетам сайта клиники (Figma «СТРАНИЦА УСЛУГ») */
+  --palette-white: #ffffff;
+  --palette-ink: #111111;
+  --palette-gray: #6d6e71;
+  --palette-gray-light: #989898;
+  --palette-placeholder: #d9d9d9;
+  --palette-mist: #f6f4fa;
+  --palette-mist-deep: #eeeaf5;
+  --palette-lilac: #a78cd5;
+  --palette-lilac-hover: #9878cc;
+  --palette-lilac-pressed: #8a69c1;
+  --palette-plum: #552995;
+  --palette-plum-hover: #47217e;
+  --palette-plum-pressed: #3a1b68;
+  --palette-lilac-50: #f3eefa;
+  --palette-lilac-100: #e6dcf4;
 
-  /* Поверхности */
-  --color-bg: var(--palette-gray-50);
-  --color-surface: var(--palette-gray-0);
-  --color-surface-muted: var(--palette-gray-50);
-  --color-surface-sunken: var(--palette-gray-100);
-  --color-surface-pressed: var(--palette-gray-200);
+  /* Поверхности: белый фон с лиловой дымкой, блоки белые с тонкой линией */
+  --color-bg: var(--palette-white);
+  --color-bg-haze:
+    radial-gradient(70% 55% at 100% 0%, rgba(167, 140, 213, 0.26) 0%, rgba(167, 140, 213, 0) 70%),
+    radial-gradient(55% 50% at 0% 75%, rgba(167, 140, 213, 0.16) 0%, rgba(167, 140, 213, 0) 70%);
+  --color-surface: var(--palette-white);
+  --color-surface-muted: var(--palette-mist);
+  --color-surface-sunken: var(--palette-mist-deep);
+  --color-surface-pressed: #e4def0;
+  --color-surface-line: inset 0 0 0 1px rgba(17, 17, 17, 0.1);
 
-  /* Текст. text-secondary проходит AA (4.5:1) на белом и на #F5F5F7.
-     text-tertiary (#86868B) допустим только для крупного текста от 24 px: AA для крупного 3:1. */
-  --color-text: var(--palette-gray-900);
-  --color-text-secondary: var(--palette-gray-600);
-  --color-text-tertiary: var(--palette-gray-500);
-  --color-text-on-accent: var(--palette-gray-0);
+  /* Текст. text-secondary (#6D6E71) проходит AA на белом; tertiary (#989898) — только подписи и неактивное */
+  --color-text: var(--palette-ink);
+  --color-text-secondary: var(--palette-gray);
+  --color-text-tertiary: var(--palette-gray-light);
+  --color-text-on-accent: var(--palette-white);
 
-  --color-separator: rgba(0, 0, 0, 0.08);
-  --color-border-strong: rgba(0, 0, 0, 0.16);
+  --color-separator: rgba(17, 17, 17, 0.12);
+  --color-border-strong: var(--palette-ink);
+  /* Обводка кнопок и полей: 2 px, как в макетах */
+  --stroke: 2px;
 
-  /* Акцент: индиго. Используется точечно: главные кнопки, выбранные состояния, акцентные карточки */
-  --accent: var(--palette-indigo-700);
-  --accent-hover: var(--palette-indigo-800);
-  --accent-pressed: var(--palette-indigo-900);
-  --accent-soft: var(--palette-lavender-50);
+  /* Акцент — сливовый из ссылок макета: текст, выбранные состояния, графики.
+     Заливка главных кнопок — лиловый #A78CD5. */
+  --accent: var(--palette-plum);
+  --accent-hover: var(--palette-plum-hover);
+  --accent-pressed: var(--palette-plum-pressed);
+  --accent-soft: var(--palette-lilac-50);
+  --accent-fill: var(--palette-lilac);
+  --accent-fill-hover: var(--palette-lilac-hover);
+  --accent-fill-pressed: var(--palette-lilac-pressed);
 
   /* Фокус с клавиатуры: двойное кольцо читается на любом фоне */
   --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-text);
 
   /* Сигнальные состояния (сдержанные, без ярких цветов) */
-  --color-notice-bg: var(--palette-lavender-100);
-  --color-notice-text: var(--palette-indigo-700);
-  --color-signal: var(--palette-gray-900);
+  --color-notice-bg: var(--palette-lilac-100);
+  --color-notice-text: var(--palette-plum);
+  --color-signal: var(--palette-ink);
 
   /* Маркеры промежутков */
   --marker-empty-stroke: #8e8e93;
   --marker-outline: rgba(0, 0, 0, 0.55);
-  --marker-ring-selected: var(--palette-gray-900);
+  --marker-ring-selected: var(--palette-ink);
 
   /* 3D-сцена */
-  --scene-bg-center: #f2f2f4;
-  --scene-bg-edge: #e4e4e8;
+  --scene-bg-center: #f7f5fb;
+  --scene-bg-edge: #ebe6f3;
 
-  /* Стекло: только для плавающих элементов */
-  --glass-bg: rgba(255, 255, 255, 0.4);
+  /* Стекло: только для плавающих элементов (шапка, пульт сцены) */
+  --glass-bg: rgba(255, 255, 255, 0.55);
   --glass-bg-fallback: rgba(255, 255, 255, 0.96);
   --glass-border: rgba(255, 255, 255, 0.7);
-  --glass-hairline: rgba(0, 0, 0, 0.06);
-  --glass-blur: 12px;
-  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.08);
-  /* Стекло на светлом фоне в элементах управления: легче плавающих панелей */
-  --glass-control-bg: rgba(255, 255, 255, 0.4);
-  --glass-control-hover: rgba(255, 255, 255, 0.6);
-  --glass-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 10px rgba(0, 0, 0, 0.05);
-  /* Стекло на индиго и других тёмных поверхностях */
+  --glass-hairline: rgba(17, 17, 17, 0.08);
+  --glass-blur: 30px;
+  --glass-shadow: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 28px rgba(17, 17, 17, 0.06);
+  --glass-control-bg: rgba(255, 255, 255, 0.6);
+  --glass-control-hover: rgba(255, 255, 255, 0.8);
+  --glass-control-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.1), 0 2px 10px rgba(17, 17, 17, 0.04);
   --glass-dark-bg: rgba(255, 255, 255, 0.14);
   --glass-dark-hover: rgba(255, 255, 255, 0.2);
   --glass-dark-border: rgba(255, 255, 255, 0.22);
-  /* Лавандовое стекло для плашек */
-  --glass-notice-bg: rgba(233, 225, 244, 0.56);
-  --glass-control-blur: 10px;
+  --glass-notice-bg: rgba(230, 220, 244, 0.6);
+  --glass-control-blur: 16px;
 
-  /* Тени непрозрачных элементов */
+  /* Тени: в строгом стиле почти не используются, блоки отделяются линией */
   --shadow-card: none;
-  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 1px 2px rgba(17, 17, 17, 0.04), 0 6px 20px rgba(17, 17, 17, 0.06);
 
-  /* Скругления */
-  --radius-card: 28px;
-  --radius-card-sm: 24px;
-  --radius-inner: 18px;
-  --radius-popover: 22px;
-  --radius-sheet: 28px;
-  --radius-field: 14px;
-  --radius-capsule: 999px;
+  /* Скругления: 10 px у блоков и полей, 5 px у малых кнопок и меток */
+  --radius-card: 10px;
+  --radius-card-sm: 10px;
+  --radius-inner: 8px;
+  --radius-popover: 10px;
+  --radius-sheet: 10px;
+  --radius-field: 10px;
+  --radius-capsule: 5px;
 
   /* Отступы, шаг 4 px */
   --space-1: 4px;
@@ -122,17 +127,20 @@
   --fs-callout: 20px;
   --fs-title3: 24px;
   --fs-title2: 32px;
-  --fs-title1: 44px;
-  --fs-display: 56px;
-  --lh-tight: 1.05;
-  --lh-snug: 1.18;
-  --lh-body: 1.28;
-  --tracking-display: -0.025em;
-  --tracking-title: -0.02em;
-  --tracking-body: -0.005em;
+  --fs-title1: 52px;
+  --fs-display: 64px;
+  --lh-tight: 1;
+  --lh-snug: 1.15;
+  --lh-body: 1.3;
+  /* Заголовки набираются прописными без сжатия, как в макетах */
+  --tracking-display: 0;
+  --tracking-title: 0;
+  --tracking-body: 0;
+  --tracking-caps: 0.02em;
   --fw-regular: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
+  /* У Relative Pro одно начертание (Book): иерархия строится кеглем и прописными, не жирностью */
+  --fw-medium: 400;
+  --fw-semibold: 400;
 
   /* Движение */
   --dur-fast: 200ms;
@@ -149,11 +157,10 @@
 
 @media (max-width: 720px) {
   :root {
-    --radius-card: 24px;
     --gutter: 16px;
-    --fs-title1: 34px;
-    --fs-display: 40px;
-    --fs-title2: 28px;
+    --fs-title1: 32px;
+    --fs-display: 44px;
+    --fs-title2: 26px;
   }
 }
 

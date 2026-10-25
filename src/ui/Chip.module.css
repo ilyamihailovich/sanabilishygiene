@@ -6,7 +6,7 @@
   padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-capsule);
-  background: var(--color-surface-sunken);
+  background: var(--color-surface-muted);
   color: var(--color-text-secondary);
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
@@ -22,6 +22,8 @@
 .toggle {
   min-height: 40px;
   padding: 0 var(--space-4);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-separator);
   color: var(--color-text);
   cursor: pointer;
   transition:
@@ -39,7 +41,8 @@
 }
 
 .toggle[aria-pressed='true'] {
-  background: var(--accent);
+  box-shadow: none;
+  background: var(--color-text);
   color: var(--color-text-on-accent);
 }
 

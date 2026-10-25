@@ -72,7 +72,7 @@
   gap: var(--space-2);
   align-items: start;
   padding: var(--space-2) var(--space-3);
-  border-radius: 16px;
+  border-radius: var(--radius-inner);
   transition:
     background-color var(--dur-fast) var(--ease-out),
     opacity var(--dur) var(--ease-out);
@@ -160,7 +160,7 @@
   min-height: 40px;
   padding: var(--space-2) var(--space-3);
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-inner);
   background: var(--color-surface-muted);
   line-height: var(--lh-body);
   resize: vertical;
@@ -231,6 +231,7 @@
   border: 0;
   border-radius: var(--radius-card-sm);
   background: var(--color-surface);
+  box-shadow: var(--color-surface-line);
   text-align: left;
   cursor: pointer;
   transition:
@@ -239,7 +240,7 @@
 }
 
 .pickCard:hover {
-  box-shadow: var(--shadow-raised);
+  box-shadow: inset 0 0 0 1px var(--color-text);
 }
 
 .pickCard:active {
@@ -252,6 +253,7 @@
 }
 
 .pickTitle {
+  text-transform: uppercase;
   font-size: var(--fs-callout);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-title);
@@ -311,7 +313,7 @@
 .kindChip {
   align-self: flex-start;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-capsule);
   background: var(--color-surface-sunken);
   color: var(--color-text-secondary);
   font-size: 13px;

@@ -40,7 +40,9 @@
 
 .startTitle {
   margin-top: var(--space-2);
-  font-size: var(--fs-title1);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  font-size: 40px;
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-display);
   line-height: var(--lh-tight);
@@ -256,7 +258,7 @@
   min-height: 46px;
   padding: 0 var(--space-5);
   border: 0;
-  border-radius: 18px;
+  border-radius: var(--radius-inner);
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
   font: inherit;

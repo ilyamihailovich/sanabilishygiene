@@ -4,8 +4,9 @@
   grid-auto-columns: 1fr;
   grid-auto-flow: column;
   padding: 3px;
-  border-radius: var(--radius-capsule);
-  background: var(--color-surface-sunken);
+  border-radius: calc(var(--radius-capsule) + 3px);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-separator);
 }
 
 .block {
@@ -42,17 +43,14 @@
 }
 
 .option[aria-checked='true'] {
-  color: var(--color-text);
+  color: var(--color-surface);
 }
 
 .thumb {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--color-surface);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 2px 8px rgba(0, 0, 0, 0.06);
+  background: var(--color-text);
 }
 
 .label {
