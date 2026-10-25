@@ -33,6 +33,8 @@ export interface Metric {
   ticks?: number[];
   step?: boolean;
   deltaUnit: string;
+  /** Документ, из которого берётся показатель. */
+  source: 'Карта ёршиков' | 'Скрининг' | 'Пародонтограмма';
 }
 
 const pctMax = () => 100;
@@ -43,6 +45,7 @@ export const comma = (v: number) => String(v).replace('.', ',');
 export const METRICS: Metric[] = [
   {
     key: 'boib',
+    source: 'Карта ёршиков',
     title: 'Кровоточивость промежутков',
     about: 'BOIB: доля межзубных промежутков, кровоточащих после ёршика, из обследованных. Карта ёршиков.',
     unit: '%',
@@ -55,6 +58,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'psr',
+    source: 'Скрининг',
     title: 'Скрининг PSR',
     about: 'Наибольший код по шести секстантам, «*» — фуркация, подвижность, рецессия ≥ 3,5 мм или мукогингивальная проблема.',
     unit: '',
@@ -68,6 +72,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'pd',
+    source: 'Пародонтограмма',
     title: 'Средняя глубина зондирования',
     about: 'Среднее по шести точкам всех присутствующих зубов и имплантатов. Пародонтограмма.',
     unit: ' мм',
@@ -78,6 +83,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'al',
+    source: 'Пародонтограмма',
     title: 'Средний уровень прикрепления',
     about: 'Уровень прикрепления = глубина зондирования − десневой край, среднее по всем точкам. Пародонтограмма.',
     unit: ' мм',
@@ -88,6 +94,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'bop',
+    source: 'Пародонтограмма',
     title: 'Кровоточивость при зондировании',
     about: 'BOP: доля точек с кровоточивостью из всех точек пародонтограммы.',
     unit: '%',
@@ -99,6 +106,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'pi',
+    source: 'Пародонтограмма',
     title: 'Налёт',
     about: 'Индекс налёта: доля точек с налётом из всех точек пародонтограммы.',
     unit: '%',
@@ -110,6 +118,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'pockets',
+    source: 'Пародонтограмма',
     title: 'Карманы 4 мм и глубже',
     about: 'Число точек с глубиной зондирования 4 мм и больше. Подробно по глубине — в графике карманов.',
     unit: '',
@@ -120,6 +129,7 @@ export const METRICS: Metric[] = [
   },
   {
     key: 'brushes',
+    source: 'Карта ёршиков',
     title: 'Промежутков с ёршиком',
     about: 'Сколько межзубных промежутков получили размер ёршика. Карта ёршиков.',
     unit: '',
@@ -168,7 +178,19 @@ function Sparkline({ values }: { values: number[] }) {
 function MetricTile({ metric, history, onOpen }: { metric: Metric; history: VisitMetrics[]; onOpen: () => void }) {
   const pts = series(history, metric).filter((p) => p.value !== null) as Array<{ v: VisitMetrics; value: number }>;
   const last = pts[pts.length - 1];
-  if (!last) return null;
+  // показатель ещё не измеряли: плитка остаётся на месте и подсказывает, из какого документа он берётся
+  if (!last)
+    return (
+      <div className={cx(s.tile, s.tileEmpty)}>
+        <span className={s.tileTitle}>{metric.title}</span>
+        <span className={s.tileFoot}>
+          <span className={s.tileMain}>
+            <span className={s.tileValue}>—</span>
+            <span className={s.deltaNone}>{metric.source}: не заполнялась</span>
+          </span>
+        </span>
+      </div>
+    );
   const values = pts.map((p) => p.value);
   return (
     <button type="button" className={s.tile} onClick={onOpen}>
@@ -405,14 +427,17 @@ export function PatientDashboard({
   clinicians,
   nextVisit,
   reportUrl,
+  patient,
 }: {
   history: VisitMetrics[];
   clinicians: Record<string, string | null>;
   nextVisit: string | null;
   reportUrl?: string;
+  patient?: { cardNumber: string; displayName: string | null; fullName: string | null };
 }) {
   const [openMetric, setOpenMetric] = useState<Metric | null>(null);
-  const tiles = METRICS.filter((m) => history.some((v) => m.get(v) !== null));
+  // все плитки показателей на месте, даже если показатель ещё не измеряли: сетка сводки не рассыпается
+  const tiles = METRICS;
   const last = history[0];
   const teeth = history.find((v) => v.teeth)?.teeth ?? null;
   return (
@@ -452,6 +477,8 @@ export function PatientDashboard({
       <PsrStrip history={history} />
       <BrushSet history={history} />
       <Timeline history={history} clinicians={clinicians} />
+      {patient && <PatientProfile patient={patient} history={history} />}
+      <Progress history={history} />
       <NextVisitCard nextVisit={nextVisit} last={last ?? null} />
       <QuickDocs history={history} reportUrl={reportUrl} />
       <MetricDetail metric={openMetric} history={history} onClose={() => setOpenMetric(null)} />
@@ -527,6 +554,83 @@ function QuickDocs({ history, reportUrl }: { history: VisitMetrics[]; reportUrl?
           </li>
         ))}
       </ul>
+    </Card>
+  );
+}
+
+const MONTH = 30.44 * DAY;
+
+/** «1 год 2 мес.», «5 мес.», «меньше месяца». */
+function span(ms: number) {
+  const months = Math.floor(ms / MONTH);
+  if (months < 1) return 'меньше месяца';
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  return [y ? `${y} ${plural(y, ['год', 'года', 'лет'])}` : '', m ? `${m} мес.` : ''].filter(Boolean).join(' ');
+}
+
+/** Профиль пациента: как к нему обращаются, сколько лет в клинике, регулярность визитов и что заполнялось. */
+function PatientProfile({ patient, history }: { patient: { cardNumber: string; displayName: string | null; fullName: string | null }; history: VisitMetrics[] }) {
+  const dates = history.map((v) => new Date(v.date).getTime()).sort((a, b) => a - b);
+  const first = dates[0];
+  const gaps = dates.slice(1).map((d, i) => d - dates[i]!);
+  const avgGap = gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : null;
+  const count = (t: DocType) => history.filter((v) => v.documents.includes(t)).length;
+  const rows: Array<[string, string]> = [
+    ['Медкарта', patient.cardNumber],
+    ['Обращение на онлайн-карте', patient.displayName ? `«Здравствуйте, ${patient.displayName}»` : '—'],
+    ['В клинике', first ? `с ${formatDate(new Date(first).toISOString())} · ${span(Date.now() - first)}` : '—'],
+    ['Визитов', `${history.length}${avgGap ? ` · в среднем раз в ${span(avgGap)}` : ''}`],
+    ['Выдано пациенту', `${history.filter((v) => v.lastIssueId).length} ${plural(history.filter((v) => v.lastIssueId).length, ['раз', 'раза', 'раз'])}`],
+    ['Карт ёршиков · скринингов · пародонтограмм', `${count('BRUSH_MAP')} · ${count('PSR')} · ${count('PERIO_CHART')}`],
+  ];
+  return (
+    <Card className={cx(s.wide, s.bottomCard)}>
+      <CardHeader title="Профиль пациента" />
+      <p className={s.profileName}>{patient.fullName ?? patient.displayName ?? 'Без имени'}</p>
+      <dl className={s.facts}>
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  );
+}
+
+/** Динамика с первого визита: первое и последнее значение каждого показателя, который измеряли хотя бы дважды. */
+function Progress({ history }: { history: VisitMetrics[] }) {
+  const rows = METRICS.map((m) => {
+    const pts = series(history, m).filter((p) => p.value !== null) as Array<{ v: VisitMetrics; value: number }>;
+    if (pts.length < 2) return null;
+    const a = pts[0]!;
+    const b = pts[pts.length - 1]!;
+    const fmt = (p: { v: VisitMetrics; value: number }) => (m.format ? m.format(p.v).split(' · ')[0] : `${comma(p.value)}${m.unit}`);
+    const diff = b.value - a.value;
+    const good = diff === 0 ? null : m.better === 'down' ? diff < 0 : diff > 0;
+    return { m, from: fmt(a), to: fmt(b), good, since: a.v.date };
+  }).filter((r): r is NonNullable<typeof r> => r !== null);
+  return (
+    <Card className={cx(s.wide, s.bottomCard)}>
+      <CardHeader title="Динамика с первого визита" />
+      {rows.length ? (
+        <ul className={s.progress}>
+          {rows.map((r) => (
+            <li key={r.m.key}>
+              <span className={s.progressTitle}>{r.m.title}</span>
+              <span className={s.progressValues}>
+                <span className={s.progressFrom}>{r.from}</span>
+                <span aria-hidden="true">→</span>
+                <span className={cx(r.good === true && s.good, r.good === false && s.bad)}>{r.to}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={s.about}>Динамика появится, когда показатели измерят хотя бы на двух визитах.</p>
+      )}
     </Card>
   );
 }

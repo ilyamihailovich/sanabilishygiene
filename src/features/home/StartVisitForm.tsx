@@ -22,11 +22,6 @@ interface Patient {
 
 const normalize = (v: string) => v.trim().replace(/\s+/g, ' ').toUpperCase();
 const isCard = (v: string) => /^[\d\s-]+$/.test(v.trim()) || /\d/.test(v.trim().split(' ')[0] ?? '');
-/** Имя для обращения из «Фамилия Имя Отчество»: второе слово, а если слово одно — оно само. */
-const nameFrom = (full: string) => {
-  const w = full.trim().split(/\s+/);
-  return w.length >= 2 ? w[1]! : (w[0] ?? '');
-};
 const title = (p: Patient) => p.fullName || p.displayName || 'Имя не указано';
 
 /** Начать визит по фамилии и имени пациента (номер медкарты тоже подходит): найти в подсказках или создать нового. */
@@ -39,7 +34,6 @@ export function StartVisitForm() {
   const [found, setFound] = useState<Patient | null>(null);
   const [creating, setCreating] = useState(false);
   const [card, setCard] = useState('');
-  const [name, setName] = useState('');
   const [fullName, setFullName] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -62,11 +56,9 @@ export function StartVisitForm() {
     if (isCard(q)) {
       setCard(normalize(q));
       setFullName('');
-      setName('');
     } else {
       setCard('');
       setFullName(q);
-      setName(nameFrom(q));
     }
     setCreating(true);
   };
@@ -96,7 +88,7 @@ export function StartVisitForm() {
   const create = async () => {
     setBusy(true);
     try {
-      const p = await api.post<Patient>('/api/v1/patients', { cardNumber: card, displayName: name, fullName });
+      const p = await api.post<Patient>('/api/v1/patients', { cardNumber: card, fullName });
       await startVisit(p.id, false);
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Ошибка', 'error');
@@ -188,15 +180,11 @@ export function StartVisitForm() {
           <TextField
             label="Фамилия Имя Отчество"
             value={fullName}
-            onChange={(e) => {
-              // имя для обращения следует за ФИО, пока его не поправили вручную
-              if (name === nameFrom(fullName)) setName(nameFrom(e.target.value));
-              setFullName(e.target.value);
-            }}
+            hint="Обращение на онлайн-карте берётся из имени: «Здравствуйте, Анна»."
+            onChange={(e) => setFullName(e.target.value)}
             maxLength={120}
             autoFocus={!fullName}
           />
-          <TextField label={ui.patients.displayName} hint={ui.patients.displayNameHint} value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
           <TextField label={ui.patients.cardNumber} value={card} onChange={(e) => setCard(e.target.value)} maxLength={40} autoFocus={Boolean(fullName)} />
         </div>
       </Dialog>

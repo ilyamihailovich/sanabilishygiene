@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { firstNameOf } from '@/domain/patient';
 
 /** Подмена API: прототип работает без сервера, изменения живут до перезагрузки страницы. */
 export interface MockDocs {
@@ -43,6 +44,13 @@ export function installMockApi(patientUrl: string, patients: Array<{ id: string;
           (p) => p.cardNumber.toLowerCase().startsWith(q) || (words.length > 0 && words.every((w) => `${p.fullName ?? ''} ${p.displayName ?? ''}`.toLowerCase().includes(w))),
         ),
       );
+    }
+    if (path === '/api/v1/patients' && method === 'POST') {
+      // новый пациент живёт до перезагрузки прототипа; имя для обращения — из ФИО, как на сервере
+      const body = JSON.parse(String(init?.body ?? '{}')) as { cardNumber?: string; fullName?: string };
+      const p = { id: `p-${Math.random().toString(36).slice(2, 8)}`, cardNumber: (body.cardNumber ?? '').trim().toUpperCase(), fullName: body.fullName?.trim() || null, displayName: firstNameOf(body.fullName) };
+      patients.push(p);
+      return json(p, 201);
     }
     const newVisit = /^\/api\/v1\/patients\/([^/]+)\/visits$/.exec(path);
     if (newVisit && method === 'POST') return json({ id: `v-new-${newVisit[1]}` });

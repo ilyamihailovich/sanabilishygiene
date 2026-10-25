@@ -33,7 +33,6 @@ export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl
   const canEdit = useCan('patient.write');
   const [edit, setEdit] = useState(false);
   const [card, setCard] = useState(patient.cardNumber);
-  const [name, setName] = useState(patient.displayName ?? '');
   const [fullName, setFullName] = useState(patient.fullName ?? '');
   const [busy, setBusy] = useState(false);
 
@@ -50,7 +49,7 @@ export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl
 
   const save = async () => {
     try {
-      await api.patch(`/api/v1/patients/${patient.id}`, { cardNumber: card, displayName: name, fullName });
+      await api.patch(`/api/v1/patients/${patient.id}`, { cardNumber: card, fullName });
       setEdit(false);
       router.refresh();
     } catch (err) {
@@ -91,7 +90,7 @@ export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl
       </div>
 
       {history.length ? (
-        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} reportUrl={reportUrl} />
+        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} reportUrl={reportUrl} patient={patient} />
       ) : (
         <p className={s.sub}>{ui.patients.noVisits}</p>
       )}
@@ -110,9 +109,8 @@ export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <TextField label={ui.patients.fullName} hint="Полностью. Обращение на онлайн-карте берётся из имени." value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
           <TextField label={ui.patients.cardNumber} value={card} onChange={(e) => setCard(e.target.value)} />
-          <TextField label={ui.patients.displayName} hint={ui.patients.displayNameHint} value={name} onChange={(e) => setName(e.target.value)} />
-          <TextField label={ui.patients.fullName} hint={ui.patients.fullNameHint} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
         </div>
       </Dialog>
     </div>

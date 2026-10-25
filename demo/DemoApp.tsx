@@ -74,7 +74,7 @@ const staff: StaffInfo = {
   role: 'DOCTOR',
   roleLabel: 'Врач',
   // каталог в прототипе можно править, чтобы показать его целиком; в приложении это право выдаёт администратор
-  permissions: ['patient.write', 'visit.write', 'visit.delete', 'document.write', 'issue.create', 'link.manage', 'template.personal', 'texts.approve', 'catalog.manage'],
+  permissions: ['patient.write', 'visit.write', 'visit.delete', 'document.write', 'issue.create', 'link.manage', 'template.personal', 'texts.approve', 'template.library', 'catalog.manage'],
   prefs: { mapMode: 'three', sizeHotkeys: [], avatar: null, avatarRev: 0 },
   idleTimeoutMin: 240,
   avatarUrl: avatar,
@@ -104,10 +104,14 @@ interface DemoVisit {
 const visits: DemoVisit[] = [
   { id: MAIN_VISIT, patientId: 'p-10482', date: snapshot.visitDate, status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'HYGIENE_PLAN', 'AFTERCARE'], boib: snapshot.brushMap?.boib.pct ?? null, psr: 2, psrStar: true },
   { id: 'v-10391', patientId: 'p-10391', date: '2026-10-21', status: 'DRAFT', documents: ['BRUSH_MAP'], boib: null, psr: null, psrStar: false },
-  { id: 'v-10377', patientId: 'p-10377', date: '2026-10-20', status: 'ISSUED', documents: ['BRUSH_MAP', 'HYGIENE_PLAN'], boib: 18, psr: null, psrStar: false },
-  { id: 'v-10215', patientId: 'p-10215', date: '2026-10-16', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'HYGIENE_PLAN'], boib: 9, psr: 1, psrStar: false },
-  { id: 'v-10164', patientId: 'p-10164', date: '2026-10-09', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR'], boib: 42, psr: 3, psrStar: false },
-  { id: 'v-10102', patientId: 'p-10102', date: '2026-09-30', status: 'ISSUED', documents: ['BRUSH_MAP', 'AFTERCARE'], boib: 22, psr: null, psrStar: false },
+  { id: 'v-10377', patientId: 'p-10377', date: '2026-10-20', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART', 'HYGIENE_PLAN'], boib: 18, psr: 2, psrStar: false },
+  { id: 'v-10377-may', patientId: 'p-10377', date: '2026-05-12', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 34, psr: 3, psrStar: false },
+  { id: 'v-10215', patientId: 'p-10215', date: '2026-10-16', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART', 'HYGIENE_PLAN'], boib: 9, psr: 1, psrStar: false },
+  { id: 'v-10215-apr', patientId: 'p-10215', date: '2026-04-02', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 21, psr: 2, psrStar: false },
+  { id: 'v-10164', patientId: 'p-10164', date: '2026-10-09', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 42, psr: 3, psrStar: false },
+  { id: 'v-10164-jul', patientId: 'p-10164', date: '2026-07-14', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 55, psr: 3, psrStar: true },
+  { id: 'v-10102', patientId: 'p-10102', date: '2026-09-30', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'AFTERCARE'], boib: 22, psr: 2, psrStar: false },
+  { id: 'v-10102-mar', patientId: 'p-10102', date: '2026-03-18', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR'], boib: 29, psr: 2, psrStar: false },
   { id: 'v-10482-apr', patientId: 'p-10482', date: '2026-04-14', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 31, psr: 2, psrStar: false },
   { id: 'v-10482-oct', patientId: 'p-10482', date: '2025-10-08', status: 'ISSUED', documents: ['BRUSH_MAP', 'PSR', 'PERIO_CHART'], boib: 46, psr: 3, psrStar: true },
 ];
@@ -301,6 +305,15 @@ function Visit({ id, step }: { id: string; step: string | null }) {
   );
 }
 
+// неделя и повторные визиты для главной прототипа: даты считаются от сегодняшнего дня
+const weekStart = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+const inDays = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString().slice(0, 10);
+const demoDue = [
+  { patientId: 'p-10164', card: '10164', name: 'Морозов Дмитрий Олегович', date: inDays(-4) },
+  { patientId: 'p-10102', card: '10102', name: 'Павлова Ольга Сергеевна', date: inDays(9) },
+  { patientId: 'p-10215', card: '10215', name: 'Кузнецова Елена Викторовна', date: inDays(23) },
+];
+
 function StaffRoutes({ path: full }: { path: string }) {
   const [path = '/', query = ''] = full.split('?');
   const [, section, id] = path.split('/');
@@ -409,6 +422,8 @@ function StaffRoutes({ path: full }: { path: string }) {
       personalTemplates={0}
       catalogUnverified={0}
       catalogBrands={summarizeBrands(catalog)}
+      week={{ visits: visits.filter((v) => v.date >= weekStart).length, issued: visits.filter((v) => v.date >= weekStart && v.status === 'ISSUED').length, patients: new Set(visits.filter((v) => v.date >= weekStart).map((v) => v.patientId)).size }}
+      due={demoDue}
     />
   );
 }

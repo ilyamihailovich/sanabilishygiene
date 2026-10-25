@@ -217,7 +217,7 @@
 
 .picker {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-3);
 }
 
@@ -264,9 +264,9 @@
 .pickFoot {
   display: flex;
   align-items: center;
-  /* кнопка выше строки текста: нижнее поле карточки визуально равно верхнему */
-  margin-bottom: calc(-1 * var(--space-2));
+  margin-top: auto;
   justify-content: space-between;
+  gap: var(--space-2);
   color: var(--color-text-secondary);
   font-size: var(--fs-caption);
 }
@@ -325,4 +325,94 @@
 .preview {
   max-height: min(60vh, 560px);
   overflow-y: auto;
+}
+
+/* Карточка шаблона: значок вида, название, начало текста, разделы метками, действия внизу */
+.pickTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.kindIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-capsule);
+  background: rgba(167, 140, 213, 0.22);
+  color: var(--accent);
+}
+
+.kindIcon[data-kind='AFTERCARE'] {
+  background: rgba(237, 237, 237, 1);
+  color: var(--color-text);
+}
+
+.kindLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.draftBadge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: var(--radius-chip);
+  background: rgba(167, 140, 213, 0.22);
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: var(--fs-caption);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.sectionChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sectionChips li {
+  padding: 3px 9px;
+  border-radius: var(--radius-chip);
+  background: rgba(17, 17, 17, 0.05);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.picker .pickCard {
+  justify-content: flex-start;
+  gap: var(--space-3);
+  min-height: 240px;
+}
+
+/* низ карточки: сведения в одну строку слева, действия справа без переноса */
+.picker .pickFoot > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.picker .docActions {
+  flex: none;
+  flex-wrap: nowrap;
+}
+
+/* кнопки раздела и пункта — одной строкой справа */
+.sectionHead .docActions,
+.item .docActions {
+  flex-wrap: nowrap;
+  gap: 2px;
 }

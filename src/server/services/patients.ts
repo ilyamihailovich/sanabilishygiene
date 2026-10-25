@@ -3,6 +3,7 @@ import { audit } from '../audit';
 import { db } from '../db';
 import { conflict } from '../http';
 import { ui } from '@/content/ui.ru';
+import { firstNameOf } from '@/domain/patient';
 
 export const cardNumberSchema = z
   .string()
@@ -25,7 +26,9 @@ export const patientInputSchema = z.object({
     .transform((s) => (s === '' ? null : s))
     .nullable()
     .default(null),
-});
+})
+  // имя для обращения не вводится отдельно: берётся из ФИО
+  .transform((p) => ({ ...p, displayName: p.fullName ? firstNameOf(p.fullName) : p.displayName }));
 
 /**
  * Поиск пациента по номеру медкарты (начало номера) или по фамилии и имени:

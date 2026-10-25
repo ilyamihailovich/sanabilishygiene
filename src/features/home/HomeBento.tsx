@@ -24,9 +24,13 @@ interface Props {
   catalogUnverified: number;
   /** Марки каталога: число размеров и их цвета. */
   catalogBrands: BrandSummary[];
+  /** Работа врача за 7 дней. */
+  week: { visits: number; issued: number; patients: number };
+  /** Пациенты, у которых повторный визит в ближайшие 30 дней или уже просрочен. */
+  due: Array<{ patientId: string; card: string; name: string | null; date: string }>;
 }
 
-export function HomeBento({ today, recent, drafts, templates, personalTemplates, catalogUnverified, catalogBrands }: Props) {
+export function HomeBento({ today, recent, drafts, templates, personalTemplates, catalogUnverified, catalogBrands, week, due }: Props) {
   const canCatalog = useCan('catalog.manage');
   return (
     <div className={s.bento}>
@@ -70,6 +74,7 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
         )}
       </Card>
 
+      <div className={s.mainStack}>
       <Card className={s.drafts}>
         <CardHeader title={ui.home.drafts} meta={drafts.length ? <span className={s.count}>{drafts.length}</span> : undefined} />
         {drafts.length ? (
@@ -95,6 +100,50 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
           <p className={s.empty}>{ui.home.draftsEmpty}</p>
         )}
       </Card>
+
+      {/* работа за неделю: три показателя одной строкой */}
+      <ul className={s.week} aria-label="За 7 дней">
+        {(
+          [
+            ['Визитов за неделю', week.visits],
+            ['Выдано пациентам', week.issued],
+            ['Пациентов', week.patients],
+          ] as const
+        ).map(([label, value]) => (
+          <li key={label} className={s.weekTile}>
+            <span className={s.sub}>{label}</span>
+            <span className={s.big}>{value}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Card>
+        <CardHeader title="Пора на повторный визит" meta={due.length ? <span className={s.count}>{due.length}</span> : undefined} />
+        {due.length ? (
+          <ul className={s.draftList}>
+            {due.map((d) => {
+              const days = Math.ceil((new Date(d.date).getTime() - new Date(today).getTime()) / 86_400_000);
+              return (
+                <li key={d.patientId}>
+                  <Link href={`/patients/${d.patientId}`} className={`${s.item} ${s.link}`}>
+                    <span className={s.who}>
+                      <span className={s.card}>{d.name ?? 'Без имени'}</span>
+                      <span className={s.number}>{d.card}</span>
+                    </span>
+                    <span className={days < 0 ? s.overdue : s.sub}>
+                      <Num>{formatDate(d.date)}</Num> · {days < 0 ? `просрочен на ${-days} дн.` : days === 0 ? 'сегодня' : `через ${days} дн.`}
+                    </span>
+                    <IconChevronRight size={18} />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className={s.empty}>В ближайший месяц повторных визитов нет.</p>
+        )}
+      </Card>
+      </div>
 
       <div className={s.sideStack}>
       <Link href="/templates" className={s.link}>

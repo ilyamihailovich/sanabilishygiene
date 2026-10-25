@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { plural } from '@/content/plural';
 import { ui } from '@/content/ui.ru';
 import { fillFromTemplate } from '@/domain/documents';
 import type { TemplateStructure } from '@/schemas/template';
@@ -12,7 +13,7 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { Select, TextField } from '@/ui/Field';
 import { Heading } from '@/ui/Heading';
-import { IconPlus } from '@/ui/icons';
+import { IconDoc, IconPlus } from '@/ui/icons';
 import { Segmented } from '@/ui/Segmented';
 import { useToast } from '@/ui/Toast';
 import { formatDate } from '@/ui/format';
@@ -33,6 +34,17 @@ interface Row {
 }
 
 type Tab = 'library' | 'personal' | 'archived';
+
+/** Начало текста шаблона для карточки: первый текстовый пункт или предупреждение. */
+function excerpt(structure: TemplateStructure | null | undefined): string | null {
+  for (const sec of structure?.sections ?? []) {
+    for (const item of sec.items) {
+      if (item.type === 'text' && item.text.trim()) return item.text.trim();
+      if (item.type === 'warning' && item.text.trim()) return item.text.trim();
+    }
+  }
+  return null;
+}
 
 export function TemplateLibrary({ templates }: { templates: Row[] }) {
   const router = useRouter();
@@ -103,47 +115,67 @@ export function TemplateLibrary({ templates }: { templates: Row[] }) {
       </div>
       {rows.length ? (
         <div className={s.picker}>
-          {rows.map((t) => (
-            <div
-              key={t.id}
-              className={s.pickCard}
-              role="button"
-              tabIndex={0}
-              aria-label={`${editable(t) ? ui.templates.edit : 'Открыть'}: ${t.title}`}
-              onClick={() => open(t)}
-              onKeyDown={(e) => {
-                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault();
-                  open(t);
-                }
-              }}
-            >
-              <div>
-                <span className={s.kindChip}>{ui.templates.kinds[t.kind]}</span>
-                <p className={s.pickTitle} style={{ marginTop: 'var(--space-3)' }}>
-                  {t.title}
-                </p>
-              </div>
-              <div className={s.pickFoot}>
-                <span>
-                  {t.version ? `${ui.templates.version} ${t.version}` : ''} · {formatDate(t.updatedAt)}
-                  {t.hasDraft ? ' · черновик' : ''}
-                </span>
-                <span className={s.docActions} onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" onClick={() => copy(t.id)}>
-                    {ui.templates.copy}
-                  </Button>
-                  {(t.personal || canLibrary) && (
-                    <Link href={`/templates/${t.id}`}>
-                      <Button variant="secondary" size="sm" tabIndex={-1}>
-                        {ui.templates.edit}
+          {rows.map((t) => {
+            const sections = t.structure?.sections ?? [];
+            return (
+              <div
+                key={t.id}
+                className={s.pickCard}
+                role="button"
+                tabIndex={0}
+                aria-label={`${editable(t) ? ui.templates.edit : 'Открыть'}: ${t.title}`}
+                onClick={() => open(t)}
+                onKeyDown={(e) => {
+                  if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    open(t);
+                  }
+                }}
+              >
+                <div className={s.pickTop}>
+                  <span className={s.kindIcon} data-kind={t.kind} aria-hidden="true">
+                    <IconDoc size={20} />
+                  </span>
+                  <span className={s.kindLabel}>{ui.templates.kinds[t.kind]}</span>
+                  {t.hasDraft && <span className={s.draftBadge}>черновик</span>}
+                </div>
+                <p className={s.pickTitle}>{t.title}</p>
+                {excerpt(t.structure) && <p className={s.excerpt}>{excerpt(t.structure)}</p>}
+                {sections.length > 0 && (
+                  <ul className={s.sectionChips}>
+                    {sections.slice(0, 4).map((sec) => (
+                      <li key={sec.id}>{sec.title}</li>
+                    ))}
+                    {sections.length > 4 && <li>+{sections.length - 4}</li>}
+                  </ul>
+                )}
+                <div className={s.pickFoot}>
+                  <span>
+                    {sections.length ? `${sections.length} ${plural(sections.length, ['раздел', 'раздела', 'разделов'])} · ` : ''}
+                    {formatDate(t.updatedAt)}
+                  </span>
+                  <span className={s.docActions} onClick={(e) => e.stopPropagation()}>
+                    {canPersonal && (
+                      <Button variant="ghost" size="sm" onClick={() => copy(t.id)}>
+                        Копия
                       </Button>
-                    </Link>
-                  )}
-                </span>
+                    )}
+                    {editable(t) ? (
+                      <Link href={`/templates/${t.id}`}>
+                        <Button variant="secondary" size="sm" tabIndex={-1}>
+                          {ui.templates.edit}
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button variant="secondary" size="sm" onClick={() => setPreview(t)}>
+                        Открыть
+                      </Button>
+                    )}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <p className={s.kind}>{ui.templates.empty}</p>

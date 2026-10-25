@@ -16,7 +16,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  max-width: calc(880px - 2 * var(--gutter) + 2 * var(--space-6));
+  max-width: calc(880px - 2 * var(--gutter));
   height: 64px;
   margin: 0 auto;
   padding: 0 var(--space-6);

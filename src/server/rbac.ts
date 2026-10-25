@@ -30,7 +30,8 @@ const matrix: Record<Role, ReadonlySet<Permission>> = {
     'audit.view',
     'settings.manage',
   ]),
-  DOCTOR: new Set<Permission>([...clinical, ...issuing, 'texts.approve']),
+  // врач — автор клинических текстов: правит шаблоны клиники и утверждает тексты оценок
+  DOCTOR: new Set<Permission>([...clinical, ...issuing, 'texts.approve', 'template.library']),
   HYGIENIST: new Set<Permission>([...clinical, ...issuing]),
   ASSISTANT: new Set<Permission>(clinical),
 };

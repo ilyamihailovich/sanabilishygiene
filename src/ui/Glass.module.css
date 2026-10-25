@@ -30,9 +30,14 @@
   border-radius: 999px;
 }
 
-/* в округлой панели кнопки тоже круглые */
-.panel button {
+/* в округлой панели кнопки-иконки круглые, переключатель — капсула */
+.panel > button {
   border-radius: 50%;
+}
+
+.panel [role='radiogroup'],
+.panel [role='radiogroup'] [role='radio'] {
+  border-radius: 999px;
 }
 
 .vertical {

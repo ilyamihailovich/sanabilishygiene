@@ -491,3 +491,82 @@
   gap: 4px;
   margin-bottom: auto;
 }
+
+.tileEmpty {
+  cursor: default;
+}
+
+.tileEmpty .tileValue {
+  color: var(--color-text-tertiary);
+}
+
+.tileEmpty:hover {
+  box-shadow: var(--card-shadow);
+}
+
+.tileEmpty:active {
+  transform: none;
+}
+
+/* Профиль пациента: имя и факты парами «подпись — значение» */
+.profileName {
+  font-size: var(--fs-title3);
+  letter-spacing: var(--tracking-title);
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 10px 0;
+  border-top: 1px solid var(--color-separator);
+  font-size: var(--fs-caption);
+}
+
+.facts dt {
+  color: var(--color-text-secondary);
+}
+
+.facts dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* Динамика: показатель слева, «было → стало» справа */
+.progress {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progress li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: 10px 0;
+  border-top: 1px solid var(--color-separator);
+  font-size: var(--fs-caption);
+}
+
+.progressTitle {
+  color: var(--color-text-secondary);
+}
+
+.progressValues {
+  display: inline-flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.progressFrom {
+  color: var(--color-text-tertiary);
+}
