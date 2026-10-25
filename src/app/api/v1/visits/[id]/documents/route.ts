@@ -4,7 +4,7 @@ import { toothSchema } from '@/schemas/brushMap';
 import { createDocument } from '@/server/services/documents';
 
 const schema = z.object({
-  type: z.enum(['BRUSH_MAP', 'PSR', 'HYGIENE_PLAN', 'AFTERCARE']),
+  type: z.enum(['BRUSH_MAP', 'PSR', 'PERIO_CHART', 'HYGIENE_PLAN', 'AFTERCARE']),
   templateId: z.string().nullable().default(null),
   /** Только для карты ёршиков: начать с формулы, отмеченной до осмотра, или перенести прошлую карту. */
   start: z

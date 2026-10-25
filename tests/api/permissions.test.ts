@@ -65,3 +65,24 @@ describe('диктовка', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('пародонтограмма', () => {
+  it('создаётся в визите с формулой из карты ёршиков, сохраняется и не попадает в документы пациента', async () => {
+    const { visitId } = await issuableVisit(doctor, sizeId);
+    const doc = await doctor.json<{ id: string; rev: number; content: { teeth: Record<string, { missing: boolean; pd: number[] }> } }>(
+      'POST',
+      `/api/v1/visits/${visitId}/documents`,
+      { type: 'PERIO_CHART' },
+    );
+    // третьи моляры в карте по умолчанию отсутствуют
+    expect(doc.content.teeth['18']!.missing).toBe(true);
+    expect(doc.content.teeth['16']!.missing).toBe(false);
+    doc.content.teeth['16']!.pd = [5, 3, 4, 3, 2, 3];
+    const saved = await doctor.call('PATCH', `/api/v1/documents/${doc.id}`, { content: doc.content, rev: doc.rev });
+    expect(saved.status).toBe(200);
+    const bad = await doctor.call('PATCH', `/api/v1/documents/${doc.id}`, { content: { schema: 1, teeth: { '16': { pd: [1, 2] } } }, rev: doc.rev + 1 });
+    expect(bad.status).toBe(400);
+    // второй пародонтограммы в визите быть не может
+    expect((await doctor.call('POST', `/api/v1/visits/${visitId}/documents`, { type: 'PERIO_CHART' })).status).toBe(409);
+  });
+});

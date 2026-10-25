@@ -20,7 +20,7 @@ import { useCan } from '../shell/StaffContext';
 import { TrendChart } from './TrendChart';
 import s from './patients.module.css';
 
-const docLabels = { BRUSH_MAP: 'Карта ёршиков', PSR: 'Скрининг', HYGIENE_PLAN: 'Схема гигиены', AFTERCARE: 'Памятка' } as const;
+const docLabels = { BRUSH_MAP: 'Карта ёршиков', PSR: 'Скрининг', PERIO_CHART: 'Пародонтограмма', HYGIENE_PLAN: 'Схема гигиены', AFTERCARE: 'Памятка' } as const;
 
 interface Props {
   patient: { id: string; cardNumber: string; displayName: string | null; fullName: string | null };

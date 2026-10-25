@@ -5,6 +5,8 @@ import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 import { emptyPsr, summarizePsr } from '@/domain/psr';
 import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
 import { psrSchema } from '@/schemas/psr';
+import { perioSchema } from '@/schemas/perio';
+import { emptyPerio } from '@/domain/perio';
 import { filledDocumentSchema, templateStructureSchema } from '@/schemas/template';
 import { audit } from '../audit';
 import { db } from '../db';
@@ -16,6 +18,8 @@ export function parseContent(type: DocumentType, raw: unknown) {
       return brushMapSchema.parse(raw);
     case 'PSR':
       return psrSchema.parse(raw);
+    case 'PERIO_CHART':
+      return perioSchema.parse(raw);
     case 'HYGIENE_PLAN':
     case 'AFTERCARE':
       return filledDocumentSchema.parse(raw);
@@ -36,7 +40,7 @@ function metrics(type: DocumentType, content: unknown) {
 
 export { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 
-const SINGLE: DocumentType[] = ['BRUSH_MAP', 'PSR', 'HYGIENE_PLAN'];
+const SINGLE: DocumentType[] = ['BRUSH_MAP', 'PSR', 'PERIO_CHART', 'HYGIENE_PLAN'];
 
 /** Как начать карту ёршиков: чистая карта с формулой, отмеченной перед осмотром, или перенос с прошлого визита. */
 export interface MapStart {
@@ -65,6 +69,13 @@ export async function createDocument(visitId: string, type: DocumentType, templa
       : brushMapSchema.parse({ ...emptyBrushMap(), teeth: { ...emptyBrushMap().teeth, ...start?.teeth } });
   }
   else if (type === 'PSR') content = emptyPsr();
+  else if (type === 'PERIO_CHART') {
+    // формула из карты ёршиков этого визита: отсутствующие зубы и имплантаты не нужно отмечать второй раз
+    const map = visit.documents.find((d) => d.type === 'BRUSH_MAP');
+    const teeth = map ? brushMapSchema.parse(map.content).teeth : {};
+    const pick = (state: string) => Object.entries(teeth).filter(([, v]) => v.state === state).map(([k]) => Number(k));
+    content = emptyPerio({ missing: [...pick('MISSING'), ...pick('PONTIC')], implants: pick('IMPLANT') });
+  }
   else {
     if (!templateId) throw badRequest('Выберите шаблон');
     const template = await db().template.findUnique({

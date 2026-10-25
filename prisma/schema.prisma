@@ -22,6 +22,7 @@ enum VisitStatus {
 enum DocumentType {
   BRUSH_MAP
   PSR
+  PERIO_CHART
   HYGIENE_PLAN
   AFTERCARE
 }

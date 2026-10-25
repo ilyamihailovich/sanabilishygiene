@@ -18,6 +18,8 @@ import { emptyBrushMap } from '@/domain/brushMap';
 import { patientTitle } from '@/domain/patient';
 import { carryOverBrushMap, fillFromTemplate } from '@/domain/documents';
 import { emptyPsr } from '@/domain/psr';
+import { ALL_TEETH, emptyPerio } from '@/domain/perio';
+import type { PerioContent } from '@/schemas/perio';
 import { brushMapSchema, type BrushMapContent } from '@/schemas/brushMap';
 import type { IssueSnapshot } from '@/schemas/snapshot';
 import type { TemplateStructure } from '@/schemas/template';
@@ -111,6 +113,38 @@ const templateRefs = templates.map((t) => ({ id: t.id, kind: t.kind, title: t.ti
 seedDocs(MAIN_VISIT, documents);
 const mainMap = brushMapSchema.parse(documents.find((d) => d.type === 'BRUSH_MAP')!.content);
 
+/**
+ * Пародонтограмма прототипа: формула из карты ёршиков и заполненные для показа значения
+ * (глубина 2–3 мм, карманы у моляров, рецессии у нижних резцов). Значения условные, не данные пациента.
+ */
+function demoPerio(): PerioContent {
+  const pick = (state: string) => Object.entries(mainMap.teeth).filter(([, v]) => v.state === state).map(([k]) => Number(k));
+  const c = emptyPerio({ missing: pick('MISSING'), implants: pick('IMPLANT') });
+  for (const t of ALL_TEETH) {
+    const tooth = c.teeth[String(t)]!;
+    if (tooth.missing) continue;
+    const n = t % 10;
+    const molar = n >= 6;
+    const lowerFront = t >= 31 && t <= 43 && n <= 3;
+    for (let i = 0; i < 6; i++) {
+      const interprox = i !== 1 && i !== 4;
+      const seed = (t * 7 + Math.floor(t / 10) * 3 + i * 13) % 10;
+      let pd = 2 + (interprox ? 1 : 0) + (seed > 7 ? 1 : 0);
+      if (molar && interprox) pd += seed > 4 ? 2 : 1;
+      if (t === 16 && i === 0) pd = 7;
+      tooth.pd[i] = pd;
+      tooth.gm[i] = lowerFront && i === 1 ? -2 : molar && seed > 6 ? -1 : 0;
+      tooth.bop[i] = pd >= 4 && seed % 2 === 0;
+      tooth.plaque[i] = seed % 3 === 0;
+    }
+  }
+  c.teeth['16']!.furcation = { b: 1, mo: 2, do: 1 };
+  c.teeth['46']!.furcation = { b: 2, o: 1 };
+  c.teeth['31']!.mobility = 1;
+  c.teeth['16']!.note = 'Обнажение фуркации, контроль через 3 месяца';
+  return c;
+}
+
 /** Создание и удаление документов в прототипе: те же функции, что на сервере, без базы. */
 export const demoDocs: MockDocs = {
   create(visitId, { type, templateId, start }) {
@@ -124,6 +158,7 @@ export const demoDocs: MockDocs = {
           ? carryOverBrushMap(mainMap)
           : brushMapSchema.parse({ ...base, teeth: { ...base.teeth, ...(start?.teeth as BrushMapContent['teeth'] | undefined) } });
     } else if (type === 'PSR') content = emptyPsr();
+    else if (type === 'PERIO_CHART') content = demoPerio();
     else {
       const t = templates.find((x) => x.id === templateId) ?? templates.find((x) => x.kind === (type === 'HYGIENE_PLAN' ? 'HYGIENE_PLAN' : 'AFTERCARE'))!;
       content = fillFromTemplate(t.id, t.version, t.title, t.structure);

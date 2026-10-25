@@ -16,6 +16,7 @@ export interface Blocker {
 const docTitle: Record<Document['type'], string> = {
   BRUSH_MAP: 'Карта ёршиков',
   PSR: 'Скрининг',
+  PERIO_CHART: 'Пародонтограмма',
   HYGIENE_PLAN: 'Схема гигиены',
   AFTERCARE: 'Памятка',
 };

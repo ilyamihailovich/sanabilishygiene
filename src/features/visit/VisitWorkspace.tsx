@@ -28,14 +28,16 @@ import { PsrEditor } from '../psr/PsrEditor';
 import type { StaffInfo } from '../shell/StaffContext';
 import { TemplateDocEditor } from '../templates/TemplateDocEditor';
 import { TemplatePicker } from '../templates/TemplatePicker';
+import { PerioEditor } from '../perio/PerioEditor';
+import { perioSchema } from '@/schemas/perio';
 import s from './visit.module.css';
 
-type StepKey = 'map' | 'psr' | 'plan' | 'aftercare' | 'issue';
-const STEPS: StepKey[] = ['map', 'psr', 'plan', 'aftercare', 'issue'];
+type StepKey = 'map' | 'psr' | 'perio' | 'plan' | 'aftercare' | 'issue';
+const STEPS: StepKey[] = ['map', 'psr', 'perio', 'plan', 'aftercare', 'issue'];
 
 export interface VisitDoc {
   id: string;
-  type: 'BRUSH_MAP' | 'PSR' | 'HYGIENE_PLAN' | 'AFTERCARE';
+  type: 'BRUSH_MAP' | 'PSR' | 'PERIO_CHART' | 'HYGIENE_PLAN' | 'AFTERCARE';
   rev: number;
   content: unknown;
   templateVersionId: string | null;
@@ -128,6 +130,7 @@ export function VisitWorkspace(props: Props) {
   const map = docOf('BRUSH_MAP');
   const psr = docOf('PSR');
   const plan = docOf('HYGIENE_PLAN');
+  const perio = docOf('PERIO_CHART');
   const aftercare = documents.filter((d) => d.type === 'AFTERCARE');
   const brushMapContent = map ? brushMapSchema.parse(map.content) : null;
 
@@ -280,6 +283,21 @@ export function VisitWorkspace(props: Props) {
                   <p className={s.ctaText}>Скрининг пародонта PSR: шесть секстантов, коды 0–4, отметка «*». Итог по наибольшему коду.</p>
                   <Button disabled={!canWrite || busy} onClick={() => createDoc('PSR')}>
                     Начать скрининг
+                  </Button>
+                </Card>
+              ))}
+
+            {step === 'perio' &&
+              (perio ? (
+                <PerioEditor key={perio.id} documentId={perio.id} rev={perio.rev} initial={perioSchema.parse(perio.content)} onRemove={() => removeDoc(perio.id)} />
+              ) : (
+                <Card className={s.cta}>
+                  <p className={s.ctaText}>
+                    Пародонтограмма: шесть точек у каждого зуба — десневой край, глубина зондирования, уровень прикрепления, кровоточивость и налёт; подвижность,
+                    фуркации и имплантаты. Отсутствующие зубы и имплантаты переносятся из карты ёршиков. Документ для врача, пациенту не выдаётся.
+                  </p>
+                  <Button disabled={!canWrite || busy} onClick={() => createDoc('PERIO_CHART')}>
+                    Начать пародонтограмму
                   </Button>
                 </Card>
               ))}
