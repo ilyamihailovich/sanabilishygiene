@@ -58,7 +58,7 @@ export const ui = {
   },
   home: {
     startTitle: 'Начать визит',
-    startRest: 'по фамилии и имени пациента',
+    startRest: 'по\u00a0ФИО пациента',
     cardPlaceholder: 'Номер медкарты',
     patientPlaceholder: 'Фамилия и имя или номер медкарты',
     find: 'Найти или создать',

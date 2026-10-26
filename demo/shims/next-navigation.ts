@@ -1,8 +1,8 @@
-// next/navigation для прототипа без сервера: переходы внутри страницы
-import { navigate, usePath } from '../router';
+// next/navigation для прототипа без сервера: переходы внутри страницы с записью в историю браузера
+import { back, navigate, replace, usePath } from '../router';
 
 const noop = () => undefined;
-export const useRouter = () => ({ push: navigate, replace: navigate, refresh: noop, back: noop, prefetch: noop });
+export const useRouter = () => ({ push: navigate, replace, refresh: noop, back, prefetch: noop });
 export const usePathname = usePath;
 export const notFound = noop;
 export const redirect = navigate;

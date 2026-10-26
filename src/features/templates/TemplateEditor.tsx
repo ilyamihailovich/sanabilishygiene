@@ -1,6 +1,7 @@
 'use client';
 
 import { Reorder, useDragControls } from 'motion/react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ui } from '@/content/ui.ru';
@@ -10,7 +11,7 @@ import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { CounterChip, ToggleChip } from '@/ui/Chip';
 import { IconButton } from '@/ui/IconButton';
-import { IconChevronDown, IconChevronUp, IconGrip, IconPlus, IconTrash } from '@/ui/icons';
+import { IconChevronDown, IconChevronLeft, IconChevronUp, IconGrip, IconPlus, IconTrash } from '@/ui/icons';
 import { useToast } from '@/ui/Toast';
 import { ItemEditor } from './ItemEditor';
 import { ITEM_TYPES, newId, newItem } from './items';
@@ -120,6 +121,10 @@ export function TemplateEditor(props: Props) {
 
   return (
     <div className={s.doc} style={{ gap: 'var(--space-6)' }}>
+      {/* выход из редактора к списку шаблонов: черновик уже сохранён */}
+      <Link href="/templates" className={s.back}>
+        <IconChevronLeft size={18} /> Шаблоны
+      </Link>
       <div className={s.docHead}>
         <div className={s.doc} style={{ gap: 'var(--space-2)', flex: '1 1 420px' }}>
           <div className={s.docActions}>

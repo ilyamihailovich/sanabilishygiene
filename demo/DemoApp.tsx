@@ -73,6 +73,7 @@ const staff: StaffInfo = {
   displayName: sample.doctor.displayName,
   role: 'DOCTOR',
   roleLabel: 'Врач',
+  title: sample.doctor.title,
   // каталог в прототипе можно править, чтобы показать его целиком; в приложении это право выдаёт администратор
   permissions: ['patient.write', 'visit.write', 'visit.delete', 'document.write', 'issue.create', 'link.manage', 'template.personal', 'texts.approve', 'template.library', 'catalog.manage'],
   prefs: { mapMode: 'three', sizeHotkeys: [], avatar: null, avatarRev: 0 },

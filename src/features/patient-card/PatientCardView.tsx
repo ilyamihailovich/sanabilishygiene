@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ui } from '@/content/ui.ru';
@@ -9,7 +10,6 @@ import type { IssueSnapshot } from '@/schemas/snapshot';
 import { Button } from '@/ui/Button';
 import { CounterChip } from '@/ui/Chip';
 import { GlassPanel, glassClass } from '@/ui/Glass';
-import { JawFade } from '../brush-map/scheme/JawFade';
 import { Heading } from '@/ui/Heading';
 import { IconDownload, IconShare } from '@/ui/icons';
 import { Logo } from '@/ui/Logo';
@@ -17,8 +17,10 @@ import { Popover } from '@/ui/Popover';
 import { Segmented } from '@/ui/Segmented';
 import { ToggleGroup } from '@/ui/ToggleGroup';
 import { cx } from '@/ui/cx';
+import { modeFade } from '@/ui/motion';
 import { boibTone, psrTone, toneStyle } from '@/ui/tone';
 import { archBox, elementAnchor, toothGeom } from '../brush-map/geometry';
+import { JawFade } from '../brush-map/scheme/JawFade';
 import { SchemeView } from '../brush-map/scheme/SchemeView';
 import { SchemeZoom } from '../brush-map/scheme/SchemeZoom';
 import type { MarkerVisual } from '../brush-map/scheme/SvgMarker';
@@ -153,8 +155,9 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
               />
             </div>
             <div className={s.stage}>
+              <AnimatePresence mode="wait" initial={false}>
               {mode === 'three' ? (
-                <>
+                <motion.div key="three" className={s.modeLayer} {...modeFade}>
                   <ThreeView
                     mirrored
                     content={map.content}
@@ -182,9 +185,9 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
                       />
                     </GlassPanel>
                   </div>
-                </>
+                </motion.div>
               ) : (
-                <>
+                <motion.div key="scheme" className={s.modeLayer} {...modeFade}>
                   <JawFade jaw={jaw}>
                     <SchemeZoom bounds={jawBounds} target={zoomTarget} mirrored>
                       {(box) => (
@@ -226,8 +229,9 @@ export function PatientCardView({ snapshot, pdfUrl, calendarUrl = null }: { snap
                       />
                     </GlassPanel>
                   </div>
-                </>
+                </motion.div>
               )}
+              </AnimatePresence>
               <Popover open={infoEl !== null} onClose={() => setInfo(null)} anchor={infoAnchor} label="Промежуток" track={info} narrow>
                 {infoEl && <ElementInfo element={infoEl} snapshot={snapshot} />}
               </Popover>

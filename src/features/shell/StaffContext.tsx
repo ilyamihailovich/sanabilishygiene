@@ -9,6 +9,8 @@ export interface StaffInfo {
   displayName: string;
   role: 'ADMIN' | 'DOCTOR' | 'HYGIENIST' | 'ASSISTANT';
   roleLabel: string;
+  /** Должность для подписи: «врач-пародонтолог». Без неё — роль. */
+  title?: string | null;
   permissions: Permission[];
   prefs: Prefs;
   idleTimeoutMin: number;

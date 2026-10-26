@@ -115,7 +115,7 @@ export function ProfileCard({ name, title, email, roleLabel, avatarUrl, stats }:
         />
         <div className={s.who}>
           <span className={s.name}>{name}</span>
-          <span className={s.muted}>{[title, roleLabel].filter(Boolean).join(' · ')}</span>
+          <span className={s.muted}>{title || roleLabel}</span>
           <span className={s.email}>{email}</span>
           <div className={s.photoActions}>
             <Button variant="secondary" size="sm" disabled={busy} onClick={() => input.current?.click()}>

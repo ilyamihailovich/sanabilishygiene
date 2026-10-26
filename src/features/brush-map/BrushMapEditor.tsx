@@ -53,6 +53,7 @@ import { Popover } from '@/ui/Popover';
 import { Segmented } from '@/ui/Segmented';
 import { Sheet } from '@/ui/Sheet';
 import { ToggleGroup } from '@/ui/ToggleGroup';
+import { modeFade } from '@/ui/motion';
 import { useToast } from '@/ui/Toast';
 import { SaveIndicator } from '../visit/SaveIndicator';
 import { useAutosave } from '../visit/useAutosave';
@@ -573,14 +574,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
 
         <AnimatePresence mode="wait" initial={false}>
           {mode === 'scheme' ? (
-            <motion.div
-              key="scheme"
-              className={`${s.scheme} ${touch ? s.schemeTouch : s.schemeFill}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key="scheme" className={`${s.scheme} ${touch ? s.schemeTouch : s.schemeFill}`} {...modeFade}>
               {touch ? (
                 <JawFade jaw={jaw}>
                   <SchemeZoom bounds={jawBounds} target={zoomTarget}>
@@ -622,7 +616,7 @@ export function BrushMapEditor({ documentId, rev, initial, catalog, hotkeyOrder,
               )}
             </motion.div>
           ) : (
-            <motion.div key="three" style={{ position: 'absolute', inset: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <motion.div key="three" style={{ position: 'absolute', inset: 0 }} {...modeFade}>
               <ThreeView
                 focusKey={dictating ? selectedKey : null}
                 content={content}

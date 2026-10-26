@@ -37,7 +37,9 @@ export function HomeBento({ today, recent, drafts, templates, personalTemplates,
       <Card tone="accent" className={s.start} padding={32}>
         <span className={s.startMeta}>{formatWeekday(today)}</span>
         <h1 className={s.startTitle}>
-          {ui.home.startTitle} <span className={s.startRest}>{ui.home.startRest}</span>
+          {ui.home.startTitle}
+          <br />
+          <span className={s.startRest}>{ui.home.startRest}</span>
         </h1>
         <StartVisitForm />
       </Card>

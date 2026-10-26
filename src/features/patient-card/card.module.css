@@ -651,3 +651,9 @@ button.brushRow[aria-pressed='true'] {
 .brushRow .brushWhere {
   grid-column: 2 / 4;
 }
+
+/* слой вида карты (3D или схема) занимает всю сцену, пока идёт смена */
+.modeLayer {
+  position: absolute;
+  inset: 0;
+}

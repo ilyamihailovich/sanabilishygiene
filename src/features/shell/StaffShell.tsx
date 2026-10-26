@@ -110,7 +110,7 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
             </nav>
             <button ref={userRef} type="button" className={s.user} onClick={() => setMenu((m) => !m)} aria-haspopup="dialog" aria-expanded={menu}>
               <span className={s.userText}>
-                <span className={s.userName}>{staff.displayName}</span> <span className={s.userRole}>· {staff.roleLabel}</span>
+                <span className={s.userName}>{staff.displayName}</span> <span className={s.userRole}>· {staff.title ?? staff.roleLabel}</span>
               </span>
               <span className={s.avatar} aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -125,11 +125,6 @@ export function StaffShell({ staff, children }: { staff: StaffInfo; children: Re
             <Link href="/account" className={s.menuItem} onClick={() => setMenu(false)}>
               <IconUser size={20} /> {ui.nav.account}
             </Link>
-            {staff.permissions.includes('texts.approve') && (
-              <Link href="/admin/texts" className={s.menuItem} onClick={() => setMenu(false)}>
-                <IconDoc size={20} /> Тексты на утверждение
-              </Link>
-            )}
             <button type="button" className={s.menuItem} onClick={logout}>
               <IconLogout size={20} /> {ui.nav.logout}
             </button>

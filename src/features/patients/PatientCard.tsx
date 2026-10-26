@@ -90,7 +90,7 @@ export function PatientCard({ patient, history, clinicians, nextVisit, reportUrl
       </div>
 
       {history.length ? (
-        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} reportUrl={reportUrl} patient={patient} />
+        <PatientDashboard history={history} clinicians={clinicians} nextVisit={nextVisit} reportUrl={reportUrl} patient={patient} onEditPatient={canEdit ? () => setEdit(true) : undefined} />
       ) : (
         <p className={s.sub}>{ui.patients.noVisits}</p>
       )}

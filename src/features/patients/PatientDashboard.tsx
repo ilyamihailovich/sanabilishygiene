@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { brushChanges, delta, type DocType, type VisitMetrics } from '@/domain/history';
 import { SEXTANTS } from '@/schemas/psr';
+import { Button } from '@/ui/Button';
 import { Card, CardHeader } from '@/ui/Card';
 import { CounterChip } from '@/ui/Chip';
 import { cx } from '@/ui/cx';
@@ -428,12 +429,15 @@ export function PatientDashboard({
   nextVisit,
   reportUrl,
   patient,
+  onEditPatient,
 }: {
   history: VisitMetrics[];
   clinicians: Record<string, string | null>;
   nextVisit: string | null;
   reportUrl?: string;
   patient?: { cardNumber: string; displayName: string | null; fullName: string | null };
+  /** Открыть правку ФИО и медкарты; нет — у сотрудника нет права. */
+  onEditPatient?: () => void;
 }) {
   const [openMetric, setOpenMetric] = useState<Metric | null>(null);
   // все плитки показателей на месте, даже если показатель ещё не измеряли: сетка сводки не рассыпается
@@ -477,7 +481,7 @@ export function PatientDashboard({
       <PsrStrip history={history} />
       <BrushSet history={history} />
       <Timeline history={history} clinicians={clinicians} />
-      {patient && <PatientProfile patient={patient} history={history} />}
+      {patient && <PatientProfile patient={patient} history={history} onEdit={onEditPatient} />}
       <Progress history={history} />
       <NextVisitCard nextVisit={nextVisit} last={last ?? null} />
       <QuickDocs history={history} reportUrl={reportUrl} />
@@ -570,7 +574,15 @@ function span(ms: number) {
 }
 
 /** Профиль пациента: как к нему обращаются, сколько лет в клинике, регулярность визитов и что заполнялось. */
-function PatientProfile({ patient, history }: { patient: { cardNumber: string; displayName: string | null; fullName: string | null }; history: VisitMetrics[] }) {
+function PatientProfile({
+  patient,
+  history,
+  onEdit,
+}: {
+  patient: { cardNumber: string; displayName: string | null; fullName: string | null };
+  history: VisitMetrics[];
+  onEdit?: () => void;
+}) {
   const dates = history.map((v) => new Date(v.date).getTime()).sort((a, b) => a - b);
   const first = dates[0];
   const gaps = dates.slice(1).map((d, i) => d - dates[i]!);
@@ -586,7 +598,16 @@ function PatientProfile({ patient, history }: { patient: { cardNumber: string; d
   ];
   return (
     <Card className={cx(s.wide, s.bottomCard)}>
-      <CardHeader title="Профиль пациента" />
+      <CardHeader
+        title="Профиль пациента"
+        action={
+          onEdit ? (
+            <Button variant="secondary" size="sm" onClick={onEdit}>
+              Изменить
+            </Button>
+          ) : undefined
+        }
+      />
       <p className={s.profileName}>{patient.fullName ?? patient.displayName ?? 'Без имени'}</p>
       <dl className={s.facts}>
         {rows.map(([k, v]) => (

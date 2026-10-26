@@ -35,6 +35,7 @@ export function staffInfo(session: CurrentSession): StaffInfo {
     displayName: session.user.displayName,
     role: session.user.role,
     roleLabel: roleLabels[session.user.role],
+    title: session.user.title,
     permissions: ALL.filter((p) => can(session.user.role, p)),
     prefs: prefsSchema.parse(session.user.prefs ?? {}),
     idleTimeoutMin: session.idleTimeoutMin,

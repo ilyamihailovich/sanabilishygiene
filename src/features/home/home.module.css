@@ -369,3 +369,14 @@
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.25);
 }
+
+/* колонки под верхним рядом одной высоты: последние карточки растягиваются до низа */
+.mainStack,
+.sideStack {
+  align-self: stretch;
+}
+
+.mainStack > :last-child,
+.sideStack > :last-child {
+  flex: 1;
+}
